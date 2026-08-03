@@ -1,3 +1,29 @@
 [gd_scene format=3 uid="uid://xio83l657lto"]
 
+[ext_resource type="Script" uid="uid://cwd3gulik5g6m" path="res://Data/Window/WindowPlacementSettings.cs" id="1_idj7w"]
+[ext_resource type="Script" uid="uid://dxr7mtirk3qal" path="res://Controllers/DesktopWindowHostController.cs" id="1_r150o"]
+
+[sub_resource type="Resource" id="Resource_d6g1g"]
+script = ExtResource("1_idj7w")
+SelectedMonitor = 1
+WindowWidth = 550
+CollapsedHeight = 65
+ExpandedHeight = 220
+metadata/_custom_type_script = "uid://cwd3gulik5g6m"
+
 [node name="Main" type="Node" unique_id=644726071]
+
+[node name="TestSurface" type="ColorRect" parent="." unique_id=920140273]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.51007515, 0.51007515, 0.51007515, 1)
+
+[node name="Controllers" type="Node" parent="." unique_id=1265139895]
+
+[node name="DesktopWindowHostController" type="Node" parent="Controllers" unique_id=1521543708]
+script = ExtResource("1_r150o")
+PlacementSettings = SubResource("Resource_d6g1g")
+TopmostRefreshIntervalSeconds = 0.5
