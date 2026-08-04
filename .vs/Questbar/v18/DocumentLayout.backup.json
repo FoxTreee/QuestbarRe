@@ -3,12 +3,24 @@
   "WorkspaceRootPath": "C:\\Users\\jafox\\github\\Questbar\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\jafox\\github\\Questbar\\Data\\Window\\WindowPlacementSettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Data\\Window\\WindowPlacementSettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\jafox\\github\\Questbar\\Controllers\\WindowSettingsPopupController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\WindowSettingsPopupController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\desktopwindowhostcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\desktopwindowhostcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\jafox\\github\\Questbar\\Scripts\\Services\\WindowSettingsStorage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Scripts\\Services\\WindowSettingsStorage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\windowsettingspanelcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\windowsettingspanelcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\data\\window\\windowplacementsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:data\\window\\windowplacementsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,24 +30,63 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 3,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "WindowSettingsStorage.cs",
+              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Scripts\\Services\\WindowSettingsStorage.cs",
+              "RelativeDocumentMoniker": "Scripts\\Services\\WindowSettingsStorage.cs",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Scripts\\Services\\WindowSettingsStorage.cs",
+              "RelativeToolTip": "Scripts\\Services\\WindowSettingsStorage.cs",
+              "ViewState": "AgIAAHEAAAAAAAAAAAAswI4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-04T01:27:46.475Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "WindowSettingsPanelController.cs",
+              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\WindowSettingsPanelController.cs",
+              "RelativeDocumentMoniker": "Controllers\\WindowSettingsPanelController.cs",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\WindowSettingsPanelController.cs",
+              "RelativeToolTip": "Controllers\\WindowSettingsPanelController.cs",
+              "ViewState": "AgIAAK0AAAAAAAAAAIA2wLUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-04T00:13:25.743Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "WindowSettingsPopupController.cs",
+              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\WindowSettingsPopupController.cs",
+              "RelativeDocumentMoniker": "Controllers\\WindowSettingsPopupController.cs",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\WindowSettingsPopupController.cs*",
+              "RelativeToolTip": "Controllers\\WindowSettingsPopupController.cs*",
+              "ViewState": "AgIAADYAAAAAAAAAAAAQwEoAAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-03T23:28:31.052Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "WindowPlacementSettings.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Data\\Window\\WindowPlacementSettings.cs",
               "RelativeDocumentMoniker": "Data\\Window\\WindowPlacementSettings.cs",
               "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Data\\Window\\WindowPlacementSettings.cs",
               "RelativeToolTip": "Data\\Window\\WindowPlacementSettings.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-08-03T22:45:42.713Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             },
             {
               "$type": "Document",
@@ -43,9 +94,9 @@
               "Title": "DesktopWindowHostController.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\DesktopWindowHostController.cs",
               "RelativeDocumentMoniker": "Controllers\\DesktopWindowHostController.cs",
-              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\DesktopWindowHostController.cs",
-              "RelativeToolTip": "Controllers\\DesktopWindowHostController.cs",
-              "ViewState": "AgIAAOsAAAAAAAAAAAAQwBQBAAABAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\DesktopWindowHostController.cs*",
+              "RelativeToolTip": "Controllers\\DesktopWindowHostController.cs*",
+              "ViewState": "AgIAACMAAAAAAAAAAAAgwDcAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-08-03T21:47:24.11Z",
               "EditorCaption": ""

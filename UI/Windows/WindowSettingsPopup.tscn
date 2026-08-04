@@ -1,0 +1,143 @@
+[gd_scene format=3 uid="uid://nmpx3ynd4hnu"]
+
+[ext_resource type="Script" uid="uid://qtqjk5w6ybmn" path="res://Controllers/WindowSettingsPanelController.cs" id="1_c4fge"]
+
+[node name="WindowSettingsPopup" type="Window" unique_id=1207381413]
+oversampling_override = 1.0
+title = "Settings"
+initial_position = 2
+size = Vector2i(640, 420)
+transient = true
+unresizable = true
+minimize_disabled = true
+maximize_disabled = true
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=787690792]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="SettingsRows" type="VBoxContainer" parent="MarginContainer" unique_id=358493530]
+layout_mode = 2
+
+[node name="WidthRow" type="HBoxContainer" parent="MarginContainer/SettingsRows" unique_id=1526771608]
+layout_mode = 2
+
+[node name="WidthLabel" type="Label" parent="MarginContainer/SettingsRows/WidthRow" unique_id=844000091]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Window Width"
+
+[node name="WidthSlider" type="HSlider" parent="MarginContainer/SettingsRows/WidthRow" unique_id=712500917]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 200.0
+max_value = 3000.0
+value = 800.0
+tick_count = 1
+ticks_on_borders = true
+ticks_position = 3
+
+[node name="WidthValue" type="SpinBox" parent="MarginContainer/SettingsRows/WidthRow" unique_id=1654601264]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+min_value = 200.0
+max_value = 3000.0
+value = 800.0
+
+[node name="MonitorRow" type="HBoxContainer" parent="MarginContainer/SettingsRows" unique_id=2078161168]
+visible = false
+layout_mode = 2
+
+[node name="AnchorRow" type="HBoxContainer" parent="MarginContainer/SettingsRows" unique_id=273534587]
+visible = false
+layout_mode = 2
+
+[node name="CollapsedHeightRow" type="HBoxContainer" parent="MarginContainer/SettingsRows" unique_id=336699118]
+layout_mode = 2
+
+[node name="CollapsedHeightRowLabel" type="Label" parent="MarginContainer/SettingsRows/CollapsedHeightRow" unique_id=931303327]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Collapsed Height"
+
+[node name="CollapsedHeightRowSlider" type="HSlider" parent="MarginContainer/SettingsRows/CollapsedHeightRow" unique_id=983040234]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 32.0
+max_value = 200.0
+value = 60.0
+tick_count = 1
+ticks_on_borders = true
+ticks_position = 3
+
+[node name="CollapsedHeightRowValue" type="SpinBox" parent="MarginContainer/SettingsRows/CollapsedHeightRow" unique_id=913613679]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+min_value = 32.0
+max_value = 200.0
+value = 60.0
+
+[node name="ExpandedHeightRow" type="HBoxContainer" parent="MarginContainer/SettingsRows" unique_id=2005385926]
+layout_mode = 2
+
+[node name="ExpandedHeightRowLabel" type="Label" parent="MarginContainer/SettingsRows/ExpandedHeightRow" unique_id=1738067126]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Expanded Height"
+
+[node name="ExpandedHeightRowSlider" type="HSlider" parent="MarginContainer/SettingsRows/ExpandedHeightRow" unique_id=457606827]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 64.0
+max_value = 600.0
+value = 250.0
+tick_count = 1
+ticks_on_borders = true
+ticks_position = 3
+
+[node name="ExpandedHeightRowValue" type="SpinBox" parent="MarginContainer/SettingsRows/ExpandedHeightRow" unique_id=337255762]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+min_value = 64.0
+max_value = 600.0
+value = 250.0
+
+[node name="HorizontalAdjustmentRow" type="HBoxContainer" parent="MarginContainer/SettingsRows" unique_id=95912132]
+layout_mode = 2
+
+[node name="HorizontalAdjustmentRowLabel" type="Label" parent="MarginContainer/SettingsRows/HorizontalAdjustmentRow" unique_id=170802093]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Horizontal Position"
+
+[node name="HorizontalAdjustmentRowSlider" type="HSlider" parent="MarginContainer/SettingsRows/HorizontalAdjustmentRow" unique_id=2095135271]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1920.0
+value = 900.0
+tick_count = 1
+ticks_on_borders = true
+ticks_position = 3
+
+[node name="HorizontalAdjustmentRowValue" type="SpinBox" parent="MarginContainer/SettingsRows/HorizontalAdjustmentRow" unique_id=229368576]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+max_value = 1920.0
+value = 900.0
+
+[node name="VerticalAdjustmentRow" type="HBoxContainer" parent="MarginContainer/SettingsRows" unique_id=702634692]
+visible = false
+layout_mode = 2
+
+[node name="ActionRow" type="HBoxContainer" parent="MarginContainer/SettingsRows" unique_id=484231358]
+visible = false
+layout_mode = 2
+
+[node name="WindowSettingsPanelController" type="Node" parent="." unique_id=906177128 node_paths=PackedStringArray("WidthSlider", "WidthValue")]
+script = ExtResource("1_c4fge")
+WidthSlider = NodePath("../MarginContainer/SettingsRows/WidthRow/WidthSlider")
+WidthValue = NodePath("../MarginContainer/SettingsRows/WidthRow/WidthValue")

@@ -46,7 +46,14 @@ public partial class DesktopWindowHostController : Node
                 "Default settings were created at runtime.");
         }
 
-        _isExpanded = PlacementSettings.StartExpanded;
+        WindowSettingsStorage.LoadInto(
+            PlacementSettings);
+
+        PlacementSettings.Changed +=
+            OnPlacementSettingsChanged;
+
+        _isExpanded =
+            PlacementSettings.StartExpanded;
 
         ConfigureNativeWindow();
         ApplyWindowPlacement();
@@ -59,6 +66,26 @@ public partial class DesktopWindowHostController : Node
             $"Expanded={_isExpanded}, " +
             $"Position={_window.Position}, " +
             $"Size={_window.Size}");
+    }
+
+    private void OnPlacementSettingsChanged()
+    {
+        if (!IsInsideTree())
+            return;
+
+        ApplyWindowPlacement();
+        EnforceNativeTopmost();
+
+        GD.Print(
+            $"Window placement settings changed. " +
+            $"Position={_window.Position}, " +
+            $"Size={_window.Size}");
+    }
+
+    public override void _ExitTree()
+    {
+        if (PlacementSettings is not null)
+            PlacementSettings.Changed -= OnPlacementSettingsChanged;
     }
 
     public override void _Process(double delta)
@@ -85,6 +112,40 @@ public partial class DesktopWindowHostController : Node
 
         if (!keyEvent.Pressed || keyEvent.Echo)
             return;
+
+        if (keyEvent.Keycode == Key.Right)
+        {
+            PlacementSettings.HorizontalOffset -= 10;
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (keyEvent.Keycode == Key.Left)
+        {
+            PlacementSettings.HorizontalOffset = Mathf.Max(
+                PlacementSettings.HorizontalOffset + 10,
+                0);
+
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (keyEvent.Keycode == Key.Up)
+        {
+            PlacementSettings.BottomOffset += 10;
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (keyEvent.Keycode == Key.Down)
+        {
+            PlacementSettings.BottomOffset = Mathf.Max(
+                PlacementSettings.BottomOffset - 10,
+                0);
+
+            GetViewport().SetInputAsHandled();
+            return;
+        }
 
         if (keyEvent.Keycode != Key.Space)
             return;

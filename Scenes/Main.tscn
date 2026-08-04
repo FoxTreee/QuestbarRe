@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" uid="uid://cwd3gulik5g6m" path="res://Data/Window/WindowPlacementSettings.cs" id="1_idj7w"]
 [ext_resource type="Script" uid="uid://dxr7mtirk3qal" path="res://Controllers/DesktopWindowHostController.cs" id="1_r150o"]
+[ext_resource type="PackedScene" uid="uid://nmpx3ynd4hnu" path="res://UI/Windows/WindowSettingsPopup.tscn" id="1_rgh2o"]
+[ext_resource type="Script" uid="uid://qtqjk5w6ybmn" path="res://Controllers/WindowSettingsPanelController.cs" id="3_kln2b"]
+[ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
 
 [sub_resource type="Resource" id="Resource_d6g1g"]
 script = ExtResource("1_idj7w")
@@ -21,9 +24,42 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.51007515, 0.51007515, 0.51007515, 1)
 
+[node name="PopupWindows" type="Node" parent="." unique_id=165967780]
+
+[node name="WindowSettingsPopup" parent="PopupWindows" unique_id=1207381413 instance=ExtResource("1_rgh2o")]
+
+[node name="WindowSettingsPanelController" parent="PopupWindows/WindowSettingsPopup" index="1" unique_id=906177128 node_paths=PackedStringArray("CollapsedHeightSlider", "CollapsedHeightValue", "ExpandedHeightSlider", "ExpandedHeightValue", "HorizontalAdjustmentSlider", "HorizontalAdjustmentValue")]
+CollapsedHeightSlider = NodePath("../MarginContainer/SettingsRows/CollapsedHeightRow/CollapsedHeightRowSlider")
+CollapsedHeightValue = NodePath("../MarginContainer/SettingsRows/CollapsedHeightRow/CollapsedHeightRowValue")
+ExpandedHeightSlider = NodePath("../MarginContainer/SettingsRows/ExpandedHeightRow/ExpandedHeightRowSlider")
+ExpandedHeightValue = NodePath("../MarginContainer/SettingsRows/ExpandedHeightRow/ExpandedHeightRowValue")
+HorizontalAdjustmentSlider = NodePath("../MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowSlider")
+HorizontalAdjustmentValue = NodePath("../MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowValue")
+
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 
 [node name="DesktopWindowHostController" type="Node" parent="Controllers" unique_id=1521543708]
 script = ExtResource("1_r150o")
 PlacementSettings = SubResource("Resource_d6g1g")
 TopmostRefreshIntervalSeconds = 0.5
+
+[node name="WindowSettingsPanelController" type="Node" parent="Controllers" unique_id=334099255 node_paths=PackedStringArray("WidthSlider", "WidthValue", "CollapsedHeightSlider", "CollapsedHeightValue", "ExpandedHeightSlider", "ExpandedHeightValue", "HorizontalAdjustmentSlider", "HorizontalAdjustmentValue")]
+script = ExtResource("3_kln2b")
+WidthSlider = NodePath("../../PopupWindows/WindowSettingsPopup/MarginContainer/SettingsRows/WidthRow/WidthSlider")
+WidthValue = NodePath("../../PopupWindows/WindowSettingsPopup/MarginContainer/SettingsRows/WidthRow/WidthValue")
+CollapsedHeightSlider = NodePath("../../PopupWindows/WindowSettingsPopup/MarginContainer/SettingsRows/CollapsedHeightRow/CollapsedHeightRowSlider")
+CollapsedHeightValue = NodePath("../../PopupWindows/WindowSettingsPopup/MarginContainer/SettingsRows/CollapsedHeightRow/CollapsedHeightRowValue")
+ExpandedHeightSlider = NodePath("../../PopupWindows/WindowSettingsPopup/MarginContainer/SettingsRows/ExpandedHeightRow/ExpandedHeightRowSlider")
+ExpandedHeightValue = NodePath("../../PopupWindows/WindowSettingsPopup/MarginContainer/SettingsRows/ExpandedHeightRow/ExpandedHeightRowValue")
+HorizontalAdjustmentSlider = NodePath("../../PopupWindows/WindowSettingsPopup/MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowSlider")
+HorizontalAdjustmentValue = NodePath("../../PopupWindows/WindowSettingsPopup/MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowValue")
+
+[node name="WindowSettingsPopupController" type="Node" parent="Controllers" unique_id=629577917 node_paths=PackedStringArray("WindowHost", "SettingsWindow", "PanelController")]
+script = ExtResource("5_pbw6q")
+WindowHost = NodePath("../DesktopWindowHostController")
+SettingsWindow = NodePath("../../PopupWindows/WindowSettingsPopup")
+PanelController = NodePath("../WindowSettingsPanelController")
+
+[node name="WindowSettingsPersistenceService" type="Node" parent="." unique_id=249966792]
+
+[editable path="PopupWindows/WindowSettingsPopup"]
