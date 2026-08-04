@@ -5,10 +5,13 @@
 [ext_resource type="PackedScene" uid="uid://nmpx3ynd4hnu" path="res://UI/Windows/WindowSettingsPopup.tscn" id="1_rgh2o"]
 [ext_resource type="Script" uid="uid://b1u1unxjnvcqm" path="res://Controllers/RegionPresentationController.cs" id="1_v1gob"]
 [ext_resource type="PackedScene" uid="uid://dqmvuh3bftuex" path="res://Scenes/Actors/Hero/HeroActor.tscn" id="2_50glp"]
+[ext_resource type="PackedScene" uid="uid://dj3nocmxt7o64" path="res://Monster.tscn" id="2_bmxlf"]
 [ext_resource type="Script" uid="uid://exf22iqixcxv" path="res://Scripts/Services/JourneyStateService.cs" id="3_jw32o"]
 [ext_resource type="Script" uid="uid://qtqjk5w6ybmn" path="res://Controllers/WindowSettingsPanelController.cs" id="3_kln2b"]
 [ext_resource type="Script" uid="uid://b6vqdf84sajh5" path="res://Controllers/Actors/HeroActorController.cs" id="3_vy5pj"]
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
+[ext_resource type="Script" uid="uid://n85xspfr8gm5" path="res://Controllers/EncounterController.cs" id="11_grg3l"]
+[ext_resource type="PackedScene" uid="uid://bxp73ohtqn7ga" path="res://Scenes/Actors/Monster/MonsterActor.tscn" id="12_frkhe"]
 
 [sub_resource type="Resource" id="Resource_d6g1g"]
 script = ExtResource("1_idj7w")
@@ -59,19 +62,35 @@ default_color = Color(0.5330062, 0.7372065, 0.5126692, 1)
 [node name="ActorLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=997391345]
 
 [node name="MonsterSpawnAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=1720500992]
-position = Vector2(80, 140)
+position = Vector2(80, 160)
 color = Color(0.82674575, 0.23699889, 0.46144724, 1)
-polygon = PackedVector2Array(-8, -16, 8, -16, 8, 16, -8, 16)
+polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
+
+[node name="MonsterActor" parent="RegionViewportContainer/RegionViewport/ActorLayer/MonsterSpawnAnchor" unique_id=1953699697 instance=ExtResource("2_bmxlf")]
 
 [node name="HeroFormationAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=79130758]
+visible = false
 position = Vector2(720, 160)
 color = Color(2.3102762e-06, 0.8720522, 0.87253284, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 
-[node name="HeroActor" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=162660220 node_paths=PackedStringArray("FormationAnchor") instance=ExtResource("2_50glp")]
+[node name="HeroActor" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=162660220 node_paths=PackedStringArray("FormationAnchor", "JourneyState", "VisualRoot") instance=ExtResource("2_50glp")]
 position = Vector2(720, 160)
 script = ExtResource("3_vy5pj")
 FormationAnchor = NodePath("../HeroFormationAnchor")
+JourneyState = NodePath("../../../../Services/JourneyStateService")
+VisualRoot = NodePath("VisualRoot")
+
+[node name="HeroActor2" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=1393210593 node_paths=PackedStringArray("FormationAnchor", "JourneyState", "VisualRoot") instance=ExtResource("2_50glp")]
+position = Vector2(720, 160)
+script = ExtResource("3_vy5pj")
+FormationAnchor = NodePath("../HeroFormationAnchor")
+FormationOffset = Vector2(-40, 0)
+JourneyState = NodePath("../../../../Services/JourneyStateService")
+VisualRoot = NodePath("VisualRoot")
+BobHeight = 20.0
+BobSpeed = 4.5
+BobPhaseOffset = 5.0
 
 [node name="RegionEffects" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=2113048403]
 
@@ -117,4 +136,13 @@ WindowHost = NodePath("../DesktopWindowHostController")
 SettingsWindow = NodePath("../../PopupWindows/WindowSettingsPopup")
 PanelController = NodePath("../WindowSettingsPanelController")
 
+[node name="EncounterController" type="Node" parent="Controllers" unique_id=292181593 node_paths=PackedStringArray("JourneyState", "ActorLayer", "MonsterSpawnAnchor")]
+script = ExtResource("11_grg3l")
+JourneyState = NodePath("../../Services/JourneyStateService")
+ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer")
+MonsterSpawnAnchor = NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/MonsterSpawnAnchor")
+MonsterScene = ExtResource("12_frkhe")
+
+[editable path="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor"]
+[editable path="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2"]
 [editable path="PopupWindows/WindowSettingsPopup"]

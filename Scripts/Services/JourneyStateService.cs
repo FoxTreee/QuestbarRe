@@ -4,8 +4,8 @@ public partial class JourneyStateService : Node
 {
 	public enum JourneyState
 	{
-		Idle,
-		Traveling
+		Traveling,
+		Encounter,
 	}
 
 	[Signal]
@@ -20,7 +20,7 @@ public partial class JourneyStateService : Node
 		= JourneyState.Traveling;
 
 	public JourneyState CurrentState { get; private set; }
-		= JourneyState.Idle;
+	= JourneyState.Traveling;
 
 	public override void _Ready()
 	{
@@ -53,31 +53,36 @@ public partial class JourneyStateService : Node
 		SetState(JourneyState.Traveling);
 	}
 
-	public void StopTravel()
+	public void BeginEncounter()
 	{
-		SetState(JourneyState.Idle);
+		SetState(JourneyState.Encounter);
 	}
 
-	public void ToggleTravel()
+	public void EndEncounter()
+	{
+		SetState(JourneyState.Traveling);
+	}
+
+	public void ToggleTestEncounter()
 	{
 		SetState(
 			CurrentState == JourneyState.Traveling
-				? JourneyState.Idle
+				? JourneyState.Encounter
 				: JourneyState.Traveling);
 	}
 	
 	public override void _UnhandledKeyInput(InputEvent @event)
-	{
-		if (@event is not InputEventKey keyEvent)
-			return;
+{
+	if (@event is not InputEventKey keyEvent)
+		return;
 
-		if (!keyEvent.Pressed || keyEvent.Echo)
-			return;
+	if (!keyEvent.Pressed || keyEvent.Echo)
+		return;
 
-		if (keyEvent.Keycode != Key.J)
-			return;
+	if (keyEvent.Keycode != Key.E)
+		return;
 
-		ToggleTravel();
-		GetViewport().SetInputAsHandled();
-	}
+	ToggleTestEncounter();
+	GetViewport().SetInputAsHandled();
+}
 }
