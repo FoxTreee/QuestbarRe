@@ -1,7 +1,12 @@
+using System.Collections.Generic;
 using Godot;
 
 public partial class EncounterController : Node
 {
+    [Signal]
+    public delegate void ActiveMonsterCountChangedEventHandler(
+    int activeMonsterCount);
+    
 	[ExportCategory("Dependencies")]
 	[Export]
 	public JourneyStateService JourneyState { get; set; } = null!;
@@ -12,13 +17,22 @@ public partial class EncounterController : Node
 	[Export]
 	public Node2D MonsterSpawnAnchor { get; set; } = null!;
 
-	[ExportCategory("Encounter Content")]
+    [Export]
+    public Node2D MonsterEntryAnchor { get; set; } = null!;
+
+    [ExportCategory("Encounter Content")]
 	[Export]
 	public PackedScene MonsterScene { get; set; } = null!;
 
-	private Node2D? _activeMonster;
+    private readonly List<MonsterActorController> _activeMonsters = new();
 
-	public override void _Ready()
+    public IReadOnlyList<MonsterActorController> ActiveMonsters =>
+        _activeMonsters;
+
+    public int ActiveMonsterCount =>
+        _activeMonsters.Count;
+
+    public override void _Ready()
 	{
 		if (!ValidateReferences())
 			return;
@@ -57,36 +71,60 @@ public partial class EncounterController : Node
 		EndEncounterPresentation();
 	}
 
-	private void BeginEncounterPresentation()
-	{
-		if (GodotObject.IsInstanceValid(_activeMonster))
-			return;
+    private void BeginEncounterPresentation()
+    {
+        RemoveInvalidMonsterReferences();
 
-		_activeMonster =
-			MonsterScene.Instantiate<Node2D>();
+        if (_activeMonsters.Count > 0)
+            return;
 
-		ActorLayer.AddChild(_activeMonster);
+        SpawnTestMonster();
+    }
 
-		_activeMonster.GlobalPosition =
-			MonsterSpawnAnchor.GlobalPosition;
+    private void SpawnTestMonster()
+    {
+        MonsterActorController monster =
+            MonsterScene.Instantiate<MonsterActorController>();
 
-		GD.Print(
-			$"Monster instantiated at " +
-			$"{_activeMonster.GlobalPosition}.");
-	}
+        ActorLayer.AddChild(monster);
 
-	private void EndEncounterPresentation()
-	{
-		if (!GodotObject.IsInstanceValid(_activeMonster))
-			return;
+        monster.InitializeEntrance(
+            MonsterSpawnAnchor.GlobalPosition,
+            MonsterEntryAnchor.GlobalPosition);
 
-		_activeMonster.QueueFree();
-		_activeMonster = null;
+        _activeMonsters.Add(monster);
+        EmitActiveMonsterCountChanged();
 
-		GD.Print("Active monster removed.");
-	}
+        GD.Print(
+            $"Monster added to encounter. " +
+            $"Active monsters={_activeMonsters.Count}");
+    }
 
-	private bool ValidateReferences()
+    private void EndEncounterPresentation()
+    {
+        RemoveInvalidMonsterReferences();
+
+        foreach (MonsterActorController monster in _activeMonsters)
+        {
+            if (GodotObject.IsInstanceValid(monster))
+                monster.QueueFree();
+        }
+
+        _activeMonsters.Clear();
+        EmitActiveMonsterCountChanged();
+
+        GD.Print(
+            "Encounter monsters removed. Active monsters=0");
+    }
+
+    private void RemoveInvalidMonsterReferences()
+    {
+        _activeMonsters.RemoveAll(
+            monster =>
+                !GodotObject.IsInstanceValid(monster));
+    }
+
+    private bool ValidateReferences()
 	{
 		bool valid = true;
 
@@ -102,14 +140,25 @@ public partial class EncounterController : Node
 			MonsterSpawnAnchor,
 			nameof(MonsterSpawnAnchor));
 
-		valid &= Require(
+        valid &= Require(
+			MonsterEntryAnchor,
+			nameof(MonsterEntryAnchor));
+
+        valid &= Require(
 			MonsterScene,
 			nameof(MonsterScene));
 
 		return valid;
 	}
 
-	private static bool Require(
+    private void EmitActiveMonsterCountChanged()
+    {
+        EmitSignal(
+            SignalName.ActiveMonsterCountChanged,
+            _activeMonsters.Count);
+    }
+
+    private static bool Require(
 		GodotObject value,
 		string propertyName)
 	{
