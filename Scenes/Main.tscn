@@ -4,7 +4,10 @@
 [ext_resource type="Script" uid="uid://dxr7mtirk3qal" path="res://Controllers/DesktopWindowHostController.cs" id="1_r150o"]
 [ext_resource type="PackedScene" uid="uid://nmpx3ynd4hnu" path="res://UI/Windows/WindowSettingsPopup.tscn" id="1_rgh2o"]
 [ext_resource type="Script" uid="uid://b1u1unxjnvcqm" path="res://Controllers/RegionPresentationController.cs" id="1_v1gob"]
+[ext_resource type="PackedScene" uid="uid://dqmvuh3bftuex" path="res://Scenes/Actors/Hero/HeroActor.tscn" id="2_50glp"]
+[ext_resource type="Script" uid="uid://exf22iqixcxv" path="res://Scripts/Services/JourneyStateService.cs" id="3_jw32o"]
 [ext_resource type="Script" uid="uid://qtqjk5w6ybmn" path="res://Controllers/WindowSettingsPanelController.cs" id="3_kln2b"]
+[ext_resource type="Script" uid="uid://b6vqdf84sajh5" path="res://Controllers/Actors/HeroActorController.cs" id="3_vy5pj"]
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
 
 [sub_resource type="Resource" id="Resource_d6g1g"]
@@ -33,11 +36,11 @@ size_2d_override = Vector2i(800, 192)
 size_2d_override_stretch = true
 render_target_update_mode = 4
 
-[node name="RegionPresentation" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1090747989 node_paths=PackedStringArray("RegionTileA", "RegionTileB")]
+[node name="RegionPresentation" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1090747989 node_paths=PackedStringArray("RegionTileA", "RegionTileB", "JourneyState")]
 script = ExtResource("1_v1gob")
 RegionTileA = NodePath("RegionTileA")
 RegionTileB = NodePath("RegionTileB")
-TravelSpeed = 440.0
+JourneyState = NodePath("../../../Services/JourneyStateService")
 
 [node name="RegionTileA" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/RegionPresentation" unique_id=373288464]
 color = Color(0.22190201, 0.22190201, 0.22190201, 1)
@@ -61,9 +64,14 @@ color = Color(0.82674575, 0.23699889, 0.46144724, 1)
 polygon = PackedVector2Array(-8, -16, 8, -16, 8, 16, -8, 16)
 
 [node name="HeroFormationAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=79130758]
-position = Vector2(720, 140)
+position = Vector2(720, 160)
 color = Color(2.3102762e-06, 0.8720522, 0.87253284, 1)
-polygon = PackedVector2Array(-8, -16, 8, -16, 8, 16, -8, 16)
+polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
+
+[node name="HeroActor" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=162660220 node_paths=PackedStringArray("FormationAnchor") instance=ExtResource("2_50glp")]
+position = Vector2(720, 160)
+script = ExtResource("3_vy5pj")
+FormationAnchor = NodePath("../HeroFormationAnchor")
 
 [node name="RegionEffects" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=2113048403]
 
@@ -79,6 +87,11 @@ ExpandedHeightSlider = NodePath("../MarginContainer/SettingsRows/ExpandedHeightR
 ExpandedHeightValue = NodePath("../MarginContainer/SettingsRows/ExpandedHeightRow/ExpandedHeightRowValue")
 HorizontalAdjustmentSlider = NodePath("../MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowSlider")
 HorizontalAdjustmentValue = NodePath("../MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowValue")
+
+[node name="Services" type="Node" parent="." unique_id=1409283487]
+
+[node name="JourneyStateService" type="Node" parent="Services" unique_id=2091345235]
+script = ExtResource("3_jw32o")
 
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 
@@ -103,7 +116,5 @@ script = ExtResource("5_pbw6q")
 WindowHost = NodePath("../DesktopWindowHostController")
 SettingsWindow = NodePath("../../PopupWindows/WindowSettingsPopup")
 PanelController = NodePath("../WindowSettingsPanelController")
-
-[node name="WindowSettingsPersistenceService" type="Node" parent="." unique_id=249966792]
 
 [editable path="PopupWindows/WindowSettingsPopup"]
