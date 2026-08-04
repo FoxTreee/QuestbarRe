@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cwd3gulik5g6m" path="res://Data/Window/WindowPlacementSettings.cs" id="1_idj7w"]
 [ext_resource type="Script" uid="uid://dxr7mtirk3qal" path="res://Controllers/DesktopWindowHostController.cs" id="1_r150o"]
 [ext_resource type="PackedScene" uid="uid://nmpx3ynd4hnu" path="res://UI/Windows/WindowSettingsPopup.tscn" id="1_rgh2o"]
+[ext_resource type="Script" uid="uid://b1u1unxjnvcqm" path="res://Controllers/RegionPresentationController.cs" id="1_v1gob"]
 [ext_resource type="Script" uid="uid://qtqjk5w6ybmn" path="res://Controllers/WindowSettingsPanelController.cs" id="3_kln2b"]
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
 
@@ -16,17 +17,60 @@ metadata/_custom_type_script = "uid://cwd3gulik5g6m"
 
 [node name="Main" type="Node" unique_id=644726071]
 
-[node name="TestSurface" type="ColorRect" parent="." unique_id=920140273]
+[node name="RegionViewportContainer" type="SubViewportContainer" parent="." unique_id=2069555820]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.51007515, 0.51007515, 0.51007515, 1)
+stretch = true
+
+[node name="RegionViewport" type="SubViewport" parent="RegionViewportContainer" unique_id=225462930]
+disable_3d = true
+handle_input_locally = false
+size = Vector2i(1152, 648)
+size_2d_override = Vector2i(800, 192)
+size_2d_override_stretch = true
+render_target_update_mode = 4
+
+[node name="RegionPresentation" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1090747989 node_paths=PackedStringArray("RegionTileA", "RegionTileB")]
+script = ExtResource("1_v1gob")
+RegionTileA = NodePath("RegionTileA")
+RegionTileB = NodePath("RegionTileB")
+TravelSpeed = 440.0
+
+[node name="RegionTileA" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/RegionPresentation" unique_id=373288464]
+color = Color(0.22190201, 0.22190201, 0.22190201, 1)
+polygon = PackedVector2Array(0, 0, 800, 0, 800, 192, 0, 192)
+
+[node name="RegionTileB" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/RegionPresentation" unique_id=1921246329]
+position = Vector2(-800, 0)
+color = Color(0.44291073, 0.4429108, 0.4429106, 1)
+polygon = PackedVector2Array(0, 0, 800, 0, 800, 192, 0, 192)
+
+[node name="GroundGuide" type="Line2D" parent="RegionViewportContainer/RegionViewport/RegionPresentation" unique_id=1508151550]
+points = PackedVector2Array(0, 160, 800, 160)
+width = 2.0
+default_color = Color(0.5330062, 0.7372065, 0.5126692, 1)
+
+[node name="ActorLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=997391345]
+
+[node name="MonsterSpawnAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=1720500992]
+position = Vector2(80, 140)
+color = Color(0.82674575, 0.23699889, 0.46144724, 1)
+polygon = PackedVector2Array(-8, -16, 8, -16, 8, 16, -8, 16)
+
+[node name="HeroFormationAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=79130758]
+position = Vector2(720, 140)
+color = Color(2.3102762e-06, 0.8720522, 0.87253284, 1)
+polygon = PackedVector2Array(-8, -16, 8, -16, 8, 16, -8, 16)
+
+[node name="RegionEffects" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=2113048403]
 
 [node name="PopupWindows" type="Node" parent="." unique_id=165967780]
 
 [node name="WindowSettingsPopup" parent="PopupWindows" unique_id=1207381413 instance=ExtResource("1_rgh2o")]
+visible = false
 
 [node name="WindowSettingsPanelController" parent="PopupWindows/WindowSettingsPopup" index="1" unique_id=906177128 node_paths=PackedStringArray("CollapsedHeightSlider", "CollapsedHeightValue", "ExpandedHeightSlider", "ExpandedHeightValue", "HorizontalAdjustmentSlider", "HorizontalAdjustmentValue")]
 CollapsedHeightSlider = NodePath("../MarginContainer/SettingsRows/CollapsedHeightRow/CollapsedHeightRowSlider")

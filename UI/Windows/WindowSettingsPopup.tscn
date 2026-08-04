@@ -6,7 +6,7 @@
 oversampling_override = 1.0
 title = "Settings"
 initial_position = 2
-size = Vector2i(640, 420)
+size = Vector2i(475, 150)
 transient = true
 unresizable = true
 minimize_disabled = true
