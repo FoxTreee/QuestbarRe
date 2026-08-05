@@ -3,206 +3,230 @@ using Godot;
 
 public partial class CombatController : Node
 {
-    [Signal]
-    public delegate void ParticipantsChangedEventHandler(
-        int heroCount,
-        int monsterCount);
+	[Signal]
+	public delegate void ParticipantsChangedEventHandler(
+		int heroCount,
+		int monsterCount);
 
-    [ExportCategory("Dependencies")]
-    [Export]
-    public EncounterController Encounter { get; set; } = null!;
+	[ExportCategory("Dependencies")]
+	[Export]
+	public EncounterController Encounter { get; set; } = null!;
 
-    [ExportCategory("Temporary Hero Roster")]
-    [Export]
-    public Godot.Collections.Array<HeroActorController>
-        ConfiguredHeroes
-    { get; set; } = new();
+	[ExportCategory("Temporary Hero Roster")]
+	[Export]
+	public Godot.Collections.Array<HeroActorController>
+		ConfiguredHeroes
+	{ get; set; } = new();
 
-    private readonly List<HeroActorController>
-        _heroParticipants = new();
+	private readonly List<HeroActorController>
+		_heroParticipants = new();
 
-    private readonly List<MonsterActorController>
-        _monsterParticipants = new();
+	private readonly List<MonsterActorController>
+		_monsterParticipants = new();
 
-    public IReadOnlyList<HeroActorController> HeroParticipants =>
-        _heroParticipants;
+	public IReadOnlyList<HeroActorController> HeroParticipants =>
+		_heroParticipants;
 
-    public IReadOnlyList<MonsterActorController> MonsterParticipants =>
-        _monsterParticipants;
+	public IReadOnlyList<MonsterActorController> MonsterParticipants =>
+		_monsterParticipants;
 
-    public int HeroParticipantCount =>
-        _heroParticipants.Count;
+	public int HeroParticipantCount =>
+		_heroParticipants.Count;
 
-    public int MonsterParticipantCount =>
-        _monsterParticipants.Count;
+	public int MonsterParticipantCount =>
+		_monsterParticipants.Count;
 
-    public bool IsCombatActive { get; private set; }
+	public bool IsCombatActive { get; private set; }
 
-    public override void _Ready()
-    {
-        if (!ValidateReferences())
-            return;
+	public override void _Ready()
+	{
+		if (!ValidateReferences())
+			return;
 
-        BuildHeroParticipants();
+		BuildHeroParticipants();
 
-        Encounter.ActiveMonsterCountChanged +=
-            OnActiveMonsterCountChanged;
+		Encounter.ActiveMonsterCountChanged +=
+			OnActiveMonsterCountChanged;
 
-        RefreshMonsterParticipants();
-        ApplyCombatState();
-        RefreshHeroTargets();
+		RefreshMonsterParticipants();
+		ApplyCombatState();
+		RefreshHeroTargets();
 
-        GD.Print(
-            $"Combat participants initialized. " +
-            $"Heroes={HeroParticipantCount}, " +
-            $"Monsters={MonsterParticipantCount}");
-    }
+		GD.Print(
+			$"Combat participants initialized. " +
+			$"Heroes={HeroParticipantCount}, " +
+			$"Monsters={MonsterParticipantCount}");
+	}
+	
+	private void BuildHeroParticipants()
+	{
+		_heroParticipants.Clear();
 
-    public override void _ExitTree()
-    {
-        foreach (HeroActorController hero in _heroParticipants)
-        {
-            if (!GodotObject.IsInstanceValid(hero))
-                continue;
+		foreach (HeroActorController hero in ConfiguredHeroes)
+		{
+			if (!GodotObject.IsInstanceValid(hero))
+				continue;
 
-            hero.AttackReleased -=
-                OnHeroAttackReleased;
-        }
+			if (_heroParticipants.Contains(hero))
+				continue;
 
-        if (GodotObject.IsInstanceValid(Encounter))
-        {
-            Encounter.ActiveMonsterCountChanged -=
-                OnActiveMonsterCountChanged;
-        }
-    }
+			_heroParticipants.Add(hero);
 
-    private void BuildHeroParticipants()
-    {
-        _heroParticipants.Clear();
+			hero.AttackReleased +=
+				OnHeroAttackReleased;
+		}
+	}
 
-        foreach (HeroActorController hero in ConfiguredHeroes)
-        {
-            if (!GodotObject.IsInstanceValid(hero))
-                continue;
+	private void OnActiveMonsterCountChanged(int activeMonsterCount)
+	{
+		RefreshMonsterParticipants();
+		ApplyCombatState();
+		RefreshHeroTargets();
+		EmitParticipantsChanged();
+	}
 
-            if (_heroParticipants.Contains(hero))
-                continue;
+	private void OnHeroAttackReleased(HeroActorController attacker, MonsterActorController target)
+	{
+		if (!GodotObject.IsInstanceValid(attacker)
+			|| !GodotObject.IsInstanceValid(target))
+		{
+			return;
+		}
 
-            _heroParticipants.Add(hero);
+		GD.Print(
+			$"Combat received attack release: " +
+			$"{attacker.Name} → {target.Name}");
 
-            hero.AttackReleased +=
-                OnHeroAttackReleased;
-        }
-    }
+		bool establishedInitialAggro =
+			target.TryEngage(attacker);
 
-    private void OnActiveMonsterCountChanged(int activeMonsterCount)
-    {
-        RefreshMonsterParticipants();
-        ApplyCombatState();
-        RefreshHeroTargets();
-        EmitParticipantsChanged();
-    }
+		if (!establishedInitialAggro)
+			return;
 
-    private void OnHeroAttackReleased(HeroActorController attacker, MonsterActorController target)
-    {
-        if (!GodotObject.IsInstanceValid(attacker)
-            || !GodotObject.IsInstanceValid(target))
-        {
-            return;
-        }
+		GD.Print(
+			$"Initial monster aggro established: " +
+			$"{target.Name} → {attacker.Name}");
+	}
 
-        GD.Print(
-            $"Combat received attack release: " +
-            $"{attacker.Name} → {target.Name}");
+	private void RefreshHeroTargets()
+	{
+		foreach (HeroActorController hero in _heroParticipants)
+		{
+			if (!GodotObject.IsInstanceValid(hero))
+				continue;
 
-        bool establishedInitialAggro =
-            target.TryEngage(attacker);
+			if (MonsterParticipantCount == 0)
+			{
+				hero.ClearTarget();
+				continue;
+			}
 
-        if (!establishedInitialAggro)
-            return;
+			hero.RefreshTarget(_monsterParticipants);
+		}
+	}
 
-        GD.Print(
-            $"Initial monster aggro established: " +
-            $"{target.Name} → {attacker.Name}");
-    }
+	private void RefreshMonsterParticipants()
+	{
+		_monsterParticipants.Clear();
 
-    private void RefreshHeroTargets()
-    {
-        foreach (HeroActorController hero in _heroParticipants)
-        {
-            if (!GodotObject.IsInstanceValid(hero))
-                continue;
+		foreach (
+			MonsterActorController monster
+			in Encounter.ActiveMonsters)
+		{
+			if (!GodotObject.IsInstanceValid(monster))
+				continue;
 
-            if (MonsterParticipantCount == 0)
-            {
-                hero.ClearTarget();
-                continue;
-            }
+			_monsterParticipants.Add(monster);
+			monster.AttackReleased -= OnMonsterAttackReleased;
+			monster.AttackReleased += OnMonsterAttackReleased;
+		}
+	}
+	
+	private void OnMonsterAttackReleased(MonsterActorController attacker, HeroActorController target)
+	{
+		if (!GodotObject.IsInstanceValid(attacker)
+			|| !GodotObject.IsInstanceValid(target))
+		{
+			return;
+		}
 
-            hero.RefreshTarget(_monsterParticipants);
-        }
-    }
+		GD.Print(
+			$"Combat received monster attack release: " +
+			$"{attacker.Name} → {target.Name}");
+	}
 
-    private void RefreshMonsterParticipants()
-    {
-        _monsterParticipants.Clear();
+	private void ApplyCombatState()
+	{
+		bool shouldCombatBeActive =
+			MonsterParticipantCount > 0;
 
-        foreach (
-            MonsterActorController monster
-            in Encounter.ActiveMonsters)
-        {
-            if (!GodotObject.IsInstanceValid(monster))
-                continue;
+		if (IsCombatActive == shouldCombatBeActive)
+			return;
 
-            _monsterParticipants.Add(monster);
-        }
-    }
+		IsCombatActive = shouldCombatBeActive;
 
-    private void ApplyCombatState()
-    {
-        bool shouldCombatBeActive =
-            MonsterParticipantCount > 0;
+		GD.Print(
+			IsCombatActive
+				? $"Combat activated. " +
+				  $"Heroes={HeroParticipantCount}, " +
+				  $"Monsters={MonsterParticipantCount}"
+				: "Combat ended.");
+	}
 
-        if (IsCombatActive == shouldCombatBeActive)
-            return;
+	private void EmitParticipantsChanged()
+	{
+		EmitSignal(
+			SignalName.ParticipantsChanged,
+			HeroParticipantCount,
+			MonsterParticipantCount);
+	}
 
-        IsCombatActive = shouldCombatBeActive;
+	private bool ValidateReferences()
+	{
+		if (!GodotObject.IsInstanceValid(Encounter))
+		{
+			GD.PushError(
+				"CombatController is missing its " +
+				"Encounter Inspector reference.");
 
-        GD.Print(
-            IsCombatActive
-                ? $"Combat activated. " +
-                  $"Heroes={HeroParticipantCount}, " +
-                  $"Monsters={MonsterParticipantCount}"
-                : "Combat ended.");
-    }
+			return false;
+		}
 
-    private void EmitParticipantsChanged()
-    {
-        EmitSignal(
-            SignalName.ParticipantsChanged,
-            HeroParticipantCount,
-            MonsterParticipantCount);
-    }
+		if (ConfiguredHeroes.Count == 0)
+		{
+			GD.PushError(
+				"CombatController has no configured heroes.");
 
-    private bool ValidateReferences()
-    {
-        if (!GodotObject.IsInstanceValid(Encounter))
-        {
-            GD.PushError(
-                "CombatController is missing its " +
-                "Encounter Inspector reference.");
+			return false;
+		}
 
-            return false;
-        }
+		return true;
+	}
+	
+	public override void _ExitTree()
+	{
+		foreach (HeroActorController hero in _heroParticipants)
+		{
+			if (!GodotObject.IsInstanceValid(hero))
+				continue;
 
-        if (ConfiguredHeroes.Count == 0)
-        {
-            GD.PushError(
-                "CombatController has no configured heroes.");
+			hero.AttackReleased -=
+				OnHeroAttackReleased;
+		}
+		
+		foreach (MonsterActorController monster in _monsterParticipants)
+	{
+		if (!GodotObject.IsInstanceValid(monster))
+			continue;
 
-            return false;
-        }
+		monster.AttackReleased -=
+			OnMonsterAttackReleased;
+	}
 
-        return true;
-    }
+		if (GodotObject.IsInstanceValid(Encounter))
+		{
+			Encounter.ActiveMonsterCountChanged -=
+				OnActiveMonsterCountChanged;
+		}
+	}
 }

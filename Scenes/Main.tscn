@@ -68,13 +68,11 @@ color = Color(0.82674575, 0.23699889, 0.46144724, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 
 [node name="MonsterEntryAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=845393241]
-visible = false
 position = Vector2(180, 160)
 color = Color(0.79823756, 0.3226114, 0.21111429, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 
 [node name="HeroFormationAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=79130758]
-visible = false
 position = Vector2(720, 160)
 color = Color(2.3102762e-06, 0.8720522, 0.87253284, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
@@ -100,7 +98,8 @@ VisualRoot = NodePath("VisualRoot")
 BobHeight = 20.0
 BobSpeed = 4.5
 BobPhaseOffset = 5.0
-TemporaryAttackRange = 150.0
+TemporaryAttackRange = 25.0
+AttackRangeTolerance = 9.0
 Targeting = NodePath("../../../../Services/TargetingService")
 
 [node name="RegionEffects" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=2113048403]

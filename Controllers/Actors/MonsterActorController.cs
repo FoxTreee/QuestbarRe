@@ -2,15 +2,30 @@ using Godot;
 
 public partial class MonsterActorController : Node2D
 {
+	[Signal]
+	public delegate void AttackReleasedEventHandler(
+	MonsterActorController attacker,
+	HeroActorController target);
+	
 	private enum MonsterState
 	{
 		Entering,
 		WaitingForTarget,
 		ApproachingTarget,
 		WaitingToAttack,
+		Attacking,
 		Dead
 	}
-
+	
+	private Vector2 _visualRestPosition;
+	private double _attackCooldownRemaining;
+	private double _attackTimeRemaining;
+	private bool _attackReleaseEmitted;
+	
+	[ExportCategory("Visuals")]
+	[Export]
+	public Node2D VisualRoot { get; set; } = null!;
+	
 	[ExportCategory("Entrance")]
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float EntrySpeed { get; set; } = 100.0f;
@@ -30,6 +45,19 @@ public partial class MonsterActorController : Node2D
 	
 	[Export(PropertyHint.Range, "0,10,0.1")]
 	public float FacingDeadZone { get; set; } = 1.0f;
+	
+	[ExportCategory("Temporary Attack Cycle")]
+	[Export(PropertyHint.Range, "0.1,10,0.1")]
+	public float TemporaryAttackInterval { get; set; } = 1.5f;
+
+	[Export(PropertyHint.Range, "0.05,2,0.05")]
+	public float TemporaryAttackDuration { get; set; } = 0.3f;
+
+	[Export(PropertyHint.Range, "0,30,0.5")]
+	public float TemporaryAttackLungeDistance { get; set; } = 8.0f;
+
+	[Export(PropertyHint.Range, "0,1,0.05")]
+	public float TemporaryAttackReleasePoint { get; set; } = 0.5f;
 
 	public Vector2 EntryDestination { get; private set; }
 
@@ -80,6 +108,21 @@ public partial class MonsterActorController : Node2D
 		GD.Print(
 			$"Monster reached encounter position " +
 			$"{EntryDestination}.");
+	}
+	
+	public override void _Ready()
+	{
+		if (!GodotObject.IsInstanceValid(VisualRoot))
+		{
+			GD.PushError(
+				"MonsterActorController is missing its " +
+				"VisualRoot Inspector reference.");
+
+			SetProcess(false);
+			return;
+		}
+
+		_visualRestPosition = VisualRoot.Position;
 	}
 
 	private static bool IsValidHeroTarget(HeroActorController? hero)
@@ -152,6 +195,7 @@ public partial class MonsterActorController : Node2D
 		}
 
 		GlobalPosition = attackPosition;
+		_attackCooldownRemaining = 0.0;
 		_state = MonsterState.WaitingToAttack;
 
 		GD.Print(
@@ -159,8 +203,10 @@ public partial class MonsterActorController : Node2D
 			$"{CurrentTarget!.Name} at {attackPosition}.");
 	}
 
-	private void UpdateWaitingToAttack()
+	private void UpdateWaitingToAttack(double delta)
 	{
+		StopAttackPresentation();
+
 		if (!IsValidHeroTarget(CurrentTarget))
 		{
 			CurrentTarget = null;
@@ -176,7 +222,17 @@ public partial class MonsterActorController : Node2D
 			> CombatArrivalDistance;
 
 		if (targetMovedOutOfRange)
+		{
 			_state = MonsterState.ApproachingTarget;
+			return;
+		}
+
+		_attackCooldownRemaining -= delta;
+
+		if (_attackCooldownRemaining > 0.0)
+			return;
+
+		BeginAttack();
 	}
 
 	public bool TryEngage( HeroActorController attacker)
@@ -196,7 +252,66 @@ public partial class MonsterActorController : Node2D
 
 		return true;
 	}
+	
+	private void BeginAttack()
+	{
+		if (!IsValidHeroTarget(CurrentTarget))
+			return;
 
+		_state = MonsterState.Attacking;
+		_attackTimeRemaining = TemporaryAttackDuration;
+		_attackReleaseEmitted = false;
+
+		StopAttackPresentation();
+
+		GD.Print(
+			$"{Name} began attacking {CurrentTarget!.Name}.");
+	}
+	
+	private void UpdateAttack(double delta)
+	{
+		if (!IsValidHeroTarget(CurrentTarget))
+		{
+			EndAttack();
+			return;
+		}
+
+		_attackTimeRemaining -= delta;
+
+		float duration =
+			Mathf.Max(TemporaryAttackDuration, 0.001f);
+
+		float progress =
+			1.0f
+			- (float)(_attackTimeRemaining / duration);
+
+		progress = Mathf.Clamp(
+			progress,
+			0.0f,
+			1.0f);
+
+		TryEmitAttackRelease(progress);
+
+		float lungeCurve =
+			Mathf.Sin(progress * Mathf.Pi);
+
+		Vector2 attackDirection =
+			Facing == FacingDirection.Left
+				? Vector2.Left
+				: Vector2.Right;
+
+		VisualRoot.Position =
+			_visualRestPosition
+			+ attackDirection
+			* TemporaryAttackLungeDistance
+			* lungeCurve;
+
+		if (_attackTimeRemaining > 0.0)
+			return;
+
+		EndAttack();
+	}
+	
 	public override void _Process(double delta)
 	{
 		UpdateFacingTowardTarget();
@@ -215,11 +330,70 @@ public partial class MonsterActorController : Node2D
 				break;
 
 			case MonsterState.WaitingToAttack:
-				UpdateWaitingToAttack();
+				UpdateWaitingToAttack(delta);
+				break;
+
+			case MonsterState.Attacking:
+				UpdateAttack(delta);
 				break;
 
 			case MonsterState.Dead:
 				break;
 		}
+	}	
+	
+	private void TryEmitAttackRelease(float attackProgress)
+	{
+		if (_attackReleaseEmitted)
+			return;
+
+		if (attackProgress
+			< TemporaryAttackReleasePoint)
+		{
+			return;
+		}
+
+		if (!IsValidHeroTarget(CurrentTarget))
+			return;
+
+		_attackReleaseEmitted = true;
+
+		EmitSignal(
+			SignalName.AttackReleased,
+			this,
+			CurrentTarget!);
+	}
+
+	private void EndAttack()
+	{
+		StopAttackPresentation();
+
+		_attackTimeRemaining = 0.0;
+		_attackCooldownRemaining =
+			TemporaryAttackInterval;
+
+		if (!IsValidHeroTarget(CurrentTarget))
+		{
+			CurrentTarget = null;
+			_state = MonsterState.WaitingForTarget;
+			return;
+		}
+
+		Vector2 attackPosition =
+			CalculateAttackPosition(CurrentTarget!);
+
+		bool targetStillInRange =
+			GlobalPosition.DistanceTo(attackPosition)
+			<= CombatArrivalDistance;
+
+		_state =
+			targetStillInRange
+				? MonsterState.WaitingToAttack
+				: MonsterState.ApproachingTarget;
+	}
+	
+	private void StopAttackPresentation()
+	{
+		VisualRoot.Position = _visualRestPosition;
 	}
 }

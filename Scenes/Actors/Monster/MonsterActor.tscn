@@ -2,8 +2,9 @@
 
 [ext_resource type="Script" uid="uid://cjebar3h2j3m" path="res://Controllers/Actors/MonsterActorController.cs" id="1_qwhad"]
 
-[node name="MonsterActor" type="Node2D" unique_id=1953699697]
+[node name="MonsterActor" type="Node2D" unique_id=1953699697 node_paths=PackedStringArray("VisualRoot")]
 script = ExtResource("1_qwhad")
+VisualRoot = NodePath("VisualRoot")
 
 [node name="VisualRoot" type="Node2D" parent="." unique_id=1579220540]
 
