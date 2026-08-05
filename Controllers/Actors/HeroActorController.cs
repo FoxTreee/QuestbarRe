@@ -26,8 +26,10 @@ public partial class HeroActorController : Node2D
 	private double _attackTimeRemaining;
 	private bool _attackReleaseEmitted;
 
+    public HeroCombatProfile CombatProfile { get; } = new();
 
-	[ExportCategory("Formation")]
+
+    [ExportCategory("Formation")]
 	[Export]
 	public Node2D FormationAnchor { get; set; } = null!;
 
@@ -55,7 +57,10 @@ public partial class HeroActorController : Node2D
 	[Export(PropertyHint.Range, "0,6.28,0.01")]
 	public float BobPhaseOffset { get; set; } = 0.0f;
 
-	[ExportCategory("Temporary Combat Movement")]
+    [Export(PropertyHint.Range, "0,0.5,0.01")]
+    public float MovementAnimationGraceTime { get; set; } = 0.15f;
+
+    [ExportCategory("Temporary Combat Movement")]
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float CombatMoveSpeed { get; set; } = 140.0f;
 
@@ -103,10 +108,17 @@ public partial class HeroActorController : Node2D
 			return;
 		}
 
-		_visualRestPosition = VisualRoot.Position;
+        InitializeCombatProfile();
+
+        CombatProfile.AttackRange = TemporaryAttackRange;
+        CombatProfile.AttackInterval = TemporaryAttackInterval;
+        CombatProfile.AttackDuration = TemporaryAttackDuration;
+        CombatProfile.MoveSpeed = CombatMoveSpeed;
+        CombatProfile.AttackDelivery = TemporaryAttackDelivery;
+
+        _visualRestPosition = VisualRoot.Position;
 
 		JourneyState.StateChanged += OnJourneyStateChanged;
-
 		ApplyJourneyState(JourneyState.CurrentState);
 		SnapToFormation();
 
@@ -144,18 +156,14 @@ public partial class HeroActorController : Node2D
 
 				break;
 
-			case HeroState.ApproachingTarget:
+            case HeroState.ApproachingTarget:
 
-				UpdateCombatApproach(delta);
+                UpdateCombatApproach(delta);
+                UpdateMovementPresentation(delta);
 
-				if (_movedThisFrame)
-					UpdateMovementAnimation(delta);
-				else
-					StopMovementAnimation();
+                break;
 
-				break;
-
-			case HeroState.WaitingToAttack:
+            case HeroState.WaitingToAttack:
 
 				UpdateWaitingToAttack(delta);
 
@@ -167,18 +175,14 @@ public partial class HeroActorController : Node2D
 
 				break;
 
-			case HeroState.ReturningToFormation:
+            case HeroState.ReturningToFormation:
 
-				UpdateReturnToFormation(delta);
+                UpdateReturnToFormation(delta);
+                UpdateMovementPresentation(delta);
 
-				if (_movedThisFrame)
-					UpdateMovementAnimation(delta);
-				else
-					StopMovementAnimation();
+                break;
 
-				break;
-
-			case HeroState.Dead:
+            case HeroState.Dead:
 
 				StopMovementAnimation();
 
@@ -186,7 +190,34 @@ public partial class HeroActorController : Node2D
 		}
 	}
 
-	private void UpdateMovementAnimation(double delta)
+    private double _movementAnimationGraceRemaining;
+
+    private void UpdateMovementPresentation(double delta)
+    {
+        if (_movedThisFrame)
+        {
+            _movementAnimationGraceRemaining =
+                MovementAnimationGraceTime;
+        }
+        else
+        {
+            _movementAnimationGraceRemaining =
+                Mathf.Max(
+                    0.0,
+                    _movementAnimationGraceRemaining - delta);
+        }
+
+        if (_movedThisFrame
+            || _movementAnimationGraceRemaining > 0.0)
+        {
+            UpdateMovementAnimation(delta);
+            return;
+        }
+
+        StopMovementAnimation();
+    }
+
+    private void UpdateMovementAnimation(double delta)
 	{
 		_animationTime += delta;
 
@@ -208,34 +239,51 @@ public partial class HeroActorController : Node2D
 		VisualRoot.Position = _visualRestPosition;
 	}
 
-	private Vector2 CalculateApproachPosition(MonsterActorController target)
-	{
-		float preferredAttackX =
-			target.GlobalPosition.X
-			+ TemporaryAttackRange;
+    private bool _initialAttackPending;
 
-		float destinationX =
-			Mathf.Min(
-				GlobalPosition.X,
-				preferredAttackX);
+    private Vector2 CalculateApproachPosition(MonsterActorController target)
+    {
+        float horizontalDifference =
+            target.GlobalPosition.X
+            - GlobalPosition.X;
 
-		return new Vector2(
-			destinationX,
-			target.GlobalPosition.Y);
-	}
+        float directionToTarget =
+            Mathf.Sign(horizontalDifference);
 
-	private bool IsTargetWithinAttackRange(MonsterActorController target)
-	{
-		float horizontalDistance =
-			GlobalPosition.X
-			- target.GlobalPosition.X;
+        float destinationX =
+            target.GlobalPosition.X
+            - directionToTarget
+            * CombatProfile.AttackRange;
 
-		return horizontalDistance
-			<= TemporaryAttackRange
-			+ AttackRangeTolerance;
-	}
-	
-	private void UpdateFacingTowardTarget()
+        return new Vector2(
+            destinationX,
+            target.GlobalPosition.Y);
+    }
+
+    private void InitializeCombatProfile()
+    {
+        CombatProfile.AttackRange = TemporaryAttackRange;
+
+        CombatProfile.AttackInterval = TemporaryAttackInterval;
+
+        CombatProfile.MoveSpeed = CombatMoveSpeed;
+
+        CombatProfile.AttackDelivery = TemporaryAttackDelivery;
+    }
+
+    private bool IsTargetWithinAttackRange(MonsterActorController target)
+    {
+        float horizontalDistance =
+            Mathf.Abs(
+                GlobalPosition.X
+                - target.GlobalPosition.X);
+
+        return horizontalDistance
+            <= CombatProfile.AttackRange
+            + AttackRangeTolerance;
+    }
+
+    private void UpdateFacingTowardTarget()
 	{
 		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
 			return;
@@ -265,44 +313,63 @@ public partial class HeroActorController : Node2D
 			$"{CurrentTarget.Name}.");
 	}
 
-	private void UpdateCombatApproach(double delta)
-	{
-		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
-			return;
+    private void PrepareToAttack()
+    {
+        if (_initialAttackPending)
+        {
+            _initialAttackPending = false;
+            _attackCooldownRemaining = 0.0;
 
-		Vector2 previousPosition =
-			GlobalPosition;
+            BeginAttack();
+            return;
+        }
 
-		Vector2 approachPosition =
-			CalculateApproachPosition(CurrentTarget!);
+        _state = HeroState.WaitingToAttack;
+    }
 
-		float movementDistance =
-			CombatMoveSpeed * (float)delta;
+    private void UpdateCombatApproach(double delta)
+    {
+        if (!Targeting.IsValidMonsterTarget(CurrentTarget))
+            return;
 
-		GlobalPosition = GlobalPosition.MoveToward(
-			approachPosition,
-			movementDistance);
+        MonsterActorController target =
+            CurrentTarget!;
 
-		_movedThisFrame =
-			!GlobalPosition.IsEqualApprox(previousPosition);
+        bool targetWithinRange =
+            IsTargetWithinAttackRange(target);
 
-		if (!IsTargetWithinAttackRange(CurrentTarget!))
-			return;
+        bool verticallyAligned =
+            Mathf.Abs(
+                GlobalPosition.Y
+                - target.GlobalPosition.Y)
+            <= CombatArrivalDistance;
 
-		bool isVerticallyAligned =
-			Mathf.Abs(
-				GlobalPosition.Y
-				- CurrentTarget!.GlobalPosition.Y)
-			<= CombatArrivalDistance;
+        if (targetWithinRange && verticallyAligned)
+        {
+            PrepareToAttack();
+            return;
+        }
 
-		if (!isVerticallyAligned)
-			return;
+        Vector2 previousPosition = GlobalPosition;
+        Vector2 approachPosition = CalculateApproachPosition(target);
+        float movementDistance = CombatProfile.MoveSpeed * (float)delta;
+        GlobalPosition = GlobalPosition.MoveToward( approachPosition, movementDistance);
+        _movedThisFrame = !GlobalPosition.IsEqualApprox(previousPosition);
+        targetWithinRange = IsTargetWithinAttackRange(target);
 
-		_attackCooldownRemaining = 0.0;
-		_state = HeroState.WaitingToAttack;
-	}
+        verticallyAligned =
+            Mathf.Abs(
+                GlobalPosition.Y
+                - target.GlobalPosition.Y)
+            <= CombatArrivalDistance;
 
-	private void UpdateWaitingToAttack(double delta)
+        if (!targetWithinRange || !verticallyAligned)
+            return;
+
+        PrepareToAttack();
+    }
+
+    private void UpdateWaitingToAttack(double delta)
 	{
 		StopMovementAnimation();
 
@@ -335,7 +402,7 @@ public partial class HeroActorController : Node2D
 			return;
 
 		_state = HeroState.Attacking;
-		_attackTimeRemaining = TemporaryAttackDuration;
+		_attackTimeRemaining = CombatProfile.AttackDuration;
 		_attackReleaseEmitted = false;
 
 		StopMovementAnimation();
@@ -371,13 +438,18 @@ public partial class HeroActorController : Node2D
 		float lungeCurve =
 			Mathf.Sin(progress * Mathf.Pi);
 
-		VisualRoot.Position =
-			_visualRestPosition
-			+ Vector2.Left
-			* TemporaryAttackLungeDistance
-			* lungeCurve;
+        Vector2 attackDirection =
+			 Facing == FacingDirection.Left
+			? Vector2.Left
+			: Vector2.Right;
 
-		if (_attackTimeRemaining > 0.0)
+        VisualRoot.Position =
+            _visualRestPosition
+            + attackDirection
+            * TemporaryAttackLungeDistance
+            * lungeCurve;
+
+        if (_attackTimeRemaining > 0.0)
 			return;
 
 		EndAttack();
@@ -390,7 +462,7 @@ public partial class HeroActorController : Node2D
 
 		_attackTimeRemaining = 0.0;
 		_attackCooldownRemaining =
-			TemporaryAttackInterval;
+            CombatProfile.AttackInterval;
 
 		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
 		{
@@ -398,8 +470,7 @@ public partial class HeroActorController : Node2D
 			return;
 		}
 
-		bool targetStillInRange =
-	IsTargetWithinAttackRange(CurrentTarget!);
+		bool targetStillInRange = IsTargetWithinAttackRange(CurrentTarget!);
 
 		bool targetStillAligned =
 			Mathf.Abs(
@@ -410,11 +481,6 @@ public partial class HeroActorController : Node2D
 		_state =
 			targetStillInRange
 			&& targetStillAligned
-				? HeroState.WaitingToAttack
-				: HeroState.ApproachingTarget;
-
-		_state =
-			targetStillInRange
 				? HeroState.WaitingToAttack
 				: HeroState.ApproachingTarget;
 	}
@@ -450,7 +516,7 @@ public partial class HeroActorController : Node2D
 			FormationPosition;
 
 		float movementDistance =
-			CombatMoveSpeed * (float)delta;
+            CombatProfile.MoveSpeed * (float)delta;
 
 		GlobalPosition = GlobalPosition.MoveToward(
 			destination,
@@ -476,6 +542,7 @@ public partial class HeroActorController : Node2D
 			$"{Name} returned to formation at " +
 			$"{FormationPosition}.");
 	}
+
 	private void ApplyJourneyState(
 	JourneyStateService.JourneyState state)
 	{
@@ -483,8 +550,10 @@ public partial class HeroActorController : Node2D
 		_attackTimeRemaining = 0.0;
 		_attackCooldownRemaining = 0.0;
 		_attackReleaseEmitted = false;
+        _initialAttackPending = false;
+        _movementAnimationGraceRemaining = 0.0;
 
-		VisualRoot.Position = _visualRestPosition;
+        VisualRoot.Position = _visualRestPosition;
 
 		if (state
 			== JourneyStateService.JourneyState.Encounter)
@@ -558,6 +627,8 @@ public partial class HeroActorController : Node2D
 			return;
 		}
 
+        _initialAttackPending = true;
+        
 		GD.Print(
 			$"{Name} targeted {CurrentTarget.Name} " +
 			$"at X={CurrentTarget.GlobalPosition.X}.");
@@ -585,8 +656,9 @@ public partial class HeroActorController : Node2D
 			return;
 
 		CurrentTarget = null;
+        _initialAttackPending = false;
 
-		if (JourneyState.CurrentState
+        if (JourneyState.CurrentState
 			== JourneyStateService.JourneyState.Traveling)
 		{
 			bool isAtFormation =

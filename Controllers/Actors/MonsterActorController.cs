@@ -25,8 +25,11 @@ public partial class MonsterActorController : Node2D
 	[ExportCategory("Visuals")]
 	[Export]
 	public Node2D VisualRoot { get; set; } = null!;
-	
-	[ExportCategory("Entrance")]
+
+    [Export]
+    public Marker2D ImpactOrigin { get; set; } = null!;
+
+    [ExportCategory("Entrance")]
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float EntrySpeed { get; set; } = 100.0f;
 
@@ -59,9 +62,17 @@ public partial class MonsterActorController : Node2D
 	[Export(PropertyHint.Range, "0,1,0.05")]
 	public float TemporaryAttackReleasePoint { get; set; } = 0.5f;
 
-	public Vector2 EntryDestination { get; private set; }
+    [Export]
+    public AttackDeliveryMode TemporaryAttackDelivery { get; set; }
+    = AttackDeliveryMode.ImmediateImpact;
 
-	private MonsterState _state = MonsterState.WaitingForTarget;
+    public Vector2 EntryDestination { get; private set; }
+
+    public MonsterCombatProfile CombatProfile { get; } = new();
+
+    public Vector2 ImpactPosition => ImpactOrigin.GlobalPosition;
+
+    private MonsterState _state = MonsterState.WaitingForTarget;
 
 	public bool IsEntering => _state == MonsterState.Entering;
 	
@@ -70,8 +81,7 @@ public partial class MonsterActorController : Node2D
 
 	public HeroActorController? CurrentTarget { get; private set; }
 
-	public bool HasTarget =>
-		IsValidHeroTarget(CurrentTarget);
+	public bool HasTarget => IsValidHeroTarget(CurrentTarget);
 
 	public void InitializeEntrance( Vector2 spawnPosition, Vector2 entryDestination)
 	{
@@ -109,8 +119,23 @@ public partial class MonsterActorController : Node2D
 			$"Monster reached encounter position " +
 			$"{EntryDestination}.");
 	}
-	
-	public override void _Ready()
+
+    private void InitializeCombatProfile()
+    {
+        CombatProfile.AttackRange =
+            TemporaryAttackRange;
+
+        CombatProfile.AttackInterval =
+            TemporaryAttackInterval;
+
+        CombatProfile.MoveSpeed =
+            CombatMoveSpeed;
+
+        CombatProfile.AttackDelivery =
+            TemporaryAttackDelivery;
+    }
+
+    public override void _Ready()
 	{
 		if (!GodotObject.IsInstanceValid(VisualRoot))
 		{
@@ -122,8 +147,19 @@ public partial class MonsterActorController : Node2D
 			return;
 		}
 
-		_visualRestPosition = VisualRoot.Position;
-	}
+        if (!GodotObject.IsInstanceValid(ImpactOrigin))
+        {
+            GD.PushError(
+                "MonsterActorController is missing its " +
+                "ImpactOrigin Inspector reference.");
+
+            SetProcess(false);
+            return;
+        }
+
+        InitializeCombatProfile();
+        _visualRestPosition = VisualRoot.Position;
+    }
 
 	private static bool IsValidHeroTarget(HeroActorController? hero)
 	{
@@ -135,7 +171,7 @@ public partial class MonsterActorController : Node2D
 	private Vector2 CalculateAttackPosition(HeroActorController target)
 	{
 		return new Vector2(
-			target.GlobalPosition.X - TemporaryAttackRange,
+			target.GlobalPosition.X - CombatProfile.AttackRange,
 			target.GlobalPosition.Y);
 	}
 	
@@ -182,7 +218,7 @@ public partial class MonsterActorController : Node2D
 			CalculateAttackPosition(CurrentTarget!);
 
 		float movementDistance =
-			CombatMoveSpeed * (float)delta;
+            CombatProfile.MoveSpeed * (float)delta;
 
 		GlobalPosition = GlobalPosition.MoveToward(
 			attackPosition,
@@ -369,10 +405,10 @@ public partial class MonsterActorController : Node2D
 		StopAttackPresentation();
 
 		_attackTimeRemaining = 0.0;
-		_attackCooldownRemaining =
-			TemporaryAttackInterval;
+        _attackCooldownRemaining =
+			CombatProfile.AttackInterval;
 
-		if (!IsValidHeroTarget(CurrentTarget))
+        if (!IsValidHeroTarget(CurrentTarget))
 		{
 			CurrentTarget = null;
 			_state = MonsterState.WaitingForTarget;

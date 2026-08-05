@@ -104,7 +104,7 @@ public partial class CombatController : Node
 			$"Combat received attack release: " +
 			$"{attacker.Name} → {target.Name}");
 
-		switch (attacker.TemporaryAttackDelivery)
+		switch (attacker.CombatProfile.AttackDelivery)
 		{
 			case AttackDeliveryMode.ImmediateImpact:
 				ConfirmHeroImpact(attacker, target);

@@ -2,12 +2,18 @@
 
 [ext_resource type="Script" uid="uid://cjebar3h2j3m" path="res://Controllers/Actors/MonsterActorController.cs" id="1_qwhad"]
 
-[node name="MonsterActor" type="Node2D" unique_id=1953699697 node_paths=PackedStringArray("VisualRoot")]
+[node name="MonsterActor" type="Node2D" unique_id=1953699697 node_paths=PackedStringArray("VisualRoot", "ImpactOrigin")]
+rotation = -0.0022674962
 script = ExtResource("1_qwhad")
 VisualRoot = NodePath("VisualRoot")
+ImpactOrigin = NodePath("VisualRoot/ImpactOrigin")
+CombatMoveSpeed = 95.0
 
 [node name="VisualRoot" type="Node2D" parent="." unique_id=1579220540]
 
 [node name="MonsterBody" type="Polygon2D" parent="VisualRoot" unique_id=1973935004]
 color = Color(0.8618303, 0.26922566, 0.27144888, 1)
 polygon = PackedVector2Array(-16, -32, 16, -32, 20, 0, -20, 0)
+
+[node name="ImpactOrigin" type="Marker2D" parent="VisualRoot" unique_id=1725275174]
+position = Vector2(0, -18)

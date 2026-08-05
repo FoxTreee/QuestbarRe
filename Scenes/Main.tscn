@@ -69,11 +69,13 @@ color = Color(0.82674575, 0.23699889, 0.46144724, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 
 [node name="MonsterEntryAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=845393241]
+visible = false
 position = Vector2(180, 160)
 color = Color(0.79823756, 0.3226114, 0.21111429, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 
 [node name="HeroFormationAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=79130758]
+visible = false
 position = Vector2(720, 160)
 color = Color(2.3102762e-06, 0.8720522, 0.87253284, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
@@ -84,30 +86,34 @@ script = ExtResource("3_vy5pj")
 FormationAnchor = NodePath("../HeroFormationAnchor")
 JourneyState = NodePath("../../../../Services/JourneyStateService")
 VisualRoot = NodePath("VisualRoot")
-ProjectileOrigin = NodePath("../HeroActor2/VisualRoot/ProjectileOrigin")
-BobHeight = 11.0
-BobPhaseOffset = 1.65
+ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
+BobHeight = 6.0
+BobSpeed = 5.1
+MovementAnimationGraceTime = 0.25
+TemporaryAttackLungeDistance = 20.5
 Targeting = NodePath("../../../../Services/TargetingService")
+
+[node name="ProjectileOrigin" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor/VisualRoot" parent_id_path=PackedInt32Array(162660220, 18405630) index="1" unique_id=805389202]
+position = Vector2(-11.999939, -24.000015)
 
 [node name="HeroActor2" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=1393210593 node_paths=PackedStringArray("FormationAnchor", "JourneyState", "VisualRoot", "ProjectileOrigin", "Targeting") instance=ExtResource("2_50glp")]
 position = Vector2(720, 160)
-rotation = -0.01555259
 script = ExtResource("3_vy5pj")
 FormationAnchor = NodePath("../HeroFormationAnchor")
 FormationOffset = Vector2(-40, 0)
 JourneyState = NodePath("../../../../Services/JourneyStateService")
 VisualRoot = NodePath("VisualRoot")
 ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
-BobHeight = 20.0
-BobSpeed = 4.5
-BobPhaseOffset = 5.0
-TemporaryAttackRange = 350.0
+BobHeight = 6.0
+BobSpeed = 5.0
+BobPhaseOffset = 3.14
+TemporaryAttackRange = 400.0
 AttackRangeTolerance = 9.0
 TemporaryAttackDelivery = 1
 Targeting = NodePath("../../../../Services/TargetingService")
 
 [node name="ProjectileOrigin" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2/VisualRoot" parent_id_path=PackedInt32Array(1393210593, 18405630) index="1" unique_id=1283317173]
-position = Vector2(-11.625244, -24.183731)
+position = Vector2(-12, -24)
 rotation = 0.01555259
 
 [node name="RegionEffects" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=2113048403]

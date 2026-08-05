@@ -47,10 +47,9 @@ public partial class ProjectileActorController : Node2D
 			return;
 		}
 
-		Vector2 targetPosition =
-			Target!.GlobalPosition;
+        Vector2 targetPosition = Target!.ImpactPosition;
 
-		float movementDistance =
+        float movementDistance =
 			TravelSpeed * (float)delta;
 
 		GlobalPosition = GlobalPosition.MoveToward(
