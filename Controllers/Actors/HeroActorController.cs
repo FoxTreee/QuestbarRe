@@ -3,10 +3,20 @@ using System.Collections.Generic;
 
 public partial class HeroActorController : Node2D
 {
-	private Vector2 _visualRestPosition;
+    private enum HeroState
+    {
+        InFormation,
+        ApproachingTarget,
+        WaitingToAttack,
+        ReturningToFormation,
+        Dead
+    }
+    
+    private Vector2 _visualRestPosition;
 	private double _animationTime;
-	private bool _isTraveling;
-    private bool _isEncounterActive;
+    private bool _movedThisFrame;
+    private HeroState _state = HeroState.InFormation;
+
 
     [ExportCategory("Formation")]
 	[Export]
@@ -42,6 +52,9 @@ public partial class HeroActorController : Node2D
 
     [Export(PropertyHint.Range, "0.1,20,0.1")]
     public float CombatArrivalDistance { get; set; } = 1.0f;
+
+    [Export(PropertyHint.Range, "0.1,20,0.1")]
+    public float AttackRangeTolerance { get; set; } = 3.0f;
 
     [Export]
     public TargetingService Targeting { get; set; } = null!;
@@ -81,17 +94,62 @@ public partial class HeroActorController : Node2D
 
     public override void _Process(double delta)
     {
-        if (_isTraveling)
-        {
-            UpdateTravelAnimation(delta);
-            return;
-        }
+        _movedThisFrame = false;
 
-        if (_isEncounterActive)
-            UpdateCombatApproach(delta);
+        switch (_state)
+        {
+            case HeroState.InFormation:
+
+                if (JourneyState.CurrentState == JourneyStateService.JourneyState.Traveling)
+                {
+                    UpdateMovementAnimation(delta);
+                }
+
+                break;
+
+            case HeroState.ApproachingTarget:
+
+                UpdateCombatApproach(delta);
+                UpdateMovementAnimation(delta);
+
+                break;
+
+            case HeroState.WaitingToAttack:
+
+                UpdateWaitingToAttack();
+
+                if (_state == HeroState.ApproachingTarget)
+                {
+                    UpdateCombatApproach(delta);
+
+                    if (_movedThisFrame)
+                        UpdateMovementAnimation(delta);
+                    else
+                        StopMovementAnimation();
+
+                    break;
+                }
+
+                StopMovementAnimation();
+
+                break;
+
+            case HeroState.ReturningToFormation:
+
+                UpdateReturnToFormation(delta);
+                UpdateMovementAnimation(delta);
+
+                break;
+
+            case HeroState.Dead:
+
+                StopMovementAnimation();
+
+                break;
+        }
     }
 
-    private void UpdateTravelAnimation(double delta)
+    private void UpdateMovementAnimation(double delta)
     {
         _animationTime += delta;
 
@@ -107,18 +165,29 @@ public partial class HeroActorController : Node2D
             + Vector2.Up * bobOffset;
     }
 
+    private void StopMovementAnimation()
+    {
+        _animationTime = 0.0;
+        VisualRoot.Position = _visualRestPosition;
+    }
+
+    private Vector2 CalculateAttackPosition(MonsterActorController target)
+    {
+        return new Vector2(
+            target.GlobalPosition.X + TemporaryAttackRange,
+            target.GlobalPosition.Y);
+    }
+
     private void UpdateCombatApproach(double delta)
     {
         if (!Targeting.IsValidMonsterTarget(CurrentTarget))
             return;
 
-        Vector2 targetPosition =
-            CurrentTarget!.GlobalPosition;
+        Vector2 previousPosition =
+            GlobalPosition;
 
         Vector2 attackPosition =
-            new(
-                targetPosition.X + TemporaryAttackRange,
-                targetPosition.Y);
+    CalculateAttackPosition(CurrentTarget!);
 
         float movementDistance =
             CombatMoveSpeed * (float)delta;
@@ -131,7 +200,63 @@ public partial class HeroActorController : Node2D
             <= CombatArrivalDistance)
         {
             GlobalPosition = attackPosition;
+            _state = HeroState.WaitingToAttack;
         }
+
+        _movedThisFrame =
+            !GlobalPosition.IsEqualApprox(previousPosition);
+    }
+
+    private void UpdateWaitingToAttack()
+    {
+        if (!Targeting.IsValidMonsterTarget(CurrentTarget))
+            return;
+
+        Vector2 attackPosition =
+            CalculateAttackPosition(CurrentTarget!);
+
+        bool targetMovedOutOfRange =
+            GlobalPosition.DistanceTo(attackPosition)
+            > AttackRangeTolerance;
+
+        if (targetMovedOutOfRange)
+            _state = HeroState.ApproachingTarget;
+    }
+
+    private void UpdateReturnToFormation(double delta)
+    {
+        Vector2 previousPosition =
+            GlobalPosition;
+
+        Vector2 destination =
+            FormationPosition;
+
+        float movementDistance =
+            CombatMoveSpeed * (float)delta;
+
+        GlobalPosition = GlobalPosition.MoveToward(
+            destination,
+            movementDistance);
+
+        _movedThisFrame =
+            !GlobalPosition.IsEqualApprox(previousPosition);
+
+        if (GlobalPosition.DistanceTo(destination)
+            > CombatArrivalDistance)
+        {
+            return;
+        }
+
+        GlobalPosition = destination;
+        _state = HeroState.InFormation;
+        _animationTime = 0.0;
+
+        VisualRoot.Position =
+            _visualRestPosition;
+
+        GD.Print(
+            $"{Name} returned to formation at " +
+            $"{FormationPosition}.");
     }
 
     private void OnJourneyStateChanged(
@@ -140,22 +265,6 @@ public partial class HeroActorController : Node2D
 	{
 		ApplyJourneyState(currentState);
 	}
-
-    private void ApplyJourneyState(JourneyStateService.JourneyState state)
-    {
-        _isTraveling = state == JourneyStateService.JourneyState.Traveling;
-
-        _isEncounterActive = state == JourneyStateService.JourneyState.Encounter;
-
-        _animationTime = 0.0;
-        VisualRoot.Position = _visualRestPosition;
-
-        if (_isTraveling)
-        {
-            // Temporary until animated return-to-formation is added.
-            SnapToFormation();
-        }
-    }
 
     private bool ValidateReferences()
 	{
@@ -180,8 +289,35 @@ public partial class HeroActorController : Node2D
 
 	return false;
 }
-	
-	public void SnapToFormation()
+
+    private void ApplyJourneyState(
+    JourneyStateService.JourneyState state)
+    {
+        _animationTime = 0.0;
+        VisualRoot.Position = _visualRestPosition;
+
+        if (state
+            == JourneyStateService.JourneyState.Encounter)
+        {
+            if (Targeting.IsValidMonsterTarget(CurrentTarget))
+            {
+                _state = HeroState.ApproachingTarget;
+            }
+
+            return;
+        }
+
+        bool isAtFormation =
+            GlobalPosition.DistanceTo(FormationPosition)
+            <= CombatArrivalDistance;
+
+        _state =
+            isAtFormation
+                ? HeroState.InFormation
+                : HeroState.ReturningToFormation;
+    }
+
+    public void SnapToFormation()
 	{
 		GlobalPosition = FormationPosition;
 	}
@@ -215,6 +351,11 @@ public partial class HeroActorController : Node2D
         GD.Print(
             $"{Name} targeted {CurrentTarget.Name} " +
             $"at X={CurrentTarget.GlobalPosition.X}.");
+
+        if (JourneyState.CurrentState == JourneyStateService.JourneyState.Encounter)
+        {
+            _state = HeroState.ApproachingTarget;
+        }
     }
 
     private static bool ContainsTarget(IReadOnlyList<MonsterActorController> candidates, MonsterActorController target)
@@ -234,6 +375,19 @@ public partial class HeroActorController : Node2D
             return;
 
         CurrentTarget = null;
+
+        if (JourneyState.CurrentState
+            == JourneyStateService.JourneyState.Traveling)
+        {
+            bool isAtFormation =
+                GlobalPosition.DistanceTo(FormationPosition)
+                <= CombatArrivalDistance;
+
+            _state =
+                isAtFormation
+                    ? HeroState.InFormation
+                    : HeroState.ReturningToFormation;
+        }
 
         GD.Print($"{Name} cleared its monster target.");
     }

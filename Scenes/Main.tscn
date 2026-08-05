@@ -73,7 +73,6 @@ color = Color(0.79823756, 0.3226114, 0.21111429, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 
 [node name="HeroFormationAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=79130758]
-visible = false
 position = Vector2(720, 160)
 color = Color(2.3102762e-06, 0.8720522, 0.87253284, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
