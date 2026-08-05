@@ -3,11 +3,17 @@ using System.Collections.Generic;
 
 public partial class HeroActorController : Node2D
 {
+    [Signal]
+    public delegate void AttackReleasedEventHandler(
+    HeroActorController attacker,
+    MonsterActorController target);
+
     private enum HeroState
     {
         InFormation,
         ApproachingTarget,
         WaitingToAttack,
+        Attacking,
         ReturningToFormation,
         Dead
     }
@@ -16,6 +22,9 @@ public partial class HeroActorController : Node2D
 	private double _animationTime;
     private bool _movedThisFrame;
     private HeroState _state = HeroState.InFormation;
+    private double _attackCooldownRemaining;
+    private double _attackTimeRemaining;
+    private bool _attackReleaseEmitted;
 
 
     [ExportCategory("Formation")]
@@ -55,6 +64,19 @@ public partial class HeroActorController : Node2D
 
     [Export(PropertyHint.Range, "0.1,20,0.1")]
     public float AttackRangeTolerance { get; set; } = 3.0f;
+
+    [ExportCategory("Temporary Attack Cycle")]
+    [Export(PropertyHint.Range, "0.1,10,0.1")]
+    public float TemporaryAttackInterval { get; set; } = 1.5f;
+
+    [Export(PropertyHint.Range, "0.05,2,0.05")]
+    public float TemporaryAttackDuration { get; set; } = 0.3f;
+
+    [Export(PropertyHint.Range, "0,30,0.5")]
+    public float TemporaryAttackLungeDistance { get; set; } = 8.0f;
+
+    [Export(PropertyHint.Range, "0,1,0.05")]
+    public float TemporaryAttackReleasePoint { get; set; } = 0.5f;
 
     [Export]
     public TargetingService Targeting { get; set; } = null!;
@@ -100,7 +122,8 @@ public partial class HeroActorController : Node2D
         {
             case HeroState.InFormation:
 
-                if (JourneyState.CurrentState == JourneyStateService.JourneyState.Traveling)
+                if (JourneyState.CurrentState
+                    == JourneyStateService.JourneyState.Traveling)
                 {
                     UpdateMovementAnimation(delta);
                 }
@@ -110,34 +133,34 @@ public partial class HeroActorController : Node2D
             case HeroState.ApproachingTarget:
 
                 UpdateCombatApproach(delta);
-                UpdateMovementAnimation(delta);
+
+                if (_movedThisFrame)
+                    UpdateMovementAnimation(delta);
+                else
+                    StopMovementAnimation();
 
                 break;
 
             case HeroState.WaitingToAttack:
 
-                UpdateWaitingToAttack();
+                UpdateWaitingToAttack(delta);
 
-                if (_state == HeroState.ApproachingTarget)
-                {
-                    UpdateCombatApproach(delta);
+                break;
 
-                    if (_movedThisFrame)
-                        UpdateMovementAnimation(delta);
-                    else
-                        StopMovementAnimation();
+            case HeroState.Attacking:
 
-                    break;
-                }
-
-                StopMovementAnimation();
+                UpdateAttack(delta);
 
                 break;
 
             case HeroState.ReturningToFormation:
 
                 UpdateReturnToFormation(delta);
-                UpdateMovementAnimation(delta);
+
+                if (_movedThisFrame)
+                    UpdateMovementAnimation(delta);
+                else
+                    StopMovementAnimation();
 
                 break;
 
@@ -207,8 +230,10 @@ public partial class HeroActorController : Node2D
             !GlobalPosition.IsEqualApprox(previousPosition);
     }
 
-    private void UpdateWaitingToAttack()
+    private void UpdateWaitingToAttack(double delta)
     {
+        StopMovementAnimation();
+
         if (!Targeting.IsValidMonsterTarget(CurrentTarget))
             return;
 
@@ -220,7 +245,122 @@ public partial class HeroActorController : Node2D
             > AttackRangeTolerance;
 
         if (targetMovedOutOfRange)
+        {
             _state = HeroState.ApproachingTarget;
+            return;
+        }
+
+        _attackCooldownRemaining -= delta;
+
+        if (_attackCooldownRemaining > 0.0)
+            return;
+
+        BeginAttack();
+    }
+
+    private void BeginAttack()
+    {
+
+        if (!Targeting.IsValidMonsterTarget(CurrentTarget))
+            return;
+
+        _state = HeroState.Attacking;
+        _attackTimeRemaining = TemporaryAttackDuration;
+        _attackReleaseEmitted = false;
+
+        StopMovementAnimation();
+
+        GD.Print(
+            $"{Name} began attacking {CurrentTarget!.Name}.");
+    }
+
+    private void UpdateAttack(double delta)
+    {
+        if (!Targeting.IsValidMonsterTarget(CurrentTarget))
+        {
+            EndAttack();
+            return;
+        }
+
+        _attackTimeRemaining -= delta;
+
+        float duration =
+            Mathf.Max(TemporaryAttackDuration, 0.001f);
+
+        float progress =
+            1.0f
+            - (float)(_attackTimeRemaining / duration);
+
+        progress = Mathf.Clamp(
+            progress,
+            0.0f,
+            1.0f);
+
+        TryEmitAttackRelease(progress);
+
+        float lungeCurve =
+            Mathf.Sin(progress * Mathf.Pi);
+
+        VisualRoot.Position =
+            _visualRestPosition
+            + Vector2.Left
+            * TemporaryAttackLungeDistance
+            * lungeCurve;
+
+        if (_attackTimeRemaining > 0.0)
+            return;
+
+        EndAttack();
+    }
+
+    private void EndAttack()
+    {
+        VisualRoot.Position =
+            _visualRestPosition;
+
+        _attackTimeRemaining = 0.0;
+        _attackCooldownRemaining =
+            TemporaryAttackInterval;
+
+        if (!Targeting.IsValidMonsterTarget(CurrentTarget))
+        {
+            _state = HeroState.WaitingToAttack;
+            return;
+        }
+
+        Vector2 attackPosition =
+            CalculateAttackPosition(CurrentTarget!);
+
+        bool targetStillInRange =
+            GlobalPosition.DistanceTo(attackPosition)
+            <= AttackRangeTolerance;
+
+        _state =
+            targetStillInRange
+                ? HeroState.WaitingToAttack
+                : HeroState.ApproachingTarget;
+    }
+
+    private void TryEmitAttackRelease(float attackProgress)
+    {
+        if (_attackReleaseEmitted)
+            return;
+
+        if (attackProgress
+            < TemporaryAttackReleasePoint)
+        {
+            return;
+        }
+
+        if (!Targeting.IsValidMonsterTarget(CurrentTarget))
+            return;
+
+        _attackReleaseEmitted = true;
+
+        EmitSignal(
+            SignalName.AttackReleased,
+            this,
+            CurrentTarget!);
     }
 
     private void UpdateReturnToFormation(double delta)
@@ -258,42 +398,14 @@ public partial class HeroActorController : Node2D
             $"{Name} returned to formation at " +
             $"{FormationPosition}.");
     }
-
-    private void OnJourneyStateChanged(
-		JourneyStateService.JourneyState previousState,
-		JourneyStateService.JourneyState currentState)
-	{
-		ApplyJourneyState(currentState);
-	}
-
-    private bool ValidateReferences()
-	{
-		bool valid = true;
-
-		valid &= Require(FormationAnchor, nameof(FormationAnchor));
-		valid &= Require(JourneyState, nameof(JourneyState));
-		valid &= Require(VisualRoot, nameof(VisualRoot));
-        valid &= Require(Targeting, nameof(Targeting));
-
-        return valid;
-	}
-	
-	private static bool Require(GodotObject value, string propertyName)
-{
-	if (GodotObject.IsInstanceValid(value))
-		return true;
-
-	GD.PushError(
-		$"HeroActorController is missing the " +
-		$"Inspector reference '{propertyName}'.");
-
-	return false;
-}
-
     private void ApplyJourneyState(
     JourneyStateService.JourneyState state)
     {
         _animationTime = 0.0;
+        _attackTimeRemaining = 0.0;
+        _attackCooldownRemaining = 0.0;
+        _attackReleaseEmitted = false;
+
         VisualRoot.Position = _visualRestPosition;
 
         if (state
@@ -316,6 +428,27 @@ public partial class HeroActorController : Node2D
                 ? HeroState.InFormation
                 : HeroState.ReturningToFormation;
     }
+
+    private void OnJourneyStateChanged(
+		JourneyStateService.JourneyState previousState,
+		JourneyStateService.JourneyState currentState)
+	{
+		ApplyJourneyState(currentState);
+	}
+
+    private bool ValidateReferences()
+	{
+		bool valid = true;
+
+		valid &= Require(FormationAnchor, nameof(FormationAnchor));
+		valid &= Require(JourneyState, nameof(JourneyState));
+		valid &= Require(VisualRoot, nameof(VisualRoot));
+        valid &= Require(Targeting, nameof(Targeting));
+
+        return valid;
+	}
+	
+
 
     public void SnapToFormation()
 	{
@@ -390,5 +523,16 @@ public partial class HeroActorController : Node2D
         }
 
         GD.Print($"{Name} cleared its monster target.");
+    }
+    private static bool Require(GodotObject value, string propertyName)
+    {
+        if (GodotObject.IsInstanceValid(value))
+            return true;
+
+        GD.PushError(
+            $"HeroActorController is missing the " +
+            $"Inspector reference '{propertyName}'.");
+
+        return false;
     }
 }

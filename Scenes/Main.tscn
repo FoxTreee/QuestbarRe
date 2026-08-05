@@ -83,11 +83,12 @@ script = ExtResource("3_vy5pj")
 FormationAnchor = NodePath("../HeroFormationAnchor")
 JourneyState = NodePath("../../../../Services/JourneyStateService")
 VisualRoot = NodePath("VisualRoot")
+AttackRangeTolerance = 7.0
 Targeting = NodePath("../../../../Services/TargetingService")
 
 [node name="HeroActor2" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=1393210593 node_paths=PackedStringArray("FormationAnchor", "JourneyState", "VisualRoot", "Targeting") instance=ExtResource("2_50glp")]
 position = Vector2(720, 160)
-rotation = -0.00051059964
+rotation = -0.01555259
 script = ExtResource("3_vy5pj")
 FormationAnchor = NodePath("../HeroFormationAnchor")
 FormationOffset = Vector2(-40, 0)
@@ -97,6 +98,8 @@ BobHeight = 20.0
 BobSpeed = 4.5
 BobPhaseOffset = 5.0
 TemporaryAttackRange = 100.0
+AttackRangeTolerance = 9.0
+TemporaryAttackLungeDistance = 2.0
 Targeting = NodePath("../../../../Services/TargetingService")
 
 [node name="RegionEffects" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=2113048403]

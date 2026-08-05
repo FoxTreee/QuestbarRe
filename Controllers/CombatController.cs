@@ -60,6 +60,15 @@ public partial class CombatController : Node
 
     public override void _ExitTree()
     {
+        foreach (HeroActorController hero in _heroParticipants)
+        {
+            if (!GodotObject.IsInstanceValid(hero))
+                continue;
+
+            hero.AttackReleased -=
+                OnHeroAttackReleased;
+        }
+
         if (GodotObject.IsInstanceValid(Encounter))
         {
             Encounter.ActiveMonsterCountChanged -=
@@ -80,16 +89,41 @@ public partial class CombatController : Node
                 continue;
 
             _heroParticipants.Add(hero);
+
+            hero.AttackReleased +=
+                OnHeroAttackReleased;
         }
     }
 
-    private void OnActiveMonsterCountChanged(
-        int activeMonsterCount)
+    private void OnActiveMonsterCountChanged(int activeMonsterCount)
     {
         RefreshMonsterParticipants();
         ApplyCombatState();
         RefreshHeroTargets();
         EmitParticipantsChanged();
+    }
+
+    private void OnHeroAttackReleased(HeroActorController attacker, MonsterActorController target)
+    {
+        if (!GodotObject.IsInstanceValid(attacker)
+            || !GodotObject.IsInstanceValid(target))
+        {
+            return;
+        }
+
+        GD.Print(
+            $"Combat received attack release: " +
+            $"{attacker.Name} → {target.Name}");
+
+        bool establishedInitialAggro =
+            target.TryEngage(attacker);
+
+        if (!establishedInitialAggro)
+            return;
+
+        GD.Print(
+            $"Initial monster aggro established: " +
+            $"{target.Name} → {attacker.Name}");
     }
 
     private void RefreshHeroTargets()
