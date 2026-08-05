@@ -194,11 +194,31 @@ public partial class HeroActorController : Node2D
         VisualRoot.Position = _visualRestPosition;
     }
 
-    private Vector2 CalculateAttackPosition(MonsterActorController target)
+    private Vector2 CalculateApproachPosition(MonsterActorController target)
     {
+        float preferredAttackX =
+            target.GlobalPosition.X
+            + TemporaryAttackRange;
+
+        float destinationX =
+            Mathf.Min(
+                GlobalPosition.X,
+                preferredAttackX);
+
         return new Vector2(
-            target.GlobalPosition.X + TemporaryAttackRange,
+            destinationX,
             target.GlobalPosition.Y);
+    }
+
+    private bool IsTargetWithinAttackRange(MonsterActorController target)
+    {
+        float horizontalDistance =
+            GlobalPosition.X
+            - target.GlobalPosition.X;
+
+        return horizontalDistance
+            <= TemporaryAttackRange
+            + AttackRangeTolerance;
     }
 
     private void UpdateCombatApproach(double delta)
@@ -209,25 +229,33 @@ public partial class HeroActorController : Node2D
         Vector2 previousPosition =
             GlobalPosition;
 
-        Vector2 attackPosition =
-    CalculateAttackPosition(CurrentTarget!);
+        Vector2 approachPosition =
+            CalculateApproachPosition(CurrentTarget!);
 
         float movementDistance =
             CombatMoveSpeed * (float)delta;
 
         GlobalPosition = GlobalPosition.MoveToward(
-            attackPosition,
+            approachPosition,
             movementDistance);
-
-        if (GlobalPosition.DistanceTo(attackPosition)
-            <= CombatArrivalDistance)
-        {
-            GlobalPosition = attackPosition;
-            _state = HeroState.WaitingToAttack;
-        }
 
         _movedThisFrame =
             !GlobalPosition.IsEqualApprox(previousPosition);
+
+        if (!IsTargetWithinAttackRange(CurrentTarget!))
+            return;
+
+        bool isVerticallyAligned =
+            Mathf.Abs(
+                GlobalPosition.Y
+                - CurrentTarget!.GlobalPosition.Y)
+            <= CombatArrivalDistance;
+
+        if (!isVerticallyAligned)
+            return;
+
+        _attackCooldownRemaining = 0.0;
+        _state = HeroState.WaitingToAttack;
     }
 
     private void UpdateWaitingToAttack(double delta)
@@ -237,14 +265,12 @@ public partial class HeroActorController : Node2D
         if (!Targeting.IsValidMonsterTarget(CurrentTarget))
             return;
 
-        Vector2 attackPosition =
-            CalculateAttackPosition(CurrentTarget!);
+        bool targetMovedOutOfRange = !IsTargetWithinAttackRange(CurrentTarget!);
 
-        bool targetMovedOutOfRange =
-            GlobalPosition.DistanceTo(attackPosition)
-            > AttackRangeTolerance;
+        bool targetMovedToAnotherY = Mathf.Abs(GlobalPosition.Y - CurrentTarget!.GlobalPosition.Y) > AttackRangeTolerance;
 
-        if (targetMovedOutOfRange)
+        if (targetMovedOutOfRange
+            || targetMovedToAnotherY)
         {
             _state = HeroState.ApproachingTarget;
             return;
@@ -328,12 +354,20 @@ public partial class HeroActorController : Node2D
             return;
         }
 
-        Vector2 attackPosition =
-            CalculateAttackPosition(CurrentTarget!);
-
         bool targetStillInRange =
-            GlobalPosition.DistanceTo(attackPosition)
+    IsTargetWithinAttackRange(CurrentTarget!);
+
+        bool targetStillAligned =
+            Mathf.Abs(
+                GlobalPosition.Y
+                - CurrentTarget!.GlobalPosition.Y)
             <= AttackRangeTolerance;
+
+        _state =
+            targetStillInRange
+            && targetStillAligned
+                ? HeroState.WaitingToAttack
+                : HeroState.ApproachingTarget;
 
         _state =
             targetStillInRange

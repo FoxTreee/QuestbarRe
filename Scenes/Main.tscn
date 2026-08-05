@@ -99,6 +99,7 @@ BobSpeed = 4.5
 BobPhaseOffset = 5.0
 TemporaryAttackRange = 100.0
 AttackRangeTolerance = 9.0
+TemporaryAttackDuration = 0.2
 TemporaryAttackLungeDistance = 2.0
 Targeting = NodePath("../../../../Services/TargetingService")
 

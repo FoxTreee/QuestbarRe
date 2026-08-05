@@ -18,6 +18,16 @@ public partial class MonsterActorController : Node2D
     [Export(PropertyHint.Range, "0.1,20,0.1")]
     public float ArrivalDistance { get; set; } = 1.0f;
 
+    [ExportCategory("Temporary Combat Movement")]
+    [Export(PropertyHint.Range, "0,500,1")]
+    public float CombatMoveSpeed { get; set; } = 100.0f;
+
+    [Export(PropertyHint.Range, "0,400,1")]
+    public float TemporaryAttackRange { get; set; } = 28.0f;
+
+    [Export(PropertyHint.Range, "0.1,20,0.1")]
+    public float CombatArrivalDistance { get; set; } = 1.0f;
+
     public Vector2 EntryDestination { get; private set; }
 
     private MonsterState _state = MonsterState.WaitingForTarget;
@@ -73,6 +83,66 @@ public partial class MonsterActorController : Node2D
             && hero.IsInsideTree();
     }
 
+    private Vector2 CalculateAttackPosition(HeroActorController target)
+    {
+        return new Vector2(
+            target.GlobalPosition.X - TemporaryAttackRange,
+            target.GlobalPosition.Y);
+    }
+
+    private void UpdateCombatApproach(double delta)
+    {
+        if (!IsValidHeroTarget(CurrentTarget))
+        {
+            CurrentTarget = null;
+            _state = MonsterState.WaitingForTarget;
+            return;
+        }
+
+        Vector2 attackPosition =
+            CalculateAttackPosition(CurrentTarget!);
+
+        float movementDistance =
+            CombatMoveSpeed * (float)delta;
+
+        GlobalPosition = GlobalPosition.MoveToward(
+            attackPosition,
+            movementDistance);
+
+        if (GlobalPosition.DistanceTo(attackPosition)
+            > CombatArrivalDistance)
+        {
+            return;
+        }
+
+        GlobalPosition = attackPosition;
+        _state = MonsterState.WaitingToAttack;
+
+        GD.Print(
+            $"{Name} reached attack position for " +
+            $"{CurrentTarget!.Name} at {attackPosition}.");
+    }
+
+    private void UpdateWaitingToAttack()
+    {
+        if (!IsValidHeroTarget(CurrentTarget))
+        {
+            CurrentTarget = null;
+            _state = MonsterState.WaitingForTarget;
+            return;
+        }
+
+        Vector2 attackPosition =
+            CalculateAttackPosition(CurrentTarget!);
+
+        bool targetMovedOutOfRange =
+            GlobalPosition.DistanceTo(attackPosition)
+            > CombatArrivalDistance;
+
+        if (targetMovedOutOfRange)
+            _state = MonsterState.ApproachingTarget;
+    }
+
     public bool TryEngage( HeroActorController attacker)
     {
         if (!IsValidHeroTarget(attacker))
@@ -103,9 +173,11 @@ public partial class MonsterActorController : Node2D
                 break;
 
             case MonsterState.ApproachingTarget:
+                UpdateCombatApproach(delta);
                 break;
 
             case MonsterState.WaitingToAttack:
+                UpdateWaitingToAttack();
                 break;
 
             case MonsterState.Dead:
