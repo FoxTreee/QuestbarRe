@@ -90,7 +90,9 @@ ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 BobHeight = 6.0
 BobSpeed = 5.1
 MovementAnimationGraceTime = 0.25
-TemporaryAttackLungeDistance = 20.5
+TemporaryAttackDamage = 15.0
+CombatMoveSpeed = 124.0
+TemporaryAttackRange = 120.0
 Targeting = NodePath("../../../../Services/TargetingService")
 
 [node name="ProjectileOrigin" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor/VisualRoot" parent_id_path=PackedInt32Array(162660220, 18405630) index="1" unique_id=805389202]
@@ -107,7 +109,9 @@ ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 BobHeight = 6.0
 BobSpeed = 5.0
 BobPhaseOffset = 3.14
-TemporaryAttackRange = 400.0
+TemporaryMaximumHealth = 80.0
+TemporaryAttackDamage = 12.0
+TemporaryAttackRange = 140.0
 AttackRangeTolerance = 9.0
 TemporaryAttackDelivery = 1
 Targeting = NodePath("../../../../Services/TargetingService")

@@ -36,7 +36,14 @@ public partial class MonsterActorController : Node2D
 	[Export(PropertyHint.Range, "0.1,20,0.1")]
 	public float ArrivalDistance { get; set; } = 1.0f;
 
-	[ExportCategory("Temporary Combat Movement")]
+    [ExportCategory("Temporary Combat Values")]
+    [Export(PropertyHint.Range, "1,100000,1")]
+    public float TemporaryMaximumHealth { get; set; } = 100.0f;
+
+    [Export(PropertyHint.Range, "0,100000,1")]
+    public float TemporaryAttackDamage { get; set; } = 10.0f;
+
+    [ExportCategory("Temporary Combat Movement")]
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float CombatMoveSpeed { get; set; } = 100.0f;
 
@@ -68,6 +75,8 @@ public partial class MonsterActorController : Node2D
 
     public Vector2 EntryDestination { get; private set; }
 
+    public float AttackDamage { get; set; }
+
     public MonsterCombatProfile CombatProfile { get; } = new();
 
     public Vector2 ImpactPosition => ImpactOrigin.GlobalPosition;
@@ -81,7 +90,9 @@ public partial class MonsterActorController : Node2D
 
 	public HeroActorController? CurrentTarget { get; private set; }
 
-	public bool HasTarget => IsValidHeroTarget(CurrentTarget);
+    public CombatHealthState Health { get; } = new();
+
+    public bool HasTarget => IsValidHeroTarget(CurrentTarget);
 
 	public void InitializeEntrance( Vector2 spawnPosition, Vector2 entryDestination)
 	{
@@ -122,17 +133,12 @@ public partial class MonsterActorController : Node2D
 
     private void InitializeCombatProfile()
     {
-        CombatProfile.AttackRange =
-            TemporaryAttackRange;
-
-        CombatProfile.AttackInterval =
-            TemporaryAttackInterval;
-
-        CombatProfile.MoveSpeed =
-            CombatMoveSpeed;
-
-        CombatProfile.AttackDelivery =
-            TemporaryAttackDelivery;
+        CombatProfile.AttackRange = TemporaryAttackRange;
+        CombatProfile.AttackInterval = TemporaryAttackInterval;
+        CombatProfile.MoveSpeed =  CombatMoveSpeed;
+        CombatProfile.AttackDelivery = TemporaryAttackDelivery;
+        CombatProfile.MaximumHealth = TemporaryMaximumHealth;
+        CombatProfile.AttackDamage = TemporaryAttackDamage;
     }
 
     public override void _Ready()
@@ -158,7 +164,13 @@ public partial class MonsterActorController : Node2D
         }
 
         InitializeCombatProfile();
+        Health.Initialize(CombatProfile.MaximumHealth);
         _visualRestPosition = VisualRoot.Position;
+
+			GD.Print(
+				 $"{Name} initialized with " +
+				 $"{Health.CurrentHealth}/" +
+				 $"{Health.MaximumHealth} health.");
     }
 
 	private static bool IsValidHeroTarget(HeroActorController? hero)

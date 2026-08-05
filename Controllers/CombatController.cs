@@ -121,31 +121,42 @@ public partial class CombatController : Node
 				break;
 		}
 	}
-	
-	private void ConfirmHeroImpact(HeroActorController attacker, MonsterActorController target)
-	{
-		if (!GodotObject.IsInstanceValid(attacker)
-			|| !GodotObject.IsInstanceValid(target))
-		{
-			return;
-		}
 
-		GD.Print(
-			$"Hero impact confirmed: " +
-			$"{attacker.Name} → {target.Name}");
+    private void ConfirmHeroImpact(
+    HeroActorController attacker,
+    MonsterActorController target)
+    {
+        if (!GodotObject.IsInstanceValid(attacker)
+            || !GodotObject.IsInstanceValid(target))
+        {
+            return;
+        }
 
-		bool establishedInitialAggro =
-			target.TryEngage(attacker);
+        GD.Print(
+            $"Hero impact confirmed: " +
+            $"{attacker.Name} → {target.Name}");
 
-		if (!establishedInitialAggro)
-			return;
+        bool establishedInitialAggro =
+            target.TryEngage(attacker);
 
-		GD.Print(
-			$"Initial monster aggro established: " +
-			$"{target.Name} → {attacker.Name}");
-	}
-	
-	private void HandlePendingProjectileRelease(HeroActorController attacker, MonsterActorController target)
+        if (establishedInitialAggro)
+        {
+            GD.Print(
+                $"Initial monster aggro established: " +
+                $"{target.Name} → {attacker.Name}");
+        }
+
+        DamageResult result =
+            target.Health.ApplyDamage(
+                attacker.CombatProfile.AttackDamage);
+
+        PrintDamageResult(
+            attacker.Name,
+            target.Name,
+            result);
+    }
+
+    private void HandlePendingProjectileRelease(HeroActorController attacker, MonsterActorController target)
 	{
 		ProjectileActorController projectile =
 			ProjectileScene.Instantiate
@@ -222,21 +233,66 @@ public partial class CombatController : Node
 			monster.AttackReleased += OnMonsterAttackReleased;
 		}
 	}
-	
-	private void OnMonsterAttackReleased(MonsterActorController attacker, HeroActorController target)
-	{
-		if (!GodotObject.IsInstanceValid(attacker)
-			|| !GodotObject.IsInstanceValid(target))
+
+    private void OnMonsterAttackReleased(
+    MonsterActorController attacker,
+    HeroActorController target)
+    {
+        if (!GodotObject.IsInstanceValid(attacker)
+            || !GodotObject.IsInstanceValid(target))
+        {
+            return;
+        }
+
+        GD.Print(
+            $"Combat received monster attack release: " +
+            $"{attacker.Name} → {target.Name}");
+
+        ConfirmMonsterImpact(
+            attacker,
+            target);
+    }
+
+    private void ConfirmMonsterImpact(
+    MonsterActorController attacker,
+    HeroActorController target)
+    {
+        if (!GodotObject.IsInstanceValid(attacker)
+            || !GodotObject.IsInstanceValid(target))
+        {
+            return;
+        }
+
+        GD.Print(
+            $"Monster impact confirmed: " +
+            $"{attacker.Name} → {target.Name}");
+
+        DamageResult result =
+            target.Health.ApplyDamage(attacker.CombatProfile.AttackDamage);
+
+        PrintDamageResult(attacker.Name,  target.Name, result);
+    }
+
+    private static void PrintDamageResult(
+	StringName attackerName,
+	StringName targetName,
+	DamageResult result)
 		{
-			return;
+			GD.Print(
+				$"{attackerName} dealt " +
+				$"{result.AppliedDamage} damage to " +
+				$"{targetName}. " +
+				$"Remaining health=" +
+				$"{result.RemainingHealth}.");
+
+			if (!result.WasLethal)
+				return;
+
+			GD.Print(
+				$"{targetName} received lethal damage.");
 		}
 
-		GD.Print(
-			$"Combat received monster attack release: " +
-			$"{attacker.Name} → {target.Name}");
-	}
-
-	private void ApplyCombatState()
+    private void ApplyCombatState()
 	{
 		bool shouldCombatBeActive =
 			MonsterParticipantCount > 0;

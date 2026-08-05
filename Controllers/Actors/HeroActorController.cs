@@ -60,6 +60,13 @@ public partial class HeroActorController : Node2D
     [Export(PropertyHint.Range, "0,0.5,0.01")]
     public float MovementAnimationGraceTime { get; set; } = 0.15f;
 
+    [ExportCategory("Temporary Combat Values")]
+    [Export(PropertyHint.Range, "1,100000,1")]
+    public float TemporaryMaximumHealth { get; set; } = 100.0f;
+
+    [Export(PropertyHint.Range, "0,100000,1")]
+    public float TemporaryAttackDamage { get; set; } = 20.0f;
+
     [ExportCategory("Temporary Combat Movement")]
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float CombatMoveSpeed { get; set; } = 140.0f;
@@ -100,7 +107,9 @@ public partial class HeroActorController : Node2D
 
 	public Vector2 FormationPosition => FormationAnchor.GlobalPosition + FormationOffset;
 
-	public override void _Ready()
+    public CombatHealthState Health { get; } = new();
+
+    public override void _Ready()
 	{
 		if (!ValidateReferences())
 		{
@@ -109,6 +118,8 @@ public partial class HeroActorController : Node2D
 		}
 
         InitializeCombatProfile();
+
+        Health.Initialize(CombatProfile.MaximumHealth);
 
         CombatProfile.AttackRange = TemporaryAttackRange;
         CombatProfile.AttackInterval = TemporaryAttackInterval;
@@ -124,8 +135,11 @@ public partial class HeroActorController : Node2D
 
 		GD.Print(
 			$"HeroActor initialized at formation position " +
-			$"{FormationPosition}.");
-	}
+			$"{FormationPosition}." +
+			$"{Name} initialized with " +
+			$"{Health.CurrentHealth}/" +
+			$"{Health.MaximumHealth} health.");
+    }
 	
 	public FacingDirection Facing { get; private set; }
 	= FacingDirection.Left;
@@ -263,12 +277,11 @@ public partial class HeroActorController : Node2D
     private void InitializeCombatProfile()
     {
         CombatProfile.AttackRange = TemporaryAttackRange;
-
         CombatProfile.AttackInterval = TemporaryAttackInterval;
-
         CombatProfile.MoveSpeed = CombatMoveSpeed;
-
         CombatProfile.AttackDelivery = TemporaryAttackDelivery;
+        CombatProfile.MaximumHealth = TemporaryMaximumHealth;
+        CombatProfile.AttackDamage = TemporaryAttackDamage;
     }
 
     private bool IsTargetWithinAttackRange(MonsterActorController target)
