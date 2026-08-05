@@ -3,10 +3,10 @@ using Godot;
 
 public partial class EncounterController : Node
 {
-    [Signal]
-    public delegate void ActiveMonsterCountChangedEventHandler(
-    int activeMonsterCount);
-    
+	[Signal]
+	public delegate void ActiveMonsterCountChangedEventHandler(
+	int activeMonsterCount);
+	
 	[ExportCategory("Dependencies")]
 	[Export]
 	public JourneyStateService JourneyState { get; set; } = null!;
@@ -17,22 +17,22 @@ public partial class EncounterController : Node
 	[Export]
 	public Node2D MonsterSpawnAnchor { get; set; } = null!;
 
-    [Export]
-    public Node2D MonsterEntryAnchor { get; set; } = null!;
+	[Export]
+	public Node2D MonsterEntryAnchor { get; set; } = null!;
 
-    [ExportCategory("Encounter Content")]
+	[ExportCategory("Encounter Content")]
 	[Export]
 	public PackedScene MonsterScene { get; set; } = null!;
 
-    private readonly List<MonsterActorController> _activeMonsters = new();
+	private readonly List<MonsterActorController> _activeMonsters = new();
 
-    public IReadOnlyList<MonsterActorController> ActiveMonsters =>
-        _activeMonsters;
+	public IReadOnlyList<MonsterActorController> ActiveMonsters =>
+		_activeMonsters;
 
-    public int ActiveMonsterCount =>
-        _activeMonsters.Count;
+	public int ActiveMonsterCount =>
+		_activeMonsters.Count;
 
-    public override void _Ready()
+	public override void _Ready()
 	{
 		if (!ValidateReferences())
 			return;
@@ -71,60 +71,60 @@ public partial class EncounterController : Node
 		EndEncounterPresentation();
 	}
 
-    private void BeginEncounterPresentation()
-    {
-        RemoveInvalidMonsterReferences();
+	private void BeginEncounterPresentation()
+	{
+		RemoveInvalidMonsterReferences();
 
-        if (_activeMonsters.Count > 0)
-            return;
+		if (_activeMonsters.Count > 0)
+			return;
 
-        SpawnTestMonster();
-    }
+		SpawnTestMonster();
+	}
 
-    private void SpawnTestMonster()
-    {
-        MonsterActorController monster =
-            MonsterScene.Instantiate<MonsterActorController>();
+	private void SpawnTestMonster()
+	{
+		MonsterActorController monster =
+			MonsterScene.Instantiate<MonsterActorController>();
 
-        ActorLayer.AddChild(monster);
+		ActorLayer.AddChild(monster);
 
-        monster.InitializeEntrance(
-            MonsterSpawnAnchor.GlobalPosition,
-            MonsterEntryAnchor.GlobalPosition);
+		monster.InitializeEntrance(
+			MonsterSpawnAnchor.GlobalPosition,
+			MonsterEntryAnchor.GlobalPosition);
 
-        _activeMonsters.Add(monster);
-        EmitActiveMonsterCountChanged();
+		_activeMonsters.Add(monster);
+		EmitActiveMonsterCountChanged();
 
-        GD.Print(
-            $"Monster added to encounter. " +
-            $"Active monsters={_activeMonsters.Count}");
-    }
+		GD.Print(
+			$"Monster added to encounter. " +
+			$"Active monsters={_activeMonsters.Count}");
+	}
 
-    private void EndEncounterPresentation()
-    {
-        RemoveInvalidMonsterReferences();
+	private void EndEncounterPresentation()
+	{
+		RemoveInvalidMonsterReferences();
 
-        foreach (MonsterActorController monster in _activeMonsters)
-        {
-            if (GodotObject.IsInstanceValid(monster))
-                monster.QueueFree();
-        }
+		foreach (MonsterActorController monster in _activeMonsters)
+		{
+			if (GodotObject.IsInstanceValid(monster))
+				monster.QueueFree();
+		}
 
-        _activeMonsters.Clear();
-        EmitActiveMonsterCountChanged();
+		_activeMonsters.Clear();
+		EmitActiveMonsterCountChanged();
 
-        GD.Print(
-            "Encounter monsters removed. Active monsters=0");
-    }
+		GD.Print(
+			"Encounter monsters removed. Active monsters=0");
+	}
 
-    private void RemoveInvalidMonsterReferences()
-    {
-        _activeMonsters.RemoveAll(
-            monster =>
-                !GodotObject.IsInstanceValid(monster));
-    }
+	private void RemoveInvalidMonsterReferences()
+	{
+		_activeMonsters.RemoveAll(
+			monster =>
+				!GodotObject.IsInstanceValid(monster));
+	}
 
-    private bool ValidateReferences()
+	private bool ValidateReferences()
 	{
 		bool valid = true;
 
@@ -140,25 +140,25 @@ public partial class EncounterController : Node
 			MonsterSpawnAnchor,
 			nameof(MonsterSpawnAnchor));
 
-        valid &= Require(
+		valid &= Require(
 			MonsterEntryAnchor,
 			nameof(MonsterEntryAnchor));
 
-        valid &= Require(
+		valid &= Require(
 			MonsterScene,
 			nameof(MonsterScene));
 
 		return valid;
 	}
 
-    private void EmitActiveMonsterCountChanged()
-    {
-        EmitSignal(
-            SignalName.ActiveMonsterCountChanged,
-            _activeMonsters.Count);
-    }
+	private void EmitActiveMonsterCountChanged()
+	{
+		EmitSignal(
+			SignalName.ActiveMonsterCountChanged,
+			_activeMonsters.Count);
+	}
 
-    private static bool Require(
+	private static bool Require(
 		GodotObject value,
 		string propertyName)
 	{

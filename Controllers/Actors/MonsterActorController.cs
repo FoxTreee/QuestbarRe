@@ -2,186 +2,224 @@ using Godot;
 
 public partial class MonsterActorController : Node2D
 {
-    private enum MonsterState
-    {
-        Entering,
-        WaitingForTarget,
-        ApproachingTarget,
-        WaitingToAttack,
-        Dead
-    }
+	private enum MonsterState
+	{
+		Entering,
+		WaitingForTarget,
+		ApproachingTarget,
+		WaitingToAttack,
+		Dead
+	}
 
-    [ExportCategory("Entrance")]
-    [Export(PropertyHint.Range, "0,500,1")]
-    public float EntrySpeed { get; set; } = 100.0f;
+	[ExportCategory("Entrance")]
+	[Export(PropertyHint.Range, "0,500,1")]
+	public float EntrySpeed { get; set; } = 100.0f;
 
-    [Export(PropertyHint.Range, "0.1,20,0.1")]
-    public float ArrivalDistance { get; set; } = 1.0f;
+	[Export(PropertyHint.Range, "0.1,20,0.1")]
+	public float ArrivalDistance { get; set; } = 1.0f;
 
-    [ExportCategory("Temporary Combat Movement")]
-    [Export(PropertyHint.Range, "0,500,1")]
-    public float CombatMoveSpeed { get; set; } = 100.0f;
+	[ExportCategory("Temporary Combat Movement")]
+	[Export(PropertyHint.Range, "0,500,1")]
+	public float CombatMoveSpeed { get; set; } = 100.0f;
 
-    [Export(PropertyHint.Range, "0,400,1")]
-    public float TemporaryAttackRange { get; set; } = 28.0f;
+	[Export(PropertyHint.Range, "0,400,1")]
+	public float TemporaryAttackRange { get; set; } = 28.0f;
 
-    [Export(PropertyHint.Range, "0.1,20,0.1")]
-    public float CombatArrivalDistance { get; set; } = 1.0f;
+	[Export(PropertyHint.Range, "0.1,20,0.1")]
+	public float CombatArrivalDistance { get; set; } = 1.0f;
+	
+	[Export(PropertyHint.Range, "0,10,0.1")]
+	public float FacingDeadZone { get; set; } = 1.0f;
 
-    public Vector2 EntryDestination { get; private set; }
+	public Vector2 EntryDestination { get; private set; }
 
-    private MonsterState _state = MonsterState.WaitingForTarget;
+	private MonsterState _state = MonsterState.WaitingForTarget;
 
-    public bool IsEntering => _state == MonsterState.Entering;
+	public bool IsEntering => _state == MonsterState.Entering;
+	
+	public FacingDirection Facing { get; private set; }
+	= FacingDirection.Right;
 
-    public HeroActorController? CurrentTarget { get; private set; }
+	public HeroActorController? CurrentTarget { get; private set; }
 
-    public bool HasTarget =>
-        IsValidHeroTarget(CurrentTarget);
+	public bool HasTarget =>
+		IsValidHeroTarget(CurrentTarget);
 
-    public void InitializeEntrance( Vector2 spawnPosition, Vector2 entryDestination)
-    {
-        GlobalPosition = spawnPosition;
-        EntryDestination = entryDestination;
+	public void InitializeEntrance( Vector2 spawnPosition, Vector2 entryDestination)
+	{
+		GlobalPosition = spawnPosition;
+		EntryDestination = entryDestination;
 
-        CurrentTarget = null;
-        _state = MonsterState.Entering;
+		CurrentTarget = null;
+		_state = MonsterState.Entering;
 
-        GD.Print(
-            $"Monster entrance initialized. " +
-            $"Spawn={spawnPosition}, " +
-            $"Destination={entryDestination}");
-    }
+		GD.Print(
+			$"Monster entrance initialized. " +
+			$"Spawn={spawnPosition}, " +
+			$"Destination={entryDestination}");
+	}
 
-    private void UpdateEntrance(double delta)
-    {
-        float movementDistance =
-            EntrySpeed * (float)delta;
+	private void UpdateEntrance(double delta)
+	{
+		float movementDistance =
+			EntrySpeed * (float)delta;
 
-        GlobalPosition = GlobalPosition.MoveToward(
-            EntryDestination,
-            movementDistance);
+		GlobalPosition = GlobalPosition.MoveToward(
+			EntryDestination,
+			movementDistance);
 
-        if (GlobalPosition.DistanceTo(EntryDestination)
-            > ArrivalDistance)
-        {
-            return;
-        }
+		if (GlobalPosition.DistanceTo(EntryDestination)
+			> ArrivalDistance)
+		{
+			return;
+		}
 
-        GlobalPosition = EntryDestination;
-        _state = MonsterState.WaitingForTarget;
+		GlobalPosition = EntryDestination;
+		_state = MonsterState.WaitingForTarget;
 
-        GD.Print(
-            $"Monster reached encounter position " +
-            $"{EntryDestination}.");
-    }
+		GD.Print(
+			$"Monster reached encounter position " +
+			$"{EntryDestination}.");
+	}
 
-    private static bool IsValidHeroTarget(HeroActorController? hero)
-    {
-        return hero is not null
-            && GodotObject.IsInstanceValid(hero)
-            && hero.IsInsideTree();
-    }
+	private static bool IsValidHeroTarget(HeroActorController? hero)
+	{
+		return hero is not null
+			&& GodotObject.IsInstanceValid(hero)
+			&& hero.IsInsideTree();
+	}
 
-    private Vector2 CalculateAttackPosition(HeroActorController target)
-    {
-        return new Vector2(
-            target.GlobalPosition.X - TemporaryAttackRange,
-            target.GlobalPosition.Y);
-    }
+	private Vector2 CalculateAttackPosition(HeroActorController target)
+	{
+		return new Vector2(
+			target.GlobalPosition.X - TemporaryAttackRange,
+			target.GlobalPosition.Y);
+	}
+	
+	private void UpdateFacingTowardTarget()
+	{
+		if (!IsValidHeroTarget(CurrentTarget))
+			return;
 
-    private void UpdateCombatApproach(double delta)
-    {
-        if (!IsValidHeroTarget(CurrentTarget))
-        {
-            CurrentTarget = null;
-            _state = MonsterState.WaitingForTarget;
-            return;
-        }
+		float horizontalDifference =
+			CurrentTarget!.GlobalPosition.X
+			- GlobalPosition.X;
 
-        Vector2 attackPosition =
-            CalculateAttackPosition(CurrentTarget!);
+		if (Mathf.Abs(horizontalDifference)
+			<= FacingDeadZone)
+		{
+			return;
+		}
 
-        float movementDistance =
-            CombatMoveSpeed * (float)delta;
+		FacingDirection newFacing =
+			horizontalDifference < 0.0f
+				? FacingDirection.Left
+				: FacingDirection.Right;
 
-        GlobalPosition = GlobalPosition.MoveToward(
-            attackPosition,
-            movementDistance);
+		if (Facing == newFacing)
+			return;
 
-        if (GlobalPosition.DistanceTo(attackPosition)
-            > CombatArrivalDistance)
-        {
-            return;
-        }
+		Facing = newFacing;
 
-        GlobalPosition = attackPosition;
-        _state = MonsterState.WaitingToAttack;
+		GD.Print(
+			$"{Name} now faces {Facing} toward " +
+			$"{CurrentTarget.Name}.");
+	}
 
-        GD.Print(
-            $"{Name} reached attack position for " +
-            $"{CurrentTarget!.Name} at {attackPosition}.");
-    }
+	private void UpdateCombatApproach(double delta)
+	{
+		if (!IsValidHeroTarget(CurrentTarget))
+		{
+			CurrentTarget = null;
+			_state = MonsterState.WaitingForTarget;
+			return;
+		}
 
-    private void UpdateWaitingToAttack()
-    {
-        if (!IsValidHeroTarget(CurrentTarget))
-        {
-            CurrentTarget = null;
-            _state = MonsterState.WaitingForTarget;
-            return;
-        }
+		Vector2 attackPosition =
+			CalculateAttackPosition(CurrentTarget!);
 
-        Vector2 attackPosition =
-            CalculateAttackPosition(CurrentTarget!);
+		float movementDistance =
+			CombatMoveSpeed * (float)delta;
 
-        bool targetMovedOutOfRange =
-            GlobalPosition.DistanceTo(attackPosition)
-            > CombatArrivalDistance;
+		GlobalPosition = GlobalPosition.MoveToward(
+			attackPosition,
+			movementDistance);
 
-        if (targetMovedOutOfRange)
-            _state = MonsterState.ApproachingTarget;
-    }
+		if (GlobalPosition.DistanceTo(attackPosition)
+			> CombatArrivalDistance)
+		{
+			return;
+		}
 
-    public bool TryEngage( HeroActorController attacker)
-    {
-        if (!IsValidHeroTarget(attacker))
-            return false;
+		GlobalPosition = attackPosition;
+		_state = MonsterState.WaitingToAttack;
 
-        if (HasTarget)
-            return false;
+		GD.Print(
+			$"{Name} reached attack position for " +
+			$"{CurrentTarget!.Name} at {attackPosition}.");
+	}
 
-        CurrentTarget = attacker;
-        _state = MonsterState.ApproachingTarget;
+	private void UpdateWaitingToAttack()
+	{
+		if (!IsValidHeroTarget(CurrentTarget))
+		{
+			CurrentTarget = null;
+			_state = MonsterState.WaitingForTarget;
+			return;
+		}
 
-        GD.Print(
-            $"{Name} engaged {attacker.Name} " +
-            $"and interrupted its entrance.");
+		Vector2 attackPosition =
+			CalculateAttackPosition(CurrentTarget!);
 
-        return true;
-    }
+		bool targetMovedOutOfRange =
+			GlobalPosition.DistanceTo(attackPosition)
+			> CombatArrivalDistance;
 
-    public override void _Process(double delta)
-    {
-        switch (_state)
-        {
-            case MonsterState.Entering:
-                UpdateEntrance(delta);
-                break;
+		if (targetMovedOutOfRange)
+			_state = MonsterState.ApproachingTarget;
+	}
 
-            case MonsterState.WaitingForTarget:
-                break;
+	public bool TryEngage( HeroActorController attacker)
+	{
+		if (!IsValidHeroTarget(attacker))
+			return false;
 
-            case MonsterState.ApproachingTarget:
-                UpdateCombatApproach(delta);
-                break;
+		if (HasTarget)
+			return false;
 
-            case MonsterState.WaitingToAttack:
-                UpdateWaitingToAttack();
-                break;
+		CurrentTarget = attacker;
+		_state = MonsterState.ApproachingTarget;
 
-            case MonsterState.Dead:
-                break;
-        }
-    }
+		GD.Print(
+			$"{Name} engaged {attacker.Name} " +
+			$"and interrupted its entrance.");
+
+		return true;
+	}
+
+	public override void _Process(double delta)
+	{
+		UpdateFacingTowardTarget();
+		
+		switch (_state)
+		{
+			case MonsterState.Entering:
+				UpdateEntrance(delta);
+				break;
+
+			case MonsterState.WaitingForTarget:
+				break;
+
+			case MonsterState.ApproachingTarget:
+				UpdateCombatApproach(delta);
+				break;
+
+			case MonsterState.WaitingToAttack:
+				UpdateWaitingToAttack();
+				break;
+
+			case MonsterState.Dead:
+				break;
+		}
+	}
 }
