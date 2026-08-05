@@ -41,6 +41,9 @@ public partial class HeroActorController : Node2D
 	[ExportCategory("Visuals")]
 	[Export]
 	public Node2D VisualRoot { get; set; } = null!;
+	
+	[Export]
+	public Marker2D ProjectileOrigin { get; set; } = null!;
 
 	[ExportCategory("Travel Animation")]
 	[Export(PropertyHint.Range, "0,20,0.5")]
@@ -80,6 +83,10 @@ public partial class HeroActorController : Node2D
 
 	[Export(PropertyHint.Range, "0,1,0.05")]
 	public float TemporaryAttackReleasePoint { get; set; } = 0.5f;
+	
+	[Export]
+	public AttackDeliveryMode TemporaryAttackDelivery { get; set; }
+	= AttackDeliveryMode.ImmediateImpact;
 
 	[Export]
 	public TargetingService Targeting { get; set; } = null!;
@@ -515,6 +522,7 @@ public partial class HeroActorController : Node2D
 		valid &= Require(JourneyState, nameof(JourneyState));
 		valid &= Require(VisualRoot, nameof(VisualRoot));
 		valid &= Require(Targeting, nameof(Targeting));
+		valid &= Require(ProjectileOrigin, nameof(ProjectileOrigin));
 
 		return valid;
 	}

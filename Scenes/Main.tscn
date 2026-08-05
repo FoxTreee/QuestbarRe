@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://n85xspfr8gm5" path="res://Controllers/EncounterController.cs" id="11_grg3l"]
 [ext_resource type="PackedScene" uid="uid://bxp73ohtqn7ga" path="res://Scenes/Actors/Monster/MonsterActor.tscn" id="12_frkhe"]
 [ext_resource type="Script" uid="uid://wv8afqfkrl6i" path="res://Controllers/CombatController.cs" id="12_grg3l"]
+[ext_resource type="PackedScene" uid="uid://bnrollfc0yukf" path="res://Scenes/Combat/ProjectileActor.tscn" id="14_1p5hy"]
 
 [sub_resource type="Resource" id="Resource_d6g1g"]
 script = ExtResource("1_idj7w")
@@ -77,17 +78,18 @@ position = Vector2(720, 160)
 color = Color(2.3102762e-06, 0.8720522, 0.87253284, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 
-[node name="HeroActor" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=162660220 node_paths=PackedStringArray("FormationAnchor", "JourneyState", "VisualRoot", "Targeting") instance=ExtResource("2_50glp")]
+[node name="HeroActor" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=162660220 node_paths=PackedStringArray("FormationAnchor", "JourneyState", "VisualRoot", "ProjectileOrigin", "Targeting") instance=ExtResource("2_50glp")]
 position = Vector2(720, 160)
 script = ExtResource("3_vy5pj")
 FormationAnchor = NodePath("../HeroFormationAnchor")
 JourneyState = NodePath("../../../../Services/JourneyStateService")
 VisualRoot = NodePath("VisualRoot")
+ProjectileOrigin = NodePath("../HeroActor2/VisualRoot/ProjectileOrigin")
 BobHeight = 11.0
 BobPhaseOffset = 1.65
 Targeting = NodePath("../../../../Services/TargetingService")
 
-[node name="HeroActor2" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=1393210593 node_paths=PackedStringArray("FormationAnchor", "JourneyState", "VisualRoot", "Targeting") instance=ExtResource("2_50glp")]
+[node name="HeroActor2" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=1393210593 node_paths=PackedStringArray("FormationAnchor", "JourneyState", "VisualRoot", "ProjectileOrigin", "Targeting") instance=ExtResource("2_50glp")]
 position = Vector2(720, 160)
 rotation = -0.01555259
 script = ExtResource("3_vy5pj")
@@ -95,12 +97,18 @@ FormationAnchor = NodePath("../HeroFormationAnchor")
 FormationOffset = Vector2(-40, 0)
 JourneyState = NodePath("../../../../Services/JourneyStateService")
 VisualRoot = NodePath("VisualRoot")
+ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 BobHeight = 20.0
 BobSpeed = 4.5
 BobPhaseOffset = 5.0
-TemporaryAttackRange = 25.0
+TemporaryAttackRange = 350.0
 AttackRangeTolerance = 9.0
+TemporaryAttackDelivery = 1
 Targeting = NodePath("../../../../Services/TargetingService")
+
+[node name="ProjectileOrigin" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2/VisualRoot" parent_id_path=PackedInt32Array(1393210593, 18405630) index="1" unique_id=1283317173]
+position = Vector2(-11.625244, -24.183731)
+rotation = 0.01555259
 
 [node name="RegionEffects" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=2113048403]
 
@@ -157,9 +165,11 @@ MonsterSpawnAnchor = NodePath("../../RegionViewportContainer/RegionViewport/Acto
 MonsterEntryAnchor = NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/MonsterEntryAnchor")
 MonsterScene = ExtResource("12_frkhe")
 
-[node name="CombatController" type="Node" parent="Controllers" unique_id=1601105505 node_paths=PackedStringArray("Encounter", "ConfiguredHeroes")]
+[node name="CombatController" type="Node" parent="Controllers" unique_id=1601105505 node_paths=PackedStringArray("Encounter", "ActorLayer", "ConfiguredHeroes")]
 script = ExtResource("12_grg3l")
 Encounter = NodePath("../EncounterController")
+ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer")
+ProjectileScene = ExtResource("14_1p5hy")
 ConfiguredHeroes = [NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor"), NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2")]
 
 [editable path="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor"]

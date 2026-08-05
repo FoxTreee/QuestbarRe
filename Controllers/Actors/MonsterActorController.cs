@@ -247,8 +247,8 @@ public partial class MonsterActorController : Node2D
 		_state = MonsterState.ApproachingTarget;
 
 		GD.Print(
-			$"{Name} engaged {attacker.Name} " +
-			$"and interrupted its entrance.");
+		$"{Name} locked aggro onto {attacker.Name} " +
+		"and interrupted its entrance.");
 
 		return true;
 	}

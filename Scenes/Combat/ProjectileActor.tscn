@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://bnrollfc0yukf"]
+
+[ext_resource type="Script" uid="uid://bgu212ojl2ddt" path="res://Controllers/Combat/ProjectileActorController.cs" id="1_abc7g"]
+
+[node name="ProjectileActor" type="Node2D" unique_id=146210138]
+script = ExtResource("1_abc7g")
+
+[node name="VisualRoot" type="Node2D" parent="." unique_id=2077960436]
+
+[node name="PrjectileBody" type="Polygon2D" parent="VisualRoot" unique_id=1541392274]
+color = Color(0.76549774, 0.8495811, 0, 1)
+polygon = PackedVector2Array(-8, -3, 8, -3, 8, 3, -8, 3)

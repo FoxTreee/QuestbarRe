@@ -11,6 +11,13 @@ public partial class CombatController : Node
 	[ExportCategory("Dependencies")]
 	[Export]
 	public EncounterController Encounter { get; set; } = null!;
+	
+	[Export]
+	public Node2D ActorLayer { get; set; } = null!;
+
+	[ExportCategory("Combat Content")]
+	[Export]
+	public PackedScene ProjectileScene { get; set; } = null!;
 
 	[ExportCategory("Temporary Hero Roster")]
 	[Export]
@@ -97,6 +104,36 @@ public partial class CombatController : Node
 			$"Combat received attack release: " +
 			$"{attacker.Name} → {target.Name}");
 
+		switch (attacker.TemporaryAttackDelivery)
+		{
+			case AttackDeliveryMode.ImmediateImpact:
+				ConfirmHeroImpact(attacker, target);
+				break;
+
+			case AttackDeliveryMode.Projectile:
+				HandlePendingProjectileRelease(
+					attacker,
+					target);
+				break;
+
+			case AttackDeliveryMode.Hitscan:
+				ConfirmHeroImpact(attacker, target);
+				break;
+		}
+	}
+	
+	private void ConfirmHeroImpact(HeroActorController attacker, MonsterActorController target)
+	{
+		if (!GodotObject.IsInstanceValid(attacker)
+			|| !GodotObject.IsInstanceValid(target))
+		{
+			return;
+		}
+
+		GD.Print(
+			$"Hero impact confirmed: " +
+			$"{attacker.Name} → {target.Name}");
+
 		bool establishedInitialAggro =
 			target.TryEngage(attacker);
 
@@ -106,6 +143,50 @@ public partial class CombatController : Node
 		GD.Print(
 			$"Initial monster aggro established: " +
 			$"{target.Name} → {attacker.Name}");
+	}
+	
+	private void HandlePendingProjectileRelease(HeroActorController attacker, MonsterActorController target)
+	{
+		ProjectileActorController projectile =
+			ProjectileScene.Instantiate
+				<ProjectileActorController>();
+
+		ActorLayer.AddChild(projectile);
+
+		projectile.Impacted +=
+			OnHeroProjectileImpacted;
+
+		projectile.Initialize(
+			attacker,
+			target,
+			attacker.ProjectileOrigin.GlobalPosition);
+
+		GD.Print(
+			$"Projectile created: " +
+			$"{attacker.Name} → {target.Name}");
+	}
+	
+	private void OnHeroProjectileImpacted(
+	ProjectileActorController projectile,
+	HeroActorController attacker,
+	MonsterActorController target)
+	{
+		if (GodotObject.IsInstanceValid(projectile))
+		{
+			projectile.Impacted -=
+				OnHeroProjectileImpacted;
+		}
+
+		if (GodotObject.IsInstanceValid(attacker)
+			&& GodotObject.IsInstanceValid(target))
+		{
+			ConfirmHeroImpact(
+				attacker,
+				target);
+		}
+
+		if (GodotObject.IsInstanceValid(projectile))
+			projectile.QueueFree();
 	}
 
 	private void RefreshHeroTargets()
@@ -183,15 +264,20 @@ public partial class CombatController : Node
 
 	private bool ValidateReferences()
 	{
-		if (!GodotObject.IsInstanceValid(Encounter))
+		if (!GodotObject.IsInstanceValid(ActorLayer))
 		{
-			GD.PushError(
-				"CombatController is missing its " +
-				"Encounter Inspector reference.");
-
-			return false;
+		GD.PushError(
+			"CombatController is missing its " +
+			"ActorLayer Inspector reference.");
+		return false;
 		}
-
+		if (!GodotObject.IsInstanceValid(ProjectileScene))
+		{
+		GD.PushError(
+			"CombatController is missing its " +
+			"ProjectileScene Inspector reference.");
+		return false;
+		}
 		if (ConfiguredHeroes.Count == 0)
 		{
 			GD.PushError(
