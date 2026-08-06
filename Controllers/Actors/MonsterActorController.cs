@@ -6,8 +6,12 @@ public partial class MonsterActorController : Node2D
 	public delegate void AttackReleasedEventHandler(
 	MonsterActorController attacker,
 	HeroActorController target);
-	
-	private enum MonsterState
+
+    [Signal]
+    public delegate void DiedEventHandler(
+    MonsterActorController monster);
+
+    private enum MonsterState
 	{
 		Entering,
 		WaitingForTarget,
@@ -90,6 +94,8 @@ public partial class MonsterActorController : Node2D
 
 	public HeroActorController? CurrentTarget { get; private set; }
 
+    public bool IsDead => _state == MonsterState.Dead;
+
     public CombatHealthState Health { get; } = new();
 
     public bool HasTarget => IsValidHeroTarget(CurrentTarget);
@@ -108,7 +114,29 @@ public partial class MonsterActorController : Node2D
 			$"Destination={entryDestination}");
 	}
 
-	private void UpdateEntrance(double delta)
+    public void EnterDeadState()
+    {
+        if (IsDead)
+            return;
+
+        _state = MonsterState.Dead;
+        CurrentTarget = null;
+
+        _attackCooldownRemaining = 0.0;
+        _attackTimeRemaining = 0.0;
+        _attackReleaseEmitted = false;
+
+        StopAttackPresentation();
+
+        GD.Print(
+            $"{Name} entered its Dead state.");
+
+        EmitSignal(
+            SignalName.Died,
+            this);
+    }
+
+    private void UpdateEntrance(double delta)
 	{
 		float movementDistance =
 			EntrySpeed * (float)delta;
@@ -285,6 +313,9 @@ public partial class MonsterActorController : Node2D
 
 	public bool TryEngage( HeroActorController attacker)
 	{
+        if (IsDead)
+            return false;
+        
 		if (!IsValidHeroTarget(attacker))
 			return false;
 

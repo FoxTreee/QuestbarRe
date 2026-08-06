@@ -1,5 +1,6 @@
-using System.Collections.Generic;
 using Godot;
+using System;
+using System.Collections.Generic;
 
 public partial class CombatController : Node
 {
@@ -8,7 +9,7 @@ public partial class CombatController : Node
 		int heroCount,
 		int monsterCount);
 
-	[ExportCategory("Dependencies")]
+    [ExportCategory("Dependencies")]
 	[Export]
 	public EncounterController Encounter { get; set; } = null!;
 	
@@ -37,7 +38,9 @@ public partial class CombatController : Node
 	public IReadOnlyList<MonsterActorController> MonsterParticipants =>
 		_monsterParticipants;
 
-	public int HeroParticipantCount =>
+    public event Action<CombatEvent>? CombatEventOccurred;
+
+    public int HeroParticipantCount =>
 		_heroParticipants.Count;
 
 	public int MonsterParticipantCount =>
@@ -146,14 +149,35 @@ public partial class CombatController : Node
                 $"{target.Name} → {attacker.Name}");
         }
 
-        DamageResult result =
-            target.Health.ApplyDamage(
-                attacker.CombatProfile.AttackDamage);
+        DamageResult result = target.Health.ApplyDamage(attacker.CombatProfile.AttackDamage);
+
+			RaiseCombatEvent(
+		new CombatEvent
+		{
+			Type = CombatEventType.DamageApplied,
+			Attacker = attacker,
+			Target = target,
+			Damage = result
+		});
 
         PrintDamageResult(
             attacker.Name,
             target.Name,
             result);
+
+        if (result.WasLethal)
+        {
+            target.EnterDeadState();
+
+            RaiseCombatEvent(
+                new CombatEvent
+                {
+                    Type = CombatEventType.DamageApplied,
+                    Attacker = attacker,
+                    Target = target,
+                    Damage = result
+                });
+        }
     }
 
     private void HandlePendingProjectileRelease(HeroActorController attacker, MonsterActorController target)
@@ -217,22 +241,37 @@ public partial class CombatController : Node
 		}
 	}
 
-	private void RefreshMonsterParticipants()
-	{
-		_monsterParticipants.Clear();
+    private void RefreshMonsterParticipants()
+    {
+        foreach (
+            MonsterActorController monster
+            in _monsterParticipants)
+        {
+            if (!GodotObject.IsInstanceValid(monster))
+                continue;
 
-		foreach (
-			MonsterActorController monster
-			in Encounter.ActiveMonsters)
-		{
-			if (!GodotObject.IsInstanceValid(monster))
-				continue;
+            monster.AttackReleased -=
+                OnMonsterAttackReleased;
+        }
 
-			_monsterParticipants.Add(monster);
-			monster.AttackReleased -= OnMonsterAttackReleased;
-			monster.AttackReleased += OnMonsterAttackReleased;
-		}
-	}
+        _monsterParticipants.Clear();
+
+        foreach (
+            MonsterActorController monster
+            in Encounter.ActiveMonsters)
+        {
+            if (!GodotObject.IsInstanceValid(monster))
+                continue;
+
+            if (monster.IsDead)
+                continue;
+
+            _monsterParticipants.Add(monster);
+
+            monster.AttackReleased +=
+                OnMonsterAttackReleased;
+        }
+    }
 
     private void OnMonsterAttackReleased(
     MonsterActorController attacker,
@@ -271,6 +310,12 @@ public partial class CombatController : Node
             target.Health.ApplyDamage(attacker.CombatProfile.AttackDamage);
 
         PrintDamageResult(attacker.Name,  target.Name, result);
+    }
+
+    private void RaiseCombatEvent(
+    CombatEvent combatEvent)
+    {
+        CombatEventOccurred?.Invoke(combatEvent);
     }
 
     private static void PrintDamageResult(

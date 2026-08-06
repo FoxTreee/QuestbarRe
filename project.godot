@@ -25,6 +25,10 @@ window/stretch/aspect="expand"
 
 project/assembly_name="Questbar"
 
+[editor]
+
+movie_writer/movie_file="C:/Users/jafox/github/Questbar/SimpleCombat.avi"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

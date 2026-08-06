@@ -93,38 +93,89 @@ public partial class EncounterController : Node
 			MonsterEntryAnchor.GlobalPosition);
 
 		_activeMonsters.Add(monster);
-		EmitActiveMonsterCountChanged();
+
+        monster.Died += OnMonsterDied;
+
+        EmitActiveMonsterCountChanged();
 
 		GD.Print(
 			$"Monster added to encounter. " +
 			$"Active monsters={_activeMonsters.Count}");
 	}
 
-	private void EndEncounterPresentation()
-	{
-		RemoveInvalidMonsterReferences();
+    private void EndEncounterPresentation()
+    {
+        RemoveInvalidMonsterReferences();
 
-		foreach (MonsterActorController monster in _activeMonsters)
-		{
-			if (GodotObject.IsInstanceValid(monster))
-				monster.QueueFree();
-		}
+        foreach (
+            MonsterActorController monster
+            in _activeMonsters)
+        {
+            if (!GodotObject.IsInstanceValid(monster))
+                continue;
 
-		_activeMonsters.Clear();
-		EmitActiveMonsterCountChanged();
+            monster.Died -= OnMonsterDied;
 
-		GD.Print(
-			"Encounter monsters removed. Active monsters=0");
-	}
+            monster.QueueFree();
+        }
 
-	private void RemoveInvalidMonsterReferences()
+        _activeMonsters.Clear();
+        EmitActiveMonsterCountChanged();
+
+        GD.Print(
+            "Encounter monsters removed. " +
+            "Active monsters=0");
+    }
+
+    private void CompleteEncounter()
+    {
+        GD.Print(
+        "Encounter completed. Returning journey to Traveling.");
+
+        // Use the same JourneyStateService transition call
+        // currently used by your E-key test to enter Traveling.
+
+        JourneyState.EndEncounter();
+    }
+
+    private void OnMonsterDied(
+    MonsterActorController monster)
+    {
+        if (!GodotObject.IsInstanceValid(monster))
+            return;
+
+        bool wasRemoved =
+            _activeMonsters.Remove(monster);
+
+        if (!wasRemoved)
+            return;
+
+        monster.Died -=
+            OnMonsterDied;
+
+        EmitActiveMonsterCountChanged();
+
+        GD.Print(
+            $"{monster.Name} removed from encounter. " +
+            $"Active monsters={_activeMonsters.Count}");
+
+        monster.QueueFree();
+
+        if (_activeMonsters.Count == 0)
+        {
+            CompleteEncounter();
+        }
+    }
+
+    private void RemoveInvalidMonsterReferences()
 	{
 		_activeMonsters.RemoveAll(
 			monster =>
 				!GodotObject.IsInstanceValid(monster));
 	}
 
-	private bool ValidateReferences()
+
+    private bool ValidateReferences()
 	{
 		bool valid = true;
 
