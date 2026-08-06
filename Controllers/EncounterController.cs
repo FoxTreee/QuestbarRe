@@ -32,69 +32,69 @@ public partial class EncounterController : Node
 	public int ActiveMonsterCount =>
 		_activeMonsters.Count;
 
-    // Spawn monsters -- DEBUG ONLY
-    public void DebugSpawnMonsters(int count)
-    {
-        int validCount =
-            Mathf.Clamp(count, 1, 100);
+	// Spawn monsters -- DEBUG ONLY
+	public void DebugSpawnMonsters(int count)
+	{
+		int validCount =
+			Mathf.Clamp(count, 1, 100);
 
-        if (JourneyState.CurrentState
-            != JourneyStateService.JourneyState.Encounter)
-        {
-            JourneyState.BeginEncounter();
-        }
+		if (JourneyState.CurrentState
+			!= JourneyStateService.JourneyState.Encounter)
+		{
+			JourneyState.BeginEncounter();
+		}
 
-        RemoveInvalidMonsterReferences();
+		RemoveInvalidMonsterReferences();
 
-        int monstersToAdd =
-            Mathf.Max(
-                validCount - _activeMonsters.Count,
-                0);
+		int monstersToAdd =
+			Mathf.Max(
+				validCount - _activeMonsters.Count,
+				0);
 
-        for (int i = 0; i < monstersToAdd; i++)
-        {
-            SpawnTestMonster();
-        }
+		for (int i = 0; i < monstersToAdd; i++)
+		{
+			SpawnTestMonster();
+		}
 
-        GD.Print(
-            $"Debug ensured {validCount} active monster(s). " +
-            $"Active monsters={_activeMonsters.Count}");
-    }
+		GD.Print(
+			$"Debug ensured {validCount} active monster(s). " +
+			$"Active monsters={_activeMonsters.Count}");
+	}
 
-    public void DebugAddMonsters(int count)
-    {
-        int validCount =
-            Mathf.Clamp(count, 1, 100);
+	public void DebugAddMonsters(int count)
+	{
+		int validCount =
+			Mathf.Clamp(count, 1, 100);
 
-        int countBeforeTransition =
-            _activeMonsters.Count;
+		int countBeforeTransition =
+			_activeMonsters.Count;
 
-        if (JourneyState.CurrentState
-            != JourneyStateService.JourneyState.Encounter)
-        {
-            JourneyState.BeginEncounter();
-        }
+		if (JourneyState.CurrentState
+			!= JourneyStateService.JourneyState.Encounter)
+		{
+			JourneyState.BeginEncounter();
+		}
 
-        int automaticallyAdded =
-            _activeMonsters.Count
-            - countBeforeTransition;
+		int automaticallyAdded =
+			_activeMonsters.Count
+			- countBeforeTransition;
 
-        int remainingToAdd =
-            Mathf.Max(
-                validCount - automaticallyAdded,
-                0);
+		int remainingToAdd =
+			Mathf.Max(
+				validCount - automaticallyAdded,
+				0);
 
-        for (int i = 0; i < remainingToAdd; i++)
-        {
-            SpawnTestMonster();
-        }
+		for (int i = 0; i < remainingToAdd; i++)
+		{
+			SpawnTestMonster();
+		}
 
-        GD.Print(
-            $"Debug added {validCount} monster(s). " +
-            $"Active monsters={_activeMonsters.Count}");
-    }
+		GD.Print(
+			$"Debug added {validCount} monster(s). " +
+			$"Active monsters={_activeMonsters.Count}");
+	}
 
-    public override void _Ready()
+	public override void _Ready()
 	{
 		if (!ValidateReferences())
 			return;
@@ -143,10 +143,14 @@ public partial class EncounterController : Node
 		SpawnTestMonster();
 	}
 
-    private MonsterActorController SpawnTestMonster()
-    {
-		MonsterActorController monster =
-			MonsterScene.Instantiate<MonsterActorController>();
+	private MonsterActorController SpawnTestMonster()
+	{
+		MonsterActorController monster = 
+		MonsterScene.Instantiate<MonsterActorController>();
+
+		monster.Name = $"MonsterActor{_activeMonsters.Count + 1}";
+
+ActorLayer.AddChild(monster);
 
 		ActorLayer.AddChild(monster);
 
@@ -156,82 +160,82 @@ public partial class EncounterController : Node
 
 		_activeMonsters.Add(monster);
 
-        monster.Died += OnMonsterDied;
+		monster.Died += OnMonsterDied;
 
-        EmitActiveMonsterCountChanged();
+		EmitActiveMonsterCountChanged();
 
 
 		GD.Print(
 			$"Monster added to encounter. " +
 			$"Active monsters={_activeMonsters.Count}");
-        return monster;
-    }
+		return monster;
+	}
 
-    private void EndEncounterPresentation()
-    {
-        RemoveInvalidMonsterReferences();
+	private void EndEncounterPresentation()
+	{
+		RemoveInvalidMonsterReferences();
 
-        foreach (
-            MonsterActorController monster
-            in _activeMonsters)
-        {
-            if (!GodotObject.IsInstanceValid(monster))
-                continue;
+		foreach (
+			MonsterActorController monster
+			in _activeMonsters)
+		{
+			if (!GodotObject.IsInstanceValid(monster))
+				continue;
 
-            monster.Died -= OnMonsterDied;
+			monster.Died -= OnMonsterDied;
 
-            monster.QueueFree();
-        }
+			monster.QueueFree();
+		}
 
-        _activeMonsters.Clear();
-        EmitActiveMonsterCountChanged();
+		_activeMonsters.Clear();
+		EmitActiveMonsterCountChanged();
 
-        GD.Print(
-            "Encounter monsters removed. " +
-            "Active monsters=0");
-    }
+		GD.Print(
+			"Encounter monsters removed. " +
+			"Active monsters=0");
+	}
 
-    private void CompleteEncounter()
-    {
-        GD.Print(
-        "Encounter completed. Returning journey to Traveling.");
+	private void CompleteEncounter()
+	{
+		GD.Print(
+		"Encounter completed. Returning journey to Traveling.");
 
-        // Use the same JourneyStateService transition call
-        // currently used by your E-key test to enter Traveling.
+		// Use the same JourneyStateService transition call
+		// currently used by your E-key test to enter Traveling.
 
-        JourneyState.EndEncounter();
-    }
+		JourneyState.EndEncounter();
+	}
 
-    private void OnMonsterDied(
-    MonsterActorController monster)
-    {
-        if (!GodotObject.IsInstanceValid(monster))
-            return;
+	private void OnMonsterDied(
+	MonsterActorController monster)
+	{
+		if (!GodotObject.IsInstanceValid(monster))
+			return;
 
-        bool wasRemoved =
-            _activeMonsters.Remove(monster);
+		bool wasRemoved =
+			_activeMonsters.Remove(monster);
 
-        if (!wasRemoved)
-            return;
+		if (!wasRemoved)
+			return;
 
-        monster.Died -=
-            OnMonsterDied;
+		monster.Died -=
+			OnMonsterDied;
 
-        EmitActiveMonsterCountChanged();
+		EmitActiveMonsterCountChanged();
 
-        GD.Print(
-            $"{monster.Name} removed from encounter. " +
-            $"Active monsters={_activeMonsters.Count}");
+		GD.Print(
+			$"{monster.Name} removed from encounter. " +
+			$"Active monsters={_activeMonsters.Count}");
 
-        monster.QueueFree();
+		monster.QueueFree();
 
-        if (_activeMonsters.Count == 0)
-        {
-            CompleteEncounter();
-        }
-    }
+		if (_activeMonsters.Count == 0)
+		{
+			CompleteEncounter();
+		}
+	}
 
-    private void RemoveInvalidMonsterReferences()
+	private void RemoveInvalidMonsterReferences()
 	{
 		_activeMonsters.RemoveAll(
 			monster =>
@@ -239,7 +243,7 @@ public partial class EncounterController : Node
 	}
 
 
-    private bool ValidateReferences()
+	private bool ValidateReferences()
 	{
 		bool valid = true;
 

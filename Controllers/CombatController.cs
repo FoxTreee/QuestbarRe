@@ -9,7 +9,7 @@ public partial class CombatController : Node
 		int heroCount,
 		int monsterCount);
 
-    [ExportCategory("Dependencies")]
+	[ExportCategory("Dependencies")]
 	[Export]
 	public EncounterController Encounter { get; set; } = null!;
 	
@@ -38,65 +38,66 @@ public partial class CombatController : Node
 	public IReadOnlyList<MonsterActorController> MonsterParticipants =>
 		_monsterParticipants;
 
-    public event Action<CombatEvent>? CombatEventOccurred;
+	public event Action<CombatEvent>? CombatEventOccurred;
 
-    public int HeroParticipantCount =>
+	public int HeroParticipantCount =>
 		_heroParticipants.Count;
 
 	public int MonsterParticipantCount =>
 		_monsterParticipants.Count;
 
 	public bool IsCombatActive { get; private set; }
-    public bool IsInitialized { get; private set; }
+	public bool IsInitialized { get; private set; }
 
-    // Reffresh heroes -- DEBUG ONLY
-    public void DebugRefreshHeroParticipants()
-    {
-        foreach (
-            HeroActorController hero
-            in _heroParticipants)
-        {
-            if (!GodotObject.IsInstanceValid(hero))
-                continue;
+	// Reffresh heroes -- DEBUG ONLY
+	public void DebugRefreshHeroParticipants()
+	{
+		UnsubscribeHeroParticipants();
+		_heroParticipants.Clear();
 
-            hero.AttackReleased -=
-                OnHeroAttackReleased;
+		BuildHeroParticipants();
 
-            hero.Incapacitated -=
-                OnHeroIncapacitated;
-        }
+		ApplyCombatState();
+		RefreshHeroTargets();
+		RefreshMonsterTargets();
 
-        _heroParticipants.Clear();
+		foreach (
+			HeroActorController hero
+			in _heroParticipants)
+		{
+			if (!GodotObject.IsInstanceValid(hero))
+				continue;
 
-        BuildHeroParticipants();
+			hero.ResumeCombatAfterDebugReset();
+		}
 
-        RefreshMonsterTargets();
-        ApplyCombatState();
-        EmitParticipantsChanged();
+		EmitParticipantsChanged();
 
-        GD.Print(
-            $"Debug-refreshed hero participants. " +
-            $"Active heroes={_heroParticipants.Count}");
-    }
-    // Remove Heroes -- DEBUG ONLY
-    private void UnsubscribeHeroParticipants()
-    {
-        foreach (
-            HeroActorController hero
-            in _heroParticipants)
-        {
-            if (!GodotObject.IsInstanceValid(hero))
-                continue;
+		GD.Print(
+			$"Debug-respawned heroes into current combat. " +
+			$"Active heroes={_heroParticipants.Count}, " +
+			$"existing monsters={_monsterParticipants.Count}");
+	}
 
-            hero.AttackReleased -=
-                OnHeroAttackReleased;
+	// Remove Heroes -- DEBUG ONLY
+	private void UnsubscribeHeroParticipants()
+	{
+		foreach (
+			HeroActorController hero
+			in _heroParticipants)
+		{
+			if (!GodotObject.IsInstanceValid(hero))
+				continue;
 
-            hero.Incapacitated -=
-                OnHeroIncapacitated;
-        }
-    }
+			hero.AttackReleased -=
+				OnHeroAttackReleased;
 
-    public override void _Ready()
+			hero.Incapacitated -=
+				OnHeroIncapacitated;
+		}
+	}
+
+	public override void _Ready()
 	{
 		if (!ValidateReferences())
 			return;
@@ -125,15 +126,15 @@ public partial class CombatController : Node
 			if (!GodotObject.IsInstanceValid(hero))
 				continue;
 
-            if (hero.IsIncapacitated)
-                continue;
+			if (hero.IsIncapacitated)
+				continue;
 
-            _heroParticipants.Add(hero);
+			_heroParticipants.Add(hero);
 
 			hero.AttackReleased += OnHeroAttackReleased;
 
-            hero.Incapacitated += OnHeroIncapacitated;
-        }
+			hero.Incapacitated += OnHeroIncapacitated;
+		}
 	}
 
 	private void OnActiveMonsterCountChanged(int activeMonsterCount)
@@ -174,31 +175,31 @@ public partial class CombatController : Node
 		}
 	}
 
-    private void ConfirmHeroImpact(
-    HeroActorController attacker,
-    MonsterActorController target)
-    {
-        if (!GodotObject.IsInstanceValid(attacker)
-            || !GodotObject.IsInstanceValid(target))
-        {
-            return;
-        }
+	private void ConfirmHeroImpact(
+	HeroActorController attacker,
+	MonsterActorController target)
+	{
+		if (!GodotObject.IsInstanceValid(attacker)
+			|| !GodotObject.IsInstanceValid(target))
+		{
+			return;
+		}
 
-        GD.Print(
-            $"Hero impact confirmed: " +
-            $"{attacker.Name} → {target.Name}");
+		GD.Print(
+			$"Hero impact confirmed: " +
+			$"{attacker.Name} → {target.Name}");
 
-        bool establishedInitialAggro =
-            target.TryEngage(attacker);
+		bool establishedInitialAggro =
+			target.TryEngage(attacker);
 
-        if (establishedInitialAggro)
-        {
-            GD.Print(
-                $"Initial monster aggro established: " +
-                $"{target.Name} → {attacker.Name}");
-        }
+		if (establishedInitialAggro)
+		{
+			GD.Print(
+				$"Initial monster aggro established: " +
+				$"{target.Name} → {attacker.Name}");
+		}
 
-        DamageResult result = target.Health.ApplyDamage(attacker.CombatProfile.AttackDamage);
+		DamageResult result = target.Health.ApplyDamage(attacker.CombatProfile.AttackDamage);
 
 			RaiseCombatEvent(
 		new CombatEvent
@@ -209,27 +210,27 @@ public partial class CombatController : Node
 			Damage = result
 		});
 
-        PrintDamageResult(
-            attacker.Name,
-            target.Name,
-            result);
+		PrintDamageResult(
+			attacker.Name,
+			target.Name,
+			result);
 
-        if (result.WasLethal)
-        {
-            target.EnterDeadState();
+		if (result.WasLethal)
+		{
+			target.EnterDeadState();
 
-            RaiseCombatEvent(
-                new CombatEvent
-                {
-                    Type = CombatEventType.ActorDied,
-                    Attacker = attacker,
-                    Target = target,
-                    Damage = result
-                });
-        }
-    }
+			RaiseCombatEvent(
+				new CombatEvent
+				{
+					Type = CombatEventType.ActorDied,
+					Attacker = attacker,
+					Target = target,
+					Damage = result
+				});
+		}
+	}
 
-    private void HandlePendingProjectileRelease(HeroActorController attacker, MonsterActorController target)
+	private void HandlePendingProjectileRelease(HeroActorController attacker, MonsterActorController target)
 	{
 		ProjectileActorController projectile =
 			ProjectileScene.Instantiate
@@ -273,37 +274,37 @@ public partial class CombatController : Node
 			projectile.QueueFree();
 	}
 
-    private HeroActorController?
-    SelectLowestHealthHero()
-    {
-        HeroActorController? selectedHero = null;
+	private HeroActorController?
+	SelectLowestHealthHero()
+	{
+		HeroActorController? selectedHero = null;
 
-        foreach (
-            HeroActorController hero
-            in _heroParticipants)
-        {
-            if (!GodotObject.IsInstanceValid(hero))
-                continue;
+		foreach (
+			HeroActorController hero
+			in _heroParticipants)
+		{
+			if (!GodotObject.IsInstanceValid(hero))
+				continue;
 
-            if (!hero.IsInsideTree()
-                || hero.IsIncapacitated
-                || !hero.Health.IsAlive)
-            {
-                continue;
-            }
+			if (!hero.IsInsideTree()
+				|| hero.IsIncapacitated
+				|| !hero.Health.IsAlive)
+			{
+				continue;
+			}
 
-            if (selectedHero is null
-                || hero.Health.CurrentHealth
-                    < selectedHero.Health.CurrentHealth)
-            {
-                selectedHero = hero;
-            }
-        }
+			if (selectedHero is null
+				|| hero.Health.CurrentHealth
+					< selectedHero.Health.CurrentHealth)
+			{
+				selectedHero = hero;
+			}
+		}
 
-        return selectedHero;
-    }
+		return selectedHero;
+	}
 
-    private void RefreshHeroTargets()
+	private void RefreshHeroTargets()
 	{
 		foreach (HeroActorController hero in _heroParticipants)
 		{
@@ -320,147 +321,147 @@ public partial class CombatController : Node
 		}
 	}
 
-    private void RefreshMonsterTargets()
-    {
-        foreach (
-            MonsterActorController monster
-            in _monsterParticipants)
-        {
-            if (!GodotObject.IsInstanceValid(monster)
-                || monster.IsDead)
-            {
-                continue;
-            }
+	private void RefreshMonsterTargets()
+	{
+		foreach (
+			MonsterActorController monster
+			in _monsterParticipants)
+		{
+			if (!GodotObject.IsInstanceValid(monster)
+				|| monster.IsDead)
+			{
+				continue;
+			}
 
-            monster.RefreshTargetValidity();
+			monster.RefreshTargetValidity();
 
-            if (monster.HasValidTarget)
-                continue;
+			if (monster.HasValidTarget)
+				continue;
 
-            HeroActorController? replacementTarget =
-                SelectLowestHealthHero();
+			HeroActorController? replacementTarget =
+				SelectLowestHealthHero();
 
-            if (replacementTarget is null)
-            {
-                GD.Print(
-                    $"{monster.Name} has no living hero target.");
+			if (replacementTarget is null)
+			{
+				GD.Print(
+					$"{monster.Name} has no living hero target.");
 
-                continue;
-            }
+				continue;
+			}
 
-            bool targetAccepted = monster.TryEngage(replacementTarget);
+			bool targetAccepted = monster.TryEngage(replacementTarget);
 
-            if (!targetAccepted)
-                continue;
+			if (!targetAccepted)
+				continue;
 
-            GD.Print(
-                $"{monster.Name} automatically retargeted " +
-                $"{replacementTarget.Name} with " +
-                $"{replacementTarget.Health.CurrentHealth} health.");
-        }
-    }
+			GD.Print(
+				$"{monster.Name} automatically retargeted " +
+				$"{replacementTarget.Name} with " +
+				$"{replacementTarget.Health.CurrentHealth} health.");
+		}
+	}
 
-    private void RefreshMonsterParticipants()
-    {
-        foreach (
-            MonsterActorController monster
-            in _monsterParticipants)
-        {
-            if (!GodotObject.IsInstanceValid(monster))
-                continue;
+	private void RefreshMonsterParticipants()
+	{
+		foreach (
+			MonsterActorController monster
+			in _monsterParticipants)
+		{
+			if (!GodotObject.IsInstanceValid(monster))
+				continue;
 
-            monster.AttackReleased -=
-                OnMonsterAttackReleased;
-        }
+			monster.AttackReleased -=
+				OnMonsterAttackReleased;
+		}
 
-        _monsterParticipants.Clear();
+		_monsterParticipants.Clear();
 
-        foreach (
-            MonsterActorController monster
-            in Encounter.ActiveMonsters)
-        {
-            if (!GodotObject.IsInstanceValid(monster))
-                continue;
+		foreach (
+			MonsterActorController monster
+			in Encounter.ActiveMonsters)
+		{
+			if (!GodotObject.IsInstanceValid(monster))
+				continue;
 
-            if (monster.IsDead)
-                continue;
+			if (monster.IsDead)
+				continue;
 
-            _monsterParticipants.Add(monster);
+			_monsterParticipants.Add(monster);
 
-            monster.AttackReleased +=
-                OnMonsterAttackReleased;
-        }
-    }
+			monster.AttackReleased +=
+				OnMonsterAttackReleased;
+		}
+	}
 
-    private void OnMonsterAttackReleased(
-    MonsterActorController attacker,
-    HeroActorController target)
-    {
-        if (!GodotObject.IsInstanceValid(attacker)
-            || !GodotObject.IsInstanceValid(target))
-        {
-            return;
-        }
+	private void OnMonsterAttackReleased(
+	MonsterActorController attacker,
+	HeroActorController target)
+	{
+		if (!GodotObject.IsInstanceValid(attacker)
+			|| !GodotObject.IsInstanceValid(target))
+		{
+			return;
+		}
 
-        GD.Print(
-            $"Combat received monster attack release: " +
-            $"{attacker.Name} → {target.Name}");
+		GD.Print(
+			$"Combat received monster attack release: " +
+			$"{attacker.Name} → {target.Name}");
 
-        ConfirmMonsterImpact(
-            attacker,
-            target);
-    }
+		ConfirmMonsterImpact(
+			attacker,
+			target);
+	}
 
-    private void ConfirmMonsterImpact(
-    MonsterActorController attacker,
-    HeroActorController target)
-    {
-        if (!GodotObject.IsInstanceValid(attacker)
-            || !GodotObject.IsInstanceValid(target))
-        {
-            return;
-        }
+	private void ConfirmMonsterImpact(
+	MonsterActorController attacker,
+	HeroActorController target)
+	{
+		if (!GodotObject.IsInstanceValid(attacker)
+			|| !GodotObject.IsInstanceValid(target))
+		{
+			return;
+		}
 
-        GD.Print(
-            $"Monster impact confirmed: " +
-            $"{attacker.Name} → {target.Name}");
+		GD.Print(
+			$"Monster impact confirmed: " +
+			$"{attacker.Name} → {target.Name}");
 
-        DamageResult result =
-            target.Health.ApplyDamage(attacker.CombatProfile.AttackDamage);
+		DamageResult result =
+			target.Health.ApplyDamage(attacker.CombatProfile.AttackDamage);
 
-        PrintDamageResult(attacker.Name,  target.Name, result);
+		PrintDamageResult(attacker.Name,  target.Name, result);
 
-        RaiseCombatEvent(
-    new CombatEvent
-    {
-        Type = CombatEventType.DamageApplied,
-        Attacker = attacker,
-        Target = target,
-        Damage = result
-    });
+		RaiseCombatEvent(
+	new CombatEvent
+	{
+		Type = CombatEventType.DamageApplied,
+		Attacker = attacker,
+		Target = target,
+		Damage = result
+	});
 
-        if (!result.WasLethal)
-            return;
+		if (!result.WasLethal)
+			return;
 
-        target.EnterIncapacitatedState();
+		target.EnterIncapacitatedState();
 
-        RaiseCombatEvent(
-            new CombatEvent
-            {
-                Type = CombatEventType.ActorIncapacitated,
-                Attacker = attacker,
-                Target = target,
-                Damage = result
-            });
-    }
+		RaiseCombatEvent(
+			new CombatEvent
+			{
+				Type = CombatEventType.ActorIncapacitated,
+				Attacker = attacker,
+				Target = target,
+				Damage = result
+			});
+	}
 
-    private void RaiseCombatEvent(
-    CombatEvent combatEvent)
-    {
-        CombatEventOccurred?.Invoke(combatEvent);
-    }
+	private void RaiseCombatEvent(
+	CombatEvent combatEvent)
+	{
+		CombatEventOccurred?.Invoke(combatEvent);
+	}
 
-    private static void PrintDamageResult(
+	private static void PrintDamageResult(
 	StringName attackerName,
 	StringName targetName,
 	DamageResult result)
@@ -479,35 +480,35 @@ public partial class CombatController : Node
 				$"{targetName} received lethal damage.");
 		}
 
-    private void OnHeroIncapacitated(
-    HeroActorController hero)
-    {
-        if (!GodotObject.IsInstanceValid(hero))
-            return;
+	private void OnHeroIncapacitated(
+	HeroActorController hero)
+	{
+		if (!GodotObject.IsInstanceValid(hero))
+			return;
 
-        GD.Print(
-            $"Combat handling incapacitation for {hero.Name}.");
+		GD.Print(
+			$"Combat handling incapacitation for {hero.Name}.");
 
-        bool wasRemoved =
-            _heroParticipants.Remove(hero);
+		bool wasRemoved =
+			_heroParticipants.Remove(hero);
 
-        if (!wasRemoved)
-            return;
+		if (!wasRemoved)
+			return;
 
-        hero.AttackReleased -= OnHeroAttackReleased;
+		hero.AttackReleased -= OnHeroAttackReleased;
 
-        hero.Incapacitated -= OnHeroIncapacitated;
+		hero.Incapacitated -= OnHeroIncapacitated;
 
-        GD.Print(
-            $"{hero.Name} removed from active combat. " +
-            $"Active heroes={_heroParticipants.Count}");
+		GD.Print(
+			$"{hero.Name} removed from active combat. " +
+			$"Active heroes={_heroParticipants.Count}");
 
-        RefreshMonsterTargets();
-        ApplyCombatState();
-        EmitParticipantsChanged();
-    }
+		RefreshMonsterTargets();
+		ApplyCombatState();
+		EmitParticipantsChanged();
+	}
 
-    private void ApplyCombatState()
+	private void ApplyCombatState()
 	{
 		bool shouldCombatBeActive =
 			MonsterParticipantCount > 0;
@@ -560,25 +561,25 @@ public partial class CombatController : Node
 		return true;
 	}
 
-    public override void _ExitTree()
-    {
-        UnsubscribeHeroParticipants();
+	public override void _ExitTree()
+	{
+		UnsubscribeHeroParticipants();
 
-        foreach (
-            MonsterActorController monster
-            in _monsterParticipants)
-        {
-            if (!GodotObject.IsInstanceValid(monster))
-                continue;
+		foreach (
+			MonsterActorController monster
+			in _monsterParticipants)
+		{
+			if (!GodotObject.IsInstanceValid(monster))
+				continue;
 
-            monster.AttackReleased -=
-                OnMonsterAttackReleased;
-        }
+			monster.AttackReleased -=
+				OnMonsterAttackReleased;
+		}
 
-        if (GodotObject.IsInstanceValid(Encounter))
-        {
-            Encounter.ActiveMonsterCountChanged -=
-                OnActiveMonsterCountChanged;
-        }
-    }
+		if (GodotObject.IsInstanceValid(Encounter))
+		{
+			Encounter.ActiveMonsterCountChanged -=
+				OnActiveMonsterCountChanged;
+		}
+	}
 }

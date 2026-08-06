@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://2wrinnpuj3lv"]
+
+[ext_resource type="Script" uid="uid://bbdu1sjw7p1sg" path="res://Controllers/Debug/DebugConsoleController.cs" id="1_1jvii"]
+
+[node name="DebugConsoleWindow" type="Window" unique_id=1708193217]
+oversampling_override = 1.0
+title = "Questbar Debug Console"
+initial_position = 2
+size = Vector2i(760, 480)
+script = ExtResource("1_1jvii")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=255021592]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1325042650]
+layout_mode = 2
+
+[node name="DebugOutput" type="RichTextLabel" parent="MarginContainer/VBoxContainer" unique_id=2047922864]
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 2
+theme_override_colors/selection_color = Color(0.1, 0.1, 1, 0.8)
+bbcode_enabled = true
+scroll_following = true
+selection_enabled = true
+
+[node name="Commandrow" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=169440476]
+layout_mode = 2
+
+[node name="PromptLabel" type="Label" parent="MarginContainer/VBoxContainer/Commandrow" unique_id=597955575]
+layout_mode = 2
+text = ">"
+
+[node name="CommandInput" type="LineEdit" parent="MarginContainer/VBoxContainer/Commandrow" unique_id=1619736136]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Type 'help' for commands..."
+clear_button_enabled = true

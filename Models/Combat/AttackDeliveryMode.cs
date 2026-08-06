@@ -1,6 +1,6 @@
 public enum AttackDeliveryMode
 {
-    ImmediateImpact,
-    Projectile,
-    Hitscan
+	ImmediateImpact,
+	Projectile,
+	Hitscan
 }

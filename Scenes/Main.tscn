@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://exf22iqixcxv" path="res://Scripts/Services/JourneyStateService.cs" id="3_jw32o"]
 [ext_resource type="Script" uid="uid://qtqjk5w6ybmn" path="res://Controllers/WindowSettingsPanelController.cs" id="3_kln2b"]
 [ext_resource type="Script" uid="uid://b6vqdf84sajh5" path="res://Controllers/Actors/HeroActorController.cs" id="3_vy5pj"]
+[ext_resource type="PackedScene" uid="uid://2wrinnpuj3lv" path="res://Scenes/Debug/DebugConsoleWindow.tscn" id="5_erwvk"]
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
 [ext_resource type="Script" uid="uid://ccdcfymdch8h5" path="res://Scripts/Services/TargetingService.cs" id="6_frkhe"]
 [ext_resource type="Script" uid="uid://cxklmvye8ghgt" path="res://Scripts/Services/DebugCommandService.cs" id="7_h1m7h"]
@@ -90,9 +91,6 @@ VisualRoot = NodePath("VisualRoot")
 ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 BobHeight = 6.0
 BobSpeed = 5.1
-MovementAnimationGraceTime = 0.25
-TemporaryMaximumHealth = 5.0
-TemporaryAttackDamage = 8.0
 CombatMoveSpeed = 229.0
 Targeting = NodePath("../../../../Services/TargetingService")
 
@@ -110,8 +108,6 @@ ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 BobHeight = 6.0
 BobSpeed = 5.0
 BobPhaseOffset = 3.14
-TemporaryMaximumHealth = 1.0
-TemporaryAttackDamage = 15.0
 CombatMoveSpeed = 20.0
 TemporaryAttackRange = 140.0
 AttackRangeTolerance = 9.0
@@ -137,6 +133,12 @@ ExpandedHeightValue = NodePath("../MarginContainer/SettingsRows/ExpandedHeightRo
 HorizontalAdjustmentSlider = NodePath("../MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowSlider")
 HorizontalAdjustmentValue = NodePath("../MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowValue")
 
+[node name="DebugConsoleWindow" parent="PopupWindows" unique_id=1708193217 node_paths=PackedStringArray("Commands", "DebugOutput", "CommandInput", "Combat") instance=ExtResource("5_erwvk")]
+Commands = NodePath("../../Services/DebugCommandService")
+DebugOutput = NodePath("MarginContainer/VBoxContainer/DebugOutput")
+CommandInput = NodePath("MarginContainer/VBoxContainer/Commandrow/CommandInput")
+Combat = NodePath("../../Controllers/CombatController")
+
 [node name="Services" type="Node" parent="." unique_id=1409283487]
 
 [node name="JourneyStateService" type="Node" parent="Services" unique_id=2091345235]
@@ -145,11 +147,12 @@ script = ExtResource("3_jw32o")
 [node name="TargetingService" type="Node" parent="Services" unique_id=1900580469]
 script = ExtResource("6_frkhe")
 
-[node name="DebugCommandService" type="Node" parent="Services" unique_id=67226220 node_paths=PackedStringArray("Encounter", "Combat", "Heroes")]
+[node name="DebugCommandService" type="Node" parent="Services" unique_id=67226220 node_paths=PackedStringArray("Encounter", "Combat", "Heroes", "Console")]
 script = ExtResource("7_h1m7h")
 Encounter = NodePath("../../Controllers/EncounterController")
 Combat = NodePath("../../Controllers/CombatController")
 Heroes = [NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor"), NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2")]
+Console = NodePath("../../PopupWindows/DebugConsoleWindow")
 
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 
@@ -193,3 +196,4 @@ ConfiguredHeroes = [NodePath("../../RegionViewportContainer/RegionViewport/Actor
 [editable path="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor"]
 [editable path="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2"]
 [editable path="PopupWindows/WindowSettingsPopup"]
+[editable path="PopupWindows/DebugConsoleWindow"]

@@ -7,11 +7,11 @@ public partial class MonsterActorController : Node2D
 	MonsterActorController attacker,
 	HeroActorController target);
 
-    [Signal]
-    public delegate void DiedEventHandler(
-    MonsterActorController monster);
+	[Signal]
+	public delegate void DiedEventHandler(
+	MonsterActorController monster);
 
-    private enum MonsterState
+	private enum MonsterState
 	{
 		Entering,
 		WaitingForTarget,
@@ -27,28 +27,28 @@ public partial class MonsterActorController : Node2D
 	private bool _attackReleaseEmitted;
 	public bool HasValidTarget => IsValidHeroTarget(CurrentTarget);
 
-    [ExportCategory("Visuals")]
+	[ExportCategory("Visuals")]
 	[Export]
 	public Node2D VisualRoot { get; set; } = null!;
 
-    [Export]
-    public Marker2D ImpactOrigin { get; set; } = null!;
+	[Export]
+	public Marker2D ImpactOrigin { get; set; } = null!;
 
-    [ExportCategory("Entrance")]
+	[ExportCategory("Entrance")]
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float EntrySpeed { get; set; } = 100.0f;
 
 	[Export(PropertyHint.Range, "0.1,20,0.1")]
 	public float ArrivalDistance { get; set; } = 1.0f;
 
-    [ExportCategory("Temporary Combat Values")]
-    [Export(PropertyHint.Range, "1,100000,1")]
-    public float TemporaryMaximumHealth { get; set; } = 100.0f;
+	[ExportCategory("Temporary Combat Values")]
+	[Export(PropertyHint.Range, "1,100000,1")]
+	public float TemporaryMaximumHealth { get; set; } = 100.0f;
 
-    [Export(PropertyHint.Range, "0,100000,1")]
-    public float TemporaryAttackDamage { get; set; } = 10.0f;
+	[Export(PropertyHint.Range, "0,100000,1")]
+	public float TemporaryAttackDamage { get; set; } = 10.0f;
 
-    [ExportCategory("Temporary Combat Movement")]
+	[ExportCategory("Temporary Combat Movement")]
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float CombatMoveSpeed { get; set; } = 100.0f;
 
@@ -74,19 +74,19 @@ public partial class MonsterActorController : Node2D
 	[Export(PropertyHint.Range, "0,1,0.05")]
 	public float TemporaryAttackReleasePoint { get; set; } = 0.5f;
 
-    [Export]
-    public AttackDeliveryMode TemporaryAttackDelivery { get; set; }
-    = AttackDeliveryMode.ImmediateImpact;
+	[Export]
+	public AttackDeliveryMode TemporaryAttackDelivery { get; set; }
+	= AttackDeliveryMode.ImmediateImpact;
 
-    public Vector2 EntryDestination { get; private set; }
+	public Vector2 EntryDestination { get; private set; }
 
-    public float AttackDamage { get; set; }
+	public float AttackDamage { get; set; }
 
-    public MonsterCombatProfile CombatProfile { get; } = new();
+	public MonsterCombatProfile CombatProfile { get; } = new();
 
-    public Vector2 ImpactPosition => ImpactOrigin.GlobalPosition;
+	public Vector2 ImpactPosition => ImpactOrigin.GlobalPosition;
 
-    private MonsterState _state = MonsterState.WaitingForTarget;
+	private MonsterState _state = MonsterState.WaitingForTarget;
 
 	public bool IsEntering => _state == MonsterState.Entering;
 	
@@ -95,11 +95,11 @@ public partial class MonsterActorController : Node2D
 
 	public HeroActorController? CurrentTarget { get; private set; }
 
-    public bool IsDead => _state == MonsterState.Dead;
+	public bool IsDead => _state == MonsterState.Dead;
 
-    public CombatHealthState Health { get; } = new();
+	public CombatHealthState Health { get; } = new();
 
-    public bool HasTarget => IsValidHeroTarget(CurrentTarget);
+	public bool HasTarget => IsValidHeroTarget(CurrentTarget);
 
 	public void InitializeEntrance( Vector2 spawnPosition, Vector2 entryDestination)
 	{
@@ -115,52 +115,52 @@ public partial class MonsterActorController : Node2D
 			$"Destination={entryDestination}");
 	}
 
-    public void RefreshTargetValidity()
-    {
-        if (IsDead)
-            return;
+	public void RefreshTargetValidity()
+	{
+		if (IsDead)
+			return;
 
-        if (IsValidHeroTarget(CurrentTarget))
-            return;
+		if (IsValidHeroTarget(CurrentTarget))
+			return;
 
-        CurrentTarget = null;
+		CurrentTarget = null;
 
-        _attackCooldownRemaining = 0.0;
-        _attackTimeRemaining = 0.0;
-        _attackReleaseEmitted = false;
+		_attackCooldownRemaining = 0.0;
+		_attackTimeRemaining = 0.0;
+		_attackReleaseEmitted = false;
 
-        StopAttackPresentation();
+		StopAttackPresentation();
 
-        _state =
-            MonsterState.WaitingForTarget;
+		_state =
+			MonsterState.WaitingForTarget;
 
-        GD.Print(
-            $"{Name} released its invalid hero target.");
-    }
+		GD.Print(
+			$"{Name} released its invalid hero target.");
+	}
 
-    public void EnterDeadState()
-    {
-        if (IsDead)
-            return;
+	public void EnterDeadState()
+	{
+		if (IsDead)
+			return;
 
-        _state = MonsterState.Dead;
-        CurrentTarget = null;
+		_state = MonsterState.Dead;
+		CurrentTarget = null;
 
-        _attackCooldownRemaining = 0.0;
-        _attackTimeRemaining = 0.0;
-        _attackReleaseEmitted = false;
+		_attackCooldownRemaining = 0.0;
+		_attackTimeRemaining = 0.0;
+		_attackReleaseEmitted = false;
 
-        StopAttackPresentation();
+		StopAttackPresentation();
 
-        GD.Print(
-            $"{Name} entered its Dead state.");
+		GD.Print(
+			$"{Name} entered its Dead state.");
 
-        EmitSignal(
-            SignalName.Died,
-            this);
-    }
+		EmitSignal(
+			SignalName.Died,
+			this);
+	}
 
-    private void UpdateEntrance(double delta)
+	private void UpdateEntrance(double delta)
 	{
 		float movementDistance =
 			EntrySpeed * (float)delta;
@@ -183,17 +183,17 @@ public partial class MonsterActorController : Node2D
 			$"{EntryDestination}.");
 	}
 
-    private void InitializeCombatProfile()
-    {
-        CombatProfile.AttackRange = TemporaryAttackRange;
-        CombatProfile.AttackInterval = TemporaryAttackInterval;
-        CombatProfile.MoveSpeed =  CombatMoveSpeed;
-        CombatProfile.AttackDelivery = TemporaryAttackDelivery;
-        CombatProfile.MaximumHealth = TemporaryMaximumHealth;
-        CombatProfile.AttackDamage = TemporaryAttackDamage;
-    }
+	private void InitializeCombatProfile()
+	{
+		CombatProfile.AttackRange = TemporaryAttackRange;
+		CombatProfile.AttackInterval = TemporaryAttackInterval;
+		CombatProfile.MoveSpeed =  CombatMoveSpeed;
+		CombatProfile.AttackDelivery = TemporaryAttackDelivery;
+		CombatProfile.MaximumHealth = TemporaryMaximumHealth;
+		CombatProfile.AttackDamage = TemporaryAttackDamage;
+	}
 
-    public override void _Ready()
+	public override void _Ready()
 	{
 		if (!GodotObject.IsInstanceValid(VisualRoot))
 		{
@@ -205,25 +205,25 @@ public partial class MonsterActorController : Node2D
 			return;
 		}
 
-        if (!GodotObject.IsInstanceValid(ImpactOrigin))
-        {
-            GD.PushError(
-                "MonsterActorController is missing its " +
-                "ImpactOrigin Inspector reference.");
+		if (!GodotObject.IsInstanceValid(ImpactOrigin))
+		{
+			GD.PushError(
+				"MonsterActorController is missing its " +
+				"ImpactOrigin Inspector reference.");
 
-            SetProcess(false);
-            return;
-        }
+			SetProcess(false);
+			return;
+		}
 
-        InitializeCombatProfile();
-        Health.Initialize(CombatProfile.MaximumHealth);
-        _visualRestPosition = VisualRoot.Position;
+		InitializeCombatProfile();
+		Health.Initialize(CombatProfile.MaximumHealth);
+		_visualRestPosition = VisualRoot.Position;
 
 			GD.Print(
 				 $"{Name} initialized with " +
 				 $"{Health.CurrentHealth}/" +
 				 $"{Health.MaximumHealth} health.");
-    }
+	}
 
 	private static bool IsValidHeroTarget(HeroActorController? hero)
 	{
@@ -283,7 +283,7 @@ public partial class MonsterActorController : Node2D
 			CalculateAttackPosition(CurrentTarget!);
 
 		float movementDistance =
-            CombatProfile.MoveSpeed * (float)delta;
+			CombatProfile.MoveSpeed * (float)delta;
 
 		GlobalPosition = GlobalPosition.MoveToward(
 			attackPosition,
@@ -338,16 +338,16 @@ public partial class MonsterActorController : Node2D
 
 	public bool TryEngage( HeroActorController attacker)
 	{
-        if (IsDead)
-            return false;
-        
+		if (IsDead)
+			return false;
+		
 		if (!IsValidHeroTarget(attacker))
 			return false;
 
-        if (HasValidTarget)
-            return false;
+		if (HasValidTarget)
+			return false;
 
-        CurrentTarget = attacker;
+		CurrentTarget = attacker;
 		_state = MonsterState.ApproachingTarget;
 
 		GD.Print(
@@ -473,10 +473,10 @@ public partial class MonsterActorController : Node2D
 		StopAttackPresentation();
 
 		_attackTimeRemaining = 0.0;
-        _attackCooldownRemaining =
+		_attackCooldownRemaining =
 			CombatProfile.AttackInterval;
 
-        if (!IsValidHeroTarget(CurrentTarget))
+		if (!IsValidHeroTarget(CurrentTarget))
 		{
 			CurrentTarget = null;
 			_state = MonsterState.WaitingForTarget;

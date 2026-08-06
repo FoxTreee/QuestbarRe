@@ -8,19 +8,19 @@ public partial class HeroActorController : Node2D
 	HeroActorController attacker,
 	MonsterActorController target);
 
-    [Signal]
-    public delegate void IncapacitatedEventHandler(
-    HeroActorController hero);
+	[Signal]
+	public delegate void IncapacitatedEventHandler(
+	HeroActorController hero);
 
-    private enum HeroState
+	private enum HeroState
 	{
 		InFormation,
 		ApproachingTarget,
 		WaitingToAttack,
 		Attacking,
 		ReturningToFormation,
-        Incapacitated
-    }
+		Incapacitated
+	}
 	
 	private Vector2 _visualRestPosition;
 	private double _animationTime;
@@ -30,11 +30,11 @@ public partial class HeroActorController : Node2D
 	private double _attackTimeRemaining;
 	private bool _attackReleaseEmitted;
 
-    public HeroCombatProfile CombatProfile { get; } = new();
-    public bool IsIncapacitated => _state == HeroState.Incapacitated;
+	public HeroCombatProfile CombatProfile { get; } = new();
+	public bool IsIncapacitated => _state == HeroState.Incapacitated;
 
 
-    [ExportCategory("Formation")]
+	[ExportCategory("Formation")]
 	[Export]
 	public Node2D FormationAnchor { get; set; } = null!;
 
@@ -62,17 +62,17 @@ public partial class HeroActorController : Node2D
 	[Export(PropertyHint.Range, "0,6.28,0.01")]
 	public float BobPhaseOffset { get; set; } = 0.0f;
 
-    [Export(PropertyHint.Range, "0,0.5,0.01")]
-    public float MovementAnimationGraceTime { get; set; } = 0.15f;
+	[Export(PropertyHint.Range, "0,0.5,0.01")]
+	public float MovementAnimationGraceTime { get; set; } = 0.15f;
 
-    [ExportCategory("Temporary Combat Values")]
-    [Export(PropertyHint.Range, "1,100000,1")]
-    public float TemporaryMaximumHealth { get; set; } = 100.0f;
+	[ExportCategory("Temporary Combat Values")]
+	[Export(PropertyHint.Range, "1,100000,1")]
+	public float TemporaryMaximumHealth { get; set; } = 100.0f;
 
-    [Export(PropertyHint.Range, "0,100000,1")]
-    public float TemporaryAttackDamage { get; set; } = 20.0f;
+	[Export(PropertyHint.Range, "0,100000,1")]
+	public float TemporaryAttackDamage { get; set; } = 20.0f;
 
-    [ExportCategory("Temporary Combat Movement")]
+	[ExportCategory("Temporary Combat Movement")]
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float CombatMoveSpeed { get; set; } = 140.0f;
 
@@ -112,40 +112,72 @@ public partial class HeroActorController : Node2D
 
 	public Vector2 FormationPosition => FormationAnchor.GlobalPosition + FormationOffset;
 
-    public CombatHealthState Health { get; } = new();
+	public CombatHealthState Health { get; } = new();
 
-    // Incapacitation Reset -- DEBUG ONLY
-    public void DebugResetFromIncapacitation()
-    {
-        Health.RestoreToMaximum();
+	// Incapacitation Reset -- DEBUG ONLY
+	public void DebugResetFromIncapacitation()
+	{
+		Health.RestoreToMaximum();
 
-        CurrentTarget = null;
+		CurrentTarget = null;
 
-        _attackCooldownRemaining = 0.0;
-        _attackTimeRemaining = 0.0;
-        _attackReleaseEmitted = false;
-        _initialAttackPending = false;
-        _movementAnimationGraceRemaining = 0.0;
+		_attackCooldownRemaining = 0.0;
+		_attackTimeRemaining = 0.0;
+		_attackReleaseEmitted = false;
+		_initialAttackPending = false;
+		_movementAnimationGraceRemaining = 0.0;
 
-        StopMovementAnimation();
+		StopMovementAnimation();
 
-        GlobalPosition =
-            FormationAnchor.GlobalPosition
-            + FormationOffset;
+		GlobalPosition =
+			FormationAnchor.GlobalPosition
+			+ FormationOffset;
 
-        _state =
-            HeroState.InFormation;
+		_state =
+			HeroState.InFormation;
 
-        ApplyJourneyState(
-            JourneyState.CurrentState);
+		GD.Print(
+			$"{Name} debug-reset with " +
+			$"{Health.CurrentHealth}/" +
+			$"{Health.MaximumHealth} health.");
+	}
+	
+	public void ResumeCombatAfterDebugReset()
+	{
+		if (IsIncapacitated)
+			return;
 
-        GD.Print(
-            $"{Name} debug-reset with " +
-            $"{Health.CurrentHealth}/" +
-            $"{Health.MaximumHealth} health.");
-    }
+		if (JourneyState.CurrentState
+			!= JourneyStateService.JourneyState.Encounter)
+		{
+			ApplyJourneyState(
+				JourneyState.CurrentState);
 
-    public override void _Ready()
+			return;
+		}
+
+		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
+		{
+			_state =
+				HeroState.InFormation;
+
+			return;
+		}
+
+		_initialAttackPending = true;
+		_attackCooldownRemaining = 0.0;
+		_attackTimeRemaining = 0.0;
+		_attackReleaseEmitted = false;
+
+		_state =
+			HeroState.ApproachingTarget;
+
+		GD.Print(
+			$"{Name} rejoined combat against " +
+			$"{CurrentTarget!.Name}.");
+	}
+
+	public override void _Ready()
 	{
 		if (!ValidateReferences())
 		{
@@ -153,10 +185,10 @@ public partial class HeroActorController : Node2D
 			return;
 		}
 
-        InitializeCombatProfile();
+		InitializeCombatProfile();
 
 		Health.Initialize(CombatProfile.MaximumHealth);
-        _visualRestPosition = VisualRoot.Position;
+		_visualRestPosition = VisualRoot.Position;
 
 		JourneyState.StateChanged += OnJourneyStateChanged;
 		ApplyJourneyState(JourneyState.CurrentState);
@@ -168,7 +200,7 @@ public partial class HeroActorController : Node2D
 			$"{Name} initialized with " +
 			$"{Health.CurrentHealth}/" +
 			$"{Health.MaximumHealth} health.");
-    }
+	}
 	
 	public FacingDirection Facing { get; private set; }
 	= FacingDirection.Left;
@@ -199,14 +231,14 @@ public partial class HeroActorController : Node2D
 
 				break;
 
-            case HeroState.ApproachingTarget:
+			case HeroState.ApproachingTarget:
 
-                UpdateCombatApproach(delta);
-                UpdateMovementPresentation(delta);
+				UpdateCombatApproach(delta);
+				UpdateMovementPresentation(delta);
 
-                break;
+				break;
 
-            case HeroState.WaitingToAttack:
+			case HeroState.WaitingToAttack:
 
 				UpdateWaitingToAttack(delta);
 
@@ -218,14 +250,14 @@ public partial class HeroActorController : Node2D
 
 				break;
 
-            case HeroState.ReturningToFormation:
+			case HeroState.ReturningToFormation:
 
-                UpdateReturnToFormation(delta);
-                UpdateMovementPresentation(delta);
+				UpdateReturnToFormation(delta);
+				UpdateMovementPresentation(delta);
 
-                break;
+				break;
 
-            case HeroState.Incapacitated:
+			case HeroState.Incapacitated:
 
 				StopMovementAnimation();
 
@@ -233,34 +265,34 @@ public partial class HeroActorController : Node2D
 		}
 	}
 
-    private double _movementAnimationGraceRemaining;
+	private double _movementAnimationGraceRemaining;
 
-    private void UpdateMovementPresentation(double delta)
-    {
-        if (_movedThisFrame)
-        {
-            _movementAnimationGraceRemaining =
-                MovementAnimationGraceTime;
-        }
-        else
-        {
-            _movementAnimationGraceRemaining =
-                Mathf.Max(
-                    0.0,
-                    _movementAnimationGraceRemaining - delta);
-        }
+	private void UpdateMovementPresentation(double delta)
+	{
+		if (_movedThisFrame)
+		{
+			_movementAnimationGraceRemaining =
+				MovementAnimationGraceTime;
+		}
+		else
+		{
+			_movementAnimationGraceRemaining =
+				Mathf.Max(
+					0.0,
+					_movementAnimationGraceRemaining - delta);
+		}
 
-        if (_movedThisFrame
-            || _movementAnimationGraceRemaining > 0.0)
-        {
-            UpdateMovementAnimation(delta);
-            return;
-        }
+		if (_movedThisFrame
+			|| _movementAnimationGraceRemaining > 0.0)
+		{
+			UpdateMovementAnimation(delta);
+			return;
+		}
 
-        StopMovementAnimation();
-    }
+		StopMovementAnimation();
+	}
 
-    private void UpdateMovementAnimation(double delta)
+	private void UpdateMovementAnimation(double delta)
 	{
 		_animationTime += delta;
 
@@ -282,51 +314,51 @@ public partial class HeroActorController : Node2D
 		VisualRoot.Position = _visualRestPosition;
 	}
 
-    private bool _initialAttackPending;
+	private bool _initialAttackPending;
 
-    private Vector2 CalculateApproachPosition(MonsterActorController target)
-    {
-        float horizontalDifference =
-            target.GlobalPosition.X
-            - GlobalPosition.X;
+	private Vector2 CalculateApproachPosition(MonsterActorController target)
+	{
+		float horizontalDifference =
+			target.GlobalPosition.X
+			- GlobalPosition.X;
 
-        float directionToTarget =
-            Mathf.Sign(horizontalDifference);
+		float directionToTarget =
+			Mathf.Sign(horizontalDifference);
 
-        float destinationX =
-            target.GlobalPosition.X
-            - directionToTarget
-            * CombatProfile.AttackRange;
+		float destinationX =
+			target.GlobalPosition.X
+			- directionToTarget
+			* CombatProfile.AttackRange;
 
-        return new Vector2(
-            destinationX,
-            target.GlobalPosition.Y);
-    }
+		return new Vector2(
+			destinationX,
+			target.GlobalPosition.Y);
+	}
 
-    private void InitializeCombatProfile()
-    {
-        CombatProfile.AttackRange = TemporaryAttackRange;
-        CombatProfile.AttackInterval = TemporaryAttackInterval;
-        CombatProfile.MoveSpeed = CombatMoveSpeed;
-        CombatProfile.AttackDelivery = TemporaryAttackDelivery;
-        CombatProfile.MaximumHealth = TemporaryMaximumHealth;
-        CombatProfile.AttackDamage = TemporaryAttackDamage;
-        CombatProfile.AttackDuration = TemporaryAttackDuration;
-    }
+	private void InitializeCombatProfile()
+	{
+		CombatProfile.AttackRange = TemporaryAttackRange;
+		CombatProfile.AttackInterval = TemporaryAttackInterval;
+		CombatProfile.MoveSpeed = CombatMoveSpeed;
+		CombatProfile.AttackDelivery = TemporaryAttackDelivery;
+		CombatProfile.MaximumHealth = TemporaryMaximumHealth;
+		CombatProfile.AttackDamage = TemporaryAttackDamage;
+		CombatProfile.AttackDuration = TemporaryAttackDuration;
+	}
 
-    private bool IsTargetWithinAttackRange(MonsterActorController target)
-    {
-        float horizontalDistance =
-            Mathf.Abs(
-                GlobalPosition.X
-                - target.GlobalPosition.X);
+	private bool IsTargetWithinAttackRange(MonsterActorController target)
+	{
+		float horizontalDistance =
+			Mathf.Abs(
+				GlobalPosition.X
+				- target.GlobalPosition.X);
 
-        return horizontalDistance
-            <= CombatProfile.AttackRange
-            + AttackRangeTolerance;
-    }
+		return horizontalDistance
+			<= CombatProfile.AttackRange
+			+ AttackRangeTolerance;
+	}
 
-    private void UpdateFacingTowardTarget()
+	private void UpdateFacingTowardTarget()
 	{
 		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
 			return;
@@ -356,63 +388,63 @@ public partial class HeroActorController : Node2D
 			$"{CurrentTarget.Name}.");
 	}
 
-    private void PrepareToAttack()
-    {
-        if (_initialAttackPending)
-        {
-            _initialAttackPending = false;
-            _attackCooldownRemaining = 0.0;
+	private void PrepareToAttack()
+	{
+		if (_initialAttackPending)
+		{
+			_initialAttackPending = false;
+			_attackCooldownRemaining = 0.0;
 
-            BeginAttack();
-            return;
-        }
+			BeginAttack();
+			return;
+		}
 
-        _state = HeroState.WaitingToAttack;
-    }
+		_state = HeroState.WaitingToAttack;
+	}
 
-    private void UpdateCombatApproach(double delta)
-    {
-        if (!Targeting.IsValidMonsterTarget(CurrentTarget))
-            return;
+	private void UpdateCombatApproach(double delta)
+	{
+		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
+			return;
 
-        MonsterActorController target =
-            CurrentTarget!;
+		MonsterActorController target =
+			CurrentTarget!;
 
-        bool targetWithinRange =
-            IsTargetWithinAttackRange(target);
+		bool targetWithinRange =
+			IsTargetWithinAttackRange(target);
 
-        bool verticallyAligned =
-            Mathf.Abs(
-                GlobalPosition.Y
-                - target.GlobalPosition.Y)
-            <= CombatArrivalDistance;
+		bool verticallyAligned =
+			Mathf.Abs(
+				GlobalPosition.Y
+				- target.GlobalPosition.Y)
+			<= CombatArrivalDistance;
 
-        if (targetWithinRange && verticallyAligned)
-        {
-            PrepareToAttack();
-            return;
-        }
+		if (targetWithinRange && verticallyAligned)
+		{
+			PrepareToAttack();
+			return;
+		}
 
-        Vector2 previousPosition = GlobalPosition;
-        Vector2 approachPosition = CalculateApproachPosition(target);
-        float movementDistance = CombatProfile.MoveSpeed * (float)delta;
-        GlobalPosition = GlobalPosition.MoveToward( approachPosition, movementDistance);
-        _movedThisFrame = !GlobalPosition.IsEqualApprox(previousPosition);
-        targetWithinRange = IsTargetWithinAttackRange(target);
+		Vector2 previousPosition = GlobalPosition;
+		Vector2 approachPosition = CalculateApproachPosition(target);
+		float movementDistance = CombatProfile.MoveSpeed * (float)delta;
+		GlobalPosition = GlobalPosition.MoveToward( approachPosition, movementDistance);
+		_movedThisFrame = !GlobalPosition.IsEqualApprox(previousPosition);
+		targetWithinRange = IsTargetWithinAttackRange(target);
 
-        verticallyAligned =
-            Mathf.Abs(
-                GlobalPosition.Y
-                - target.GlobalPosition.Y)
-            <= CombatArrivalDistance;
+		verticallyAligned =
+			Mathf.Abs(
+				GlobalPosition.Y
+				- target.GlobalPosition.Y)
+			<= CombatArrivalDistance;
 
-        if (!targetWithinRange || !verticallyAligned)
-            return;
+		if (!targetWithinRange || !verticallyAligned)
+			return;
 
-        PrepareToAttack();
-    }
+		PrepareToAttack();
+	}
 
-    private void UpdateWaitingToAttack(double delta)
+	private void UpdateWaitingToAttack(double delta)
 	{
 		StopMovementAnimation();
 
@@ -481,18 +513,18 @@ public partial class HeroActorController : Node2D
 		float lungeCurve =
 			Mathf.Sin(progress * Mathf.Pi);
 
-        Vector2 attackDirection =
+		Vector2 attackDirection =
 			 Facing == FacingDirection.Left
 			? Vector2.Left
 			: Vector2.Right;
 
-        VisualRoot.Position =
-            _visualRestPosition
-            + attackDirection
-            * TemporaryAttackLungeDistance
-            * lungeCurve;
+		VisualRoot.Position =
+			_visualRestPosition
+			+ attackDirection
+			* TemporaryAttackLungeDistance
+			* lungeCurve;
 
-        if (_attackTimeRemaining > 0.0)
+		if (_attackTimeRemaining > 0.0)
 			return;
 
 		EndAttack();
@@ -505,7 +537,7 @@ public partial class HeroActorController : Node2D
 
 		_attackTimeRemaining = 0.0;
 		_attackCooldownRemaining =
-            CombatProfile.AttackInterval;
+			CombatProfile.AttackInterval;
 
 		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
 		{
@@ -528,31 +560,31 @@ public partial class HeroActorController : Node2D
 				: HeroState.ApproachingTarget;
 	}
 
-    public void EnterIncapacitatedState()
-    {
-        if (IsIncapacitated)
-            return;
+	public void EnterIncapacitatedState()
+	{
+		if (IsIncapacitated)
+			return;
 
-        _state = HeroState.Incapacitated;
-        CurrentTarget = null;
+		_state = HeroState.Incapacitated;
+		CurrentTarget = null;
 
-        _attackCooldownRemaining = 0.0;
-        _attackTimeRemaining = 0.0;
-        _attackReleaseEmitted = false;
-        _initialAttackPending = false;
-        _movementAnimationGraceRemaining = 0.0;
+		_attackCooldownRemaining = 0.0;
+		_attackTimeRemaining = 0.0;
+		_attackReleaseEmitted = false;
+		_initialAttackPending = false;
+		_movementAnimationGraceRemaining = 0.0;
 
-        StopMovementAnimation();
+		StopMovementAnimation();
 
-        GD.Print(
-            $"{Name} entered its Incapacitated state.");
+		GD.Print(
+			$"{Name} entered its Incapacitated state.");
 
-        EmitSignal(
-            SignalName.Incapacitated,
-            this);
-    }
+		EmitSignal(
+			SignalName.Incapacitated,
+			this);
+	}
 
-    private void TryEmitAttackRelease(float attackProgress)
+	private void TryEmitAttackRelease(float attackProgress)
 	{
 		if (_attackReleaseEmitted)
 			return;
@@ -583,7 +615,7 @@ public partial class HeroActorController : Node2D
 			FormationPosition;
 
 		float movementDistance =
-            CombatProfile.MoveSpeed * (float)delta;
+			CombatProfile.MoveSpeed * (float)delta;
 
 		GlobalPosition = GlobalPosition.MoveToward(
 			destination,
@@ -613,20 +645,20 @@ public partial class HeroActorController : Node2D
 	private void ApplyJourneyState(
 	JourneyStateService.JourneyState state)
 	{
-        if (IsIncapacitated)
-        {
-            StopMovementAnimation();
-            return;
-        }
-        
+		if (IsIncapacitated)
+		{
+			StopMovementAnimation();
+			return;
+		}
+		
 		_animationTime = 0.0;
 		_attackTimeRemaining = 0.0;
 		_attackCooldownRemaining = 0.0;
 		_attackReleaseEmitted = false;
-        _initialAttackPending = false;
-        _movementAnimationGraceRemaining = 0.0;
+		_initialAttackPending = false;
+		_movementAnimationGraceRemaining = 0.0;
 
-        VisualRoot.Position = _visualRestPosition;
+		VisualRoot.Position = _visualRestPosition;
 
 		if (state
 			== JourneyStateService.JourneyState.Encounter)
@@ -676,9 +708,9 @@ public partial class HeroActorController : Node2D
 
 	public void RefreshTarget(IReadOnlyList<MonsterActorController> candidates)
 	{
-        if (IsIncapacitated)
-            return;
-        
+		if (IsIncapacitated)
+			return;
+		
 		if (CurrentTarget is not null
 			&& Targeting.IsValidMonsterTarget(CurrentTarget)
 			&& ContainsTarget(candidates, CurrentTarget))
@@ -702,8 +734,8 @@ public partial class HeroActorController : Node2D
 			return;
 		}
 
-        _initialAttackPending = true;
-        
+		_initialAttackPending = true;
+		
 		GD.Print(
 			$"{Name} targeted {CurrentTarget.Name} " +
 			$"at X={CurrentTarget.GlobalPosition.X}.");
@@ -731,12 +763,12 @@ public partial class HeroActorController : Node2D
 			return;
 
 		CurrentTarget = null;
-        _initialAttackPending = false;
+		_initialAttackPending = false;
 
-        if (IsIncapacitated)
-            return;
+		if (IsIncapacitated)
+			return;
 
-        if (JourneyState.CurrentState
+		if (JourneyState.CurrentState
 			== JourneyStateService.JourneyState.Traveling)
 		{
 			bool isAtFormation =

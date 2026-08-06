@@ -1,5 +1,5 @@
 public enum FacingDirection
 {
-    Left,
-    Right
+	Left,
+	Right
 }
