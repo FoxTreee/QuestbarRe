@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://b6vqdf84sajh5" path="res://Controllers/Actors/HeroActorController.cs" id="3_vy5pj"]
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
 [ext_resource type="Script" uid="uid://ccdcfymdch8h5" path="res://Scripts/Services/TargetingService.cs" id="6_frkhe"]
+[ext_resource type="Script" uid="uid://cxklmvye8ghgt" path="res://Scripts/Services/DebugCommandService.cs" id="7_h1m7h"]
 [ext_resource type="Script" uid="uid://n85xspfr8gm5" path="res://Controllers/EncounterController.cs" id="11_grg3l"]
 [ext_resource type="PackedScene" uid="uid://bxp73ohtqn7ga" path="res://Scenes/Actors/Monster/MonsterActor.tscn" id="12_frkhe"]
 [ext_resource type="Script" uid="uid://wv8afqfkrl6i" path="res://Controllers/CombatController.cs" id="12_grg3l"]
@@ -109,7 +110,7 @@ ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 BobHeight = 6.0
 BobSpeed = 5.0
 BobPhaseOffset = 3.14
-TemporaryMaximumHealth = 50.0
+TemporaryMaximumHealth = 1.0
 TemporaryAttackDamage = 15.0
 CombatMoveSpeed = 20.0
 TemporaryAttackRange = 140.0
@@ -143,6 +144,12 @@ script = ExtResource("3_jw32o")
 
 [node name="TargetingService" type="Node" parent="Services" unique_id=1900580469]
 script = ExtResource("6_frkhe")
+
+[node name="DebugCommandService" type="Node" parent="Services" unique_id=67226220 node_paths=PackedStringArray("Encounter", "Combat", "Heroes")]
+script = ExtResource("7_h1m7h")
+Encounter = NodePath("../../Controllers/EncounterController")
+Combat = NodePath("../../Controllers/CombatController")
+Heroes = [NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor"), NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2")]
 
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 

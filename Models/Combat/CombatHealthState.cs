@@ -23,6 +23,15 @@ public sealed class CombatHealthState
         IsInitialized = true;
     }
 
+    public void RestoreToMaximum()
+    {
+        if (!IsInitialized)
+            return;
+
+        CurrentHealth =
+            MaximumHealth;
+    }
+
     public DamageResult ApplyDamage(float requestedDamage)
     {
         float validDamage =

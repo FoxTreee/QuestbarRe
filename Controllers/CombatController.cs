@@ -49,6 +49,53 @@ public partial class CombatController : Node
 	public bool IsCombatActive { get; private set; }
     public bool IsInitialized { get; private set; }
 
+    // Reffresh heroes -- DEBUG ONLY
+    public void DebugRefreshHeroParticipants()
+    {
+        foreach (
+            HeroActorController hero
+            in _heroParticipants)
+        {
+            if (!GodotObject.IsInstanceValid(hero))
+                continue;
+
+            hero.AttackReleased -=
+                OnHeroAttackReleased;
+
+            hero.Incapacitated -=
+                OnHeroIncapacitated;
+        }
+
+        _heroParticipants.Clear();
+
+        BuildHeroParticipants();
+
+        RefreshMonsterTargets();
+        ApplyCombatState();
+        EmitParticipantsChanged();
+
+        GD.Print(
+            $"Debug-refreshed hero participants. " +
+            $"Active heroes={_heroParticipants.Count}");
+    }
+    // Remove Heroes -- DEBUG ONLY
+    private void UnsubscribeHeroParticipants()
+    {
+        foreach (
+            HeroActorController hero
+            in _heroParticipants)
+        {
+            if (!GodotObject.IsInstanceValid(hero))
+                continue;
+
+            hero.AttackReleased -=
+                OnHeroAttackReleased;
+
+            hero.Incapacitated -=
+                OnHeroIncapacitated;
+        }
+    }
+
     public override void _Ready()
 	{
 		if (!ValidateReferences())
@@ -174,7 +221,7 @@ public partial class CombatController : Node
             RaiseCombatEvent(
                 new CombatEvent
                 {
-                    Type = CombatEventType.DamageApplied,
+                    Type = CombatEventType.ActorDied,
                     Attacker = attacker,
                     Target = target,
                     Damage = result
@@ -512,31 +559,26 @@ public partial class CombatController : Node
 
 		return true;
 	}
-	
-	public override void _ExitTree()
-	{
-		foreach (HeroActorController hero in _heroParticipants)
-		{
-			if (!GodotObject.IsInstanceValid(hero))
-				continue;
 
-			hero.AttackReleased -=
-				OnHeroAttackReleased;
-		}
-		
-		foreach (MonsterActorController monster in _monsterParticipants)
-	{
-		if (!GodotObject.IsInstanceValid(monster))
-			continue;
+    public override void _ExitTree()
+    {
+        UnsubscribeHeroParticipants();
 
-		monster.AttackReleased -=
-			OnMonsterAttackReleased;
-	}
+        foreach (
+            MonsterActorController monster
+            in _monsterParticipants)
+        {
+            if (!GodotObject.IsInstanceValid(monster))
+                continue;
 
-		if (GodotObject.IsInstanceValid(Encounter))
-		{
-			Encounter.ActiveMonsterCountChanged -=
-				OnActiveMonsterCountChanged;
-		}
-	}
+            monster.AttackReleased -=
+                OnMonsterAttackReleased;
+        }
+
+        if (GodotObject.IsInstanceValid(Encounter))
+        {
+            Encounter.ActiveMonsterCountChanged -=
+                OnActiveMonsterCountChanged;
+        }
+    }
 }

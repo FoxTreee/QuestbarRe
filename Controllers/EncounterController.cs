@@ -32,7 +32,69 @@ public partial class EncounterController : Node
 	public int ActiveMonsterCount =>
 		_activeMonsters.Count;
 
-	public override void _Ready()
+    // Spawn monsters -- DEBUG ONLY
+    public void DebugSpawnMonsters(int count)
+    {
+        int validCount =
+            Mathf.Clamp(count, 1, 100);
+
+        if (JourneyState.CurrentState
+            != JourneyStateService.JourneyState.Encounter)
+        {
+            JourneyState.BeginEncounter();
+        }
+
+        RemoveInvalidMonsterReferences();
+
+        int monstersToAdd =
+            Mathf.Max(
+                validCount - _activeMonsters.Count,
+                0);
+
+        for (int i = 0; i < monstersToAdd; i++)
+        {
+            SpawnTestMonster();
+        }
+
+        GD.Print(
+            $"Debug ensured {validCount} active monster(s). " +
+            $"Active monsters={_activeMonsters.Count}");
+    }
+
+    public void DebugAddMonsters(int count)
+    {
+        int validCount =
+            Mathf.Clamp(count, 1, 100);
+
+        int countBeforeTransition =
+            _activeMonsters.Count;
+
+        if (JourneyState.CurrentState
+            != JourneyStateService.JourneyState.Encounter)
+        {
+            JourneyState.BeginEncounter();
+        }
+
+        int automaticallyAdded =
+            _activeMonsters.Count
+            - countBeforeTransition;
+
+        int remainingToAdd =
+            Mathf.Max(
+                validCount - automaticallyAdded,
+                0);
+
+        for (int i = 0; i < remainingToAdd; i++)
+        {
+            SpawnTestMonster();
+        }
+
+        GD.Print(
+            $"Debug added {validCount} monster(s). " +
+            $"Active monsters={_activeMonsters.Count}");
+    }
+
+    public override void _Ready()
 	{
 		if (!ValidateReferences())
 			return;
@@ -81,8 +143,8 @@ public partial class EncounterController : Node
 		SpawnTestMonster();
 	}
 
-	private void SpawnTestMonster()
-	{
+    private MonsterActorController SpawnTestMonster()
+    {
 		MonsterActorController monster =
 			MonsterScene.Instantiate<MonsterActorController>();
 
@@ -98,10 +160,12 @@ public partial class EncounterController : Node
 
         EmitActiveMonsterCountChanged();
 
+
 		GD.Print(
 			$"Monster added to encounter. " +
 			$"Active monsters={_activeMonsters.Count}");
-	}
+        return monster;
+    }
 
     private void EndEncounterPresentation()
     {

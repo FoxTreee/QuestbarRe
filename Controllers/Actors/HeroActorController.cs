@@ -114,6 +114,37 @@ public partial class HeroActorController : Node2D
 
     public CombatHealthState Health { get; } = new();
 
+    // Incapacitation Reset -- DEBUG ONLY
+    public void DebugResetFromIncapacitation()
+    {
+        Health.RestoreToMaximum();
+
+        CurrentTarget = null;
+
+        _attackCooldownRemaining = 0.0;
+        _attackTimeRemaining = 0.0;
+        _attackReleaseEmitted = false;
+        _initialAttackPending = false;
+        _movementAnimationGraceRemaining = 0.0;
+
+        StopMovementAnimation();
+
+        GlobalPosition =
+            FormationAnchor.GlobalPosition
+            + FormationOffset;
+
+        _state =
+            HeroState.InFormation;
+
+        ApplyJourneyState(
+            JourneyState.CurrentState);
+
+        GD.Print(
+            $"{Name} debug-reset with " +
+            $"{Health.CurrentHealth}/" +
+            $"{Health.MaximumHealth} health.");
+    }
+
     public override void _Ready()
 	{
 		if (!ValidateReferences())
@@ -124,14 +155,7 @@ public partial class HeroActorController : Node2D
 
         InitializeCombatProfile();
 
-        Health.Initialize(CombatProfile.MaximumHealth);
-
-        CombatProfile.AttackRange = TemporaryAttackRange;
-        CombatProfile.AttackInterval = TemporaryAttackInterval;
-        CombatProfile.AttackDuration = TemporaryAttackDuration;
-        CombatProfile.MoveSpeed = CombatMoveSpeed;
-        CombatProfile.AttackDelivery = TemporaryAttackDelivery;
-
+		Health.Initialize(CombatProfile.MaximumHealth);
         _visualRestPosition = VisualRoot.Position;
 
 		JourneyState.StateChanged += OnJourneyStateChanged;
@@ -287,6 +311,7 @@ public partial class HeroActorController : Node2D
         CombatProfile.AttackDelivery = TemporaryAttackDelivery;
         CombatProfile.MaximumHealth = TemporaryMaximumHealth;
         CombatProfile.AttackDamage = TemporaryAttackDamage;
+        CombatProfile.AttackDuration = TemporaryAttackDuration;
     }
 
     private bool IsTargetWithinAttackRange(MonsterActorController target)

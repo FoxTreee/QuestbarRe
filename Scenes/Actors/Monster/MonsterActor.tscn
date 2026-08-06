@@ -7,8 +7,7 @@ rotation = -0.0022674962
 script = ExtResource("1_qwhad")
 VisualRoot = NodePath("VisualRoot")
 ImpactOrigin = NodePath("VisualRoot/ImpactOrigin")
-TemporaryMaximumHealth = 50.0
-TemporaryAttackDamage = 6.0
+TemporaryAttackDamage = 50.0
 
 [node name="VisualRoot" type="Node2D" parent="." unique_id=1579220540]
 
