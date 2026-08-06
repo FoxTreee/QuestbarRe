@@ -39,8 +39,9 @@ public partial class CombatController : Node
 		_monsterParticipants;
 
 	public event Action<CombatEvent>? CombatEventOccurred;
+    public event Action<TargetChangedEvent>? TargetChanged;
 
-	public int HeroParticipantCount =>
+    public int HeroParticipantCount =>
 		_heroParticipants.Count;
 
 	public int MonsterParticipantCount =>
@@ -317,51 +318,89 @@ public partial class CombatController : Node
 				continue;
 			}
 
-			hero.RefreshTarget(_monsterParticipants);
-		}
+            MonsterActorController? previousTarget = hero.CurrentTarget;
+
+            hero.RefreshTarget( _monsterParticipants);
+
+            if (hero.CurrentTarget != previousTarget)
+            {
+                RaiseTargetChanged(
+                    hero,
+                    previousTarget,
+                    hero.CurrentTarget);
+            }
+
+                if (previousTarget is not null)
+                {
+                    RaiseTargetChanged(
+                        hero,
+                        previousTarget,
+                        null);
+                }
+
+                continue;
+        }
 	}
 
-	private void RefreshMonsterTargets()
-	{
-		foreach (
-			MonsterActorController monster
-			in _monsterParticipants)
-		{
-			if (!GodotObject.IsInstanceValid(monster)
-				|| monster.IsDead)
-			{
-				continue;
-			}
+    private void RefreshMonsterTargets()
+    {
+        foreach (
+            MonsterActorController monster
+            in _monsterParticipants)
+        {
+            if (!GodotObject.IsInstanceValid(monster)
+                || monster.IsDead)
+            {
+                continue;
+            }
 
-			monster.RefreshTargetValidity();
+            HeroActorController? previousTarget =
+                monster.CurrentTarget;
 
-			if (monster.HasValidTarget)
-				continue;
+            monster.RefreshTargetValidity();
 
-			HeroActorController? replacementTarget =
-				SelectLowestHealthHero();
+            if (monster.HasValidTarget)
+                continue;
 
-			if (replacementTarget is null)
-			{
-				GD.Print(
-					$"{monster.Name} has no living hero target.");
+            HeroActorController? replacementTarget =
+                SelectLowestHealthHero();
 
-				continue;
-			}
+            if (replacementTarget is null)
+            {
+                if (previousTarget is not null)
+                {
+                    RaiseTargetChanged(
+                        monster,
+                        previousTarget,
+                        null);
+                }
 
-			bool targetAccepted = monster.TryEngage(replacementTarget);
+                GD.Print(
+                    $"{monster.Name} has no living hero target.");
 
-			if (!targetAccepted)
-				continue;
+                continue;
+            }
 
-			GD.Print(
-				$"{monster.Name} automatically retargeted " +
-				$"{replacementTarget.Name} with " +
-				$"{replacementTarget.Health.CurrentHealth} health.");
-		}
-	}
+            bool targetAccepted =
+                monster.TryEngage(
+                    replacementTarget);
 
-	private void RefreshMonsterParticipants()
+            if (!targetAccepted)
+                continue;
+
+            RaiseTargetChanged(
+                monster,
+                previousTarget,
+                replacementTarget);
+
+            GD.Print(
+                $"{monster.Name} automatically retargeted " +
+                $"{replacementTarget.Name} with " +
+                $"{replacementTarget.Health.CurrentHealth} health.");
+        }
+    }
+
+    private void RefreshMonsterParticipants()
 	{
 		foreach (
 			MonsterActorController monster
@@ -431,29 +470,29 @@ public partial class CombatController : Node
 
 		PrintDamageResult(attacker.Name,  target.Name, result);
 
-		RaiseCombatEvent(
-	new CombatEvent
-	{
-		Type = CombatEventType.DamageApplied,
-		Attacker = attacker,
-		Target = target,
-		Damage = result
-	});
+        RaiseCombatEvent(
+    new CombatEvent
+    {
+        Type = CombatEventType.DamageApplied,
+        Attacker = attacker,
+        Target = target,
+        Damage = result
+    });
 
-		if (!result.WasLethal)
-			return;
+        if (!result.WasLethal)
+            return;
 
-		target.EnterIncapacitatedState();
+        target.EnterIncapacitatedState();
 
-		RaiseCombatEvent(
-			new CombatEvent
-			{
-				Type = CombatEventType.ActorIncapacitated,
-				Attacker = attacker,
-				Target = target,
-				Damage = result
-			});
-	}
+        RaiseCombatEvent(
+            new CombatEvent
+            {
+                Type = CombatEventType.ActorIncapacitated,
+                Attacker = attacker,
+                Target = target,
+                Damage = result
+            });
+    }
 
 	private void RaiseCombatEvent(
 	CombatEvent combatEvent)
@@ -461,7 +500,21 @@ public partial class CombatController : Node
 		CombatEventOccurred?.Invoke(combatEvent);
 	}
 
-	private static void PrintDamageResult(
+    private void RaiseTargetChanged(
+    Node actor,
+    Node? previousTarget,
+    Node? currentTarget)
+    {
+        TargetChanged?.Invoke(
+            new TargetChangedEvent
+            {
+                Actor = actor,
+                PreviousTarget = previousTarget,
+                CurrentTarget = currentTarget
+            });
+    }
+
+    private static void PrintDamageResult(
 	StringName attackerName,
 	StringName targetName,
 	DamageResult result)

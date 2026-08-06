@@ -91,7 +91,7 @@ VisualRoot = NodePath("VisualRoot")
 ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 BobHeight = 6.0
 BobSpeed = 5.1
-CombatMoveSpeed = 229.0
+TemporaryMaximumHealth = 4741.0
 Targeting = NodePath("../../../../Services/TargetingService")
 
 [node name="ProjectileOrigin" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor/VisualRoot" parent_id_path=PackedInt32Array(162660220, 18405630) index="1" unique_id=805389202]
@@ -108,7 +108,7 @@ ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 BobHeight = 6.0
 BobSpeed = 5.0
 BobPhaseOffset = 3.14
-CombatMoveSpeed = 20.0
+TemporaryMaximumHealth = 4142.0
 TemporaryAttackRange = 140.0
 AttackRangeTolerance = 9.0
 TemporaryAttackDelivery = 1
@@ -133,11 +133,19 @@ ExpandedHeightValue = NodePath("../MarginContainer/SettingsRows/ExpandedHeightRo
 HorizontalAdjustmentSlider = NodePath("../MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowSlider")
 HorizontalAdjustmentValue = NodePath("../MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowValue")
 
-[node name="DebugConsoleWindow" parent="PopupWindows" unique_id=1708193217 node_paths=PackedStringArray("Commands", "DebugOutput", "CommandInput", "Combat") instance=ExtResource("5_erwvk")]
+[node name="DebugConsoleWindow" parent="PopupWindows" unique_id=1708193217 node_paths=PackedStringArray("Commands", "Combat", "JourneyState", "Encounter", "DebugOutput", "CommandInput") instance=ExtResource("5_erwvk")]
+visible = false
 Commands = NodePath("../../Services/DebugCommandService")
+Combat = NodePath("../../Controllers/CombatController")
+JourneyState = NodePath("../../Services/JourneyStateService")
+Encounter = NodePath("../../Controllers/EncounterController")
 DebugOutput = NodePath("MarginContainer/VBoxContainer/DebugOutput")
 CommandInput = NodePath("MarginContainer/VBoxContainer/Commandrow/CommandInput")
-Combat = NodePath("../../Controllers/CombatController")
+
+[node name="CommandInput" parent="PopupWindows/DebugConsoleWindow/MarginContainer/VBoxContainer/Commandrow" parent_id_path=PackedInt32Array(1708193217, 169440476) index="1" unique_id=1619736136]
+text = ""
+placeholder_text = "Type 'help' for commands..."
+keep_editing_on_text_submit = true
 
 [node name="Services" type="Node" parent="." unique_id=1409283487]
 

@@ -1,5 +1,6 @@
-using System.Collections.Generic;
 using Godot;
+using System;
+using System.Collections.Generic;
 
 public partial class EncounterController : Node
 {
@@ -24,16 +25,18 @@ public partial class EncounterController : Node
 	[Export]
 	public PackedScene MonsterScene { get; set; } = null!;
 
-	private readonly List<MonsterActorController> _activeMonsters = new();
+	public IReadOnlyList<MonsterActorController> ActiveMonsters => _activeMonsters;
 
-	public IReadOnlyList<MonsterActorController> ActiveMonsters =>
-		_activeMonsters;
+    private readonly List<MonsterActorController> _activeMonsters = new();
+    private int _nextMonsterDebugId = 1;
 
-	public int ActiveMonsterCount =>
-		_activeMonsters.Count;
+    public event Action? EncounterStarted;
+    public event Action? EncounterCompleted;
+    public event Action<int>? MonsterRosterChanged;
+	public int ActiveMonsterCount => _activeMonsters.Count;
 
-	// Spawn monsters -- DEBUG ONLY
-	public void DebugSpawnMonsters(int count)
+    // Spawn monsters -- DEBUG ONLY
+    public void DebugSpawnMonsters(int count)
 	{
 		int validCount =
 			Mathf.Clamp(count, 1, 100);
@@ -141,7 +144,8 @@ public partial class EncounterController : Node
 			return;
 
 		SpawnTestMonster();
-	}
+        EncounterStarted?.Invoke();
+    }
 
 	private MonsterActorController SpawnTestMonster()
 	{
@@ -149,8 +153,6 @@ public partial class EncounterController : Node
 		MonsterScene.Instantiate<MonsterActorController>();
 
 		monster.Name = $"MonsterActor{_activeMonsters.Count + 1}";
-
-ActorLayer.AddChild(monster);
 
 		ActorLayer.AddChild(monster);
 
@@ -200,10 +202,8 @@ ActorLayer.AddChild(monster);
 		GD.Print(
 		"Encounter completed. Returning journey to Traveling.");
 
-		// Use the same JourneyStateService transition call
-		// currently used by your E-key test to enter Traveling.
-
-		JourneyState.EndEncounter();
+        EncounterCompleted?.Invoke();
+        JourneyState.EndEncounter();
 	}
 
 	private void OnMonsterDied(
@@ -275,7 +275,10 @@ ActorLayer.AddChild(monster);
 		EmitSignal(
 			SignalName.ActiveMonsterCountChanged,
 			_activeMonsters.Count);
-	}
+
+        MonsterRosterChanged?.Invoke(
+            _activeMonsters.Count);
+    }
 
 	private static bool Require(
 		GodotObject value,

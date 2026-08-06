@@ -1,23 +1,32 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public partial class DebugConsoleController : Window
 {
 	[ExportCategory("Dependencies")]
 	[Export]
 	public DebugCommandService Commands { get; set; } = null!;
+    [Export]
+    public CombatController Combat { get; set; } = null!;
+    [Export]
+    public JourneyStateService JourneyState { get; set; } = null!;
+    [Export]
+    public EncounterController Encounter { get; set; } = null!;
 
-	[ExportCategory("Controls")]
+    [ExportCategory("Controls")]
 	[Export]
 	public RichTextLabel DebugOutput { get; set; } = null!;
 
 	[Export]
 	public LineEdit CommandInput { get; set; } = null!;
-	
-	[Export]
-	public CombatController Combat { get; set; } = null!;
 
-	public override void _Ready()
+    private readonly List<string> _commandHistory = new();
+    private int _historyIndex;
+
+
+
+    public override void _Ready()
 	{
 		GD.Print(
 			"DebugConsoleController ready.");
@@ -25,11 +34,17 @@ public partial class DebugConsoleController : Window
 		if (!ValidateReferences())
 			return;
 			
-			Combat.CombatEventOccurred += OnCombatEventOccurred;
-			CommandInput.TextSubmitted += OnCommandSubmitted;
-			CloseRequested += HideConsole;
+		Combat.CombatEventOccurred += OnCombatEventOccurred;
+		CommandInput.TextSubmitted += OnCommandSubmitted;
+        CommandInput.GuiInput += OnCommandInputGuiInput;
+        CloseRequested += HideConsole;
 
-		AppendOutput(
+        JourneyState.StateChanged += OnJourneyStateChanged;
+        Encounter.EncounterStarted += OnEncounterStarted;
+        Encounter.EncounterCompleted += OnEncounterCompleted;
+        Encounter.MonsterRosterChanged += OnMonsterRosterChanged;
+
+        AppendOutput(
 			"Questbar Debug Console ready.\n" +
 			"Type 'help' for available commands.");
 
@@ -48,7 +63,26 @@ public partial class DebugConsoleController : Window
 			Combat.CombatEventOccurred -= OnCombatEventOccurred;
 		}
 
-		CloseRequested -=
+        if (GodotObject.IsInstanceValid(JourneyState))
+        {
+            JourneyState.StateChanged -= OnJourneyStateChanged;
+        }
+
+        if (GodotObject.IsInstanceValid(Encounter))
+        {
+            Encounter.EncounterStarted -= OnEncounterStarted;
+            Encounter.EncounterCompleted -= OnEncounterCompleted;
+            Encounter.MonsterRosterChanged -= OnMonsterRosterChanged;
+        }
+        if (GodotObject.IsInstanceValid(CommandInput))
+        {
+            CommandInput.TextSubmitted -= OnCommandSubmitted;
+
+            CommandInput.GuiInput -= OnCommandInputGuiInput;
+        }
+
+
+        CloseRequested -=
 			HideConsole;
 	}
 
@@ -70,8 +104,7 @@ public partial class DebugConsoleController : Window
 		Hide();
 	}
 
-	private void OnCommandSubmitted(
-		string commandText)
+	private void OnCommandSubmitted(string commandText)
 	{
 		string trimmedCommand =
 			commandText.Trim();
@@ -84,7 +117,9 @@ public partial class DebugConsoleController : Window
 			return;
 		}
 
-		AppendOutput(
+        AddCommandToHistory(trimmedCommand);
+
+        AppendOutput(
 			$"> {trimmedCommand}");
 
 		if (trimmedCommand.Equals(
@@ -117,23 +152,14 @@ public partial class DebugConsoleController : Window
 	{
 		bool valid = true;
 
-		valid &= Require(
-			Commands,
-			nameof(Commands));
+		valid &= Require(Commands, nameof(Commands));
+		valid &= Require(DebugOutput, nameof(DebugOutput));
+		valid &= Require(CommandInput, nameof(CommandInput));
+		valid &= Require(Combat, nameof(Combat));
+        valid &= Require(JourneyState, nameof(JourneyState));
+        valid &= Require(Encounter, nameof(Encounter));
 
-		valid &= Require(
-			DebugOutput,
-			nameof(DebugOutput));
-
-		valid &= Require(
-			CommandInput,
-			nameof(CommandInput));
-			
-		valid &= Require(
-			Combat,
-			nameof(Combat));
-
-		return valid;
+        return valid;
 	}
 
 	private static bool Require(GodotObject value, string propertyName)
@@ -147,30 +173,146 @@ public partial class DebugConsoleController : Window
 
 		return false;
 	}
-	
-	private void OnCombatEventOccurred( CombatEvent combatEvent)
-	{
-		string message =
-			combatEvent.Type switch
-			{
-				CombatEventType.DamageApplied =>
-					BuildDamageMessage(combatEvent),
 
-				CombatEventType.ActorDied =>
-					BuildDeathMessage(combatEvent),
+    private void OnCombatEventOccurred(CombatEvent combatEvent)
+    {
+        string message =
+            combatEvent.Type switch
+            {
+                CombatEventType.DamageApplied => BuildDamageMessage(combatEvent),
 
-				CombatEventType.ActorIncapacitated =>
-					BuildIncapacitationMessage(combatEvent),
+                CombatEventType.ActorDied => BuildDeathMessage(combatEvent),
 
-				_ =>
-					$"COMBAT  {combatEvent.Type}"
-			};
+                CombatEventType.ActorIncapacitated => BuildIncapacitationMessage(combatEvent),
 
-		AppendTimestampedOutput(message);
-	}
-	
-	private static string BuildDamageMessage(
-	CombatEvent combatEvent)
+                _ => $"COMBAT  {combatEvent.Type}"
+            };
+
+        AppendTimestampedOutput(message);
+    }
+
+    private void OnJourneyStateChanged(JourneyStateService.JourneyState previousState, JourneyStateService.JourneyState currentState)
+    {
+        AppendTimestampedOutput(
+			$"JOURNEY  {previousState} → {currentState}");
+    }
+
+    private void OnEncounterStarted()
+    {
+        AppendTimestampedOutput(
+            "ENCOUNTER  Started");
+    }
+
+    private void OnEncounterCompleted()
+    {
+        AppendTimestampedOutput(
+            "ENCOUNTER  Completed");
+    }
+
+    private void OnMonsterRosterChanged(int activeMonsterCount)
+    {
+        AppendTimestampedOutput(
+            $"MONSTERS  Active count={activeMonsterCount}");
+    }
+
+    private void AddCommandToHistory( string command)
+    {
+        if (_commandHistory.Count > 0
+            && _commandHistory[^1]
+                .Equals(
+                    command,
+                    StringComparison.Ordinal))
+        {
+            _historyIndex =
+                _commandHistory.Count;
+
+            return;
+        }
+
+        _commandHistory.Add(command);
+
+        _historyIndex =
+            _commandHistory.Count;
+    }
+
+    private void ShowHistoryCommand()
+    {
+        if (_historyIndex < 0
+            || _historyIndex
+                >= _commandHistory.Count)
+        {
+            return;
+        }
+
+        CommandInput.Text =
+            _commandHistory[_historyIndex];
+
+        CommandInput.CaretColumn =
+            CommandInput.Text.Length;
+    }
+
+    private void ShowNextCommand()
+    {
+        if (_commandHistory.Count == 0)
+            return;
+
+        if (_historyIndex
+            >= _commandHistory.Count - 1)
+        {
+            _historyIndex =
+                _commandHistory.Count;
+
+            CommandInput.Clear();
+            return;
+        }
+
+        _historyIndex++;
+
+        ShowHistoryCommand();
+    }
+
+    private void ShowPreviousCommand()
+    {
+        if (_commandHistory.Count == 0)
+            return;
+
+        _historyIndex =
+            Mathf.Max(
+                _historyIndex - 1,
+                0);
+
+        ShowHistoryCommand();
+    }
+
+    private void OnCommandInputGuiInput( InputEvent @event)
+    {
+        if (@event is not InputEventKey keyEvent)
+            return;
+
+        if (!keyEvent.Pressed
+            || keyEvent.Echo)
+        {
+            return;
+        }
+
+        switch (keyEvent.Keycode)
+        {
+            case Key.Up:
+                ShowPreviousCommand();
+                break;
+
+            case Key.Down:
+                ShowNextCommand();
+                break;
+
+            default:
+                return;
+        }
+
+        CommandInput.AcceptEvent();
+    }
+
+    private static string BuildDamageMessage(CombatEvent combatEvent)
 	{
 		return
 			$"DAMAGE  " +
@@ -180,24 +322,21 @@ public partial class DebugConsoleController : Window
 			$"{combatEvent.Damage.RemainingHealth} remaining";
 	}
 
-private static string BuildDeathMessage(
-	CombatEvent combatEvent)
-	{
-		return
-			$"DIED  {combatEvent.Target.Name} | " +
-			$"final hit by {combatEvent.Attacker.Name}";
-	}
+	private static string BuildDeathMessage(CombatEvent combatEvent)
+		{
+			return
+				$"DIED  {combatEvent.Target.Name} | " +
+				$"final hit by {combatEvent.Attacker.Name}";
+		}
 
-private static string BuildIncapacitationMessage(
-	CombatEvent combatEvent)
+	private static string BuildIncapacitationMessage(CombatEvent combatEvent)
 	{
 		return
 			$"INCAPACITATED  {combatEvent.Target.Name} | " +
 			$"final hit by {combatEvent.Attacker.Name}";
 	}
 	
-	private void AppendTimestampedOutput(
-	string message)
+	private void AppendTimestampedOutput(string message)
 	{
 		string timestamp =
 			DateTime.Now.ToString("HH:mm:ss");
