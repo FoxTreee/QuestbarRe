@@ -6,14 +6,21 @@ public sealed class CombatHealthState
 
     public float CurrentHealth { get; private set; }
 
+    public bool IsInitialized { get; private set; }
+
     public bool IsAlive =>
         CurrentHealth > 0.0f;
 
     public void Initialize(float maximumHealth)
     {
+        if (IsInitialized)
+            return;
+
         MaximumHealth = MathF.Max(maximumHealth, 1.0f);
 
         CurrentHealth =  MaximumHealth;
+
+        IsInitialized = true;
     }
 
     public DamageResult ApplyDamage(float requestedDamage)

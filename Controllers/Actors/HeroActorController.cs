@@ -8,15 +8,19 @@ public partial class HeroActorController : Node2D
 	HeroActorController attacker,
 	MonsterActorController target);
 
-	private enum HeroState
+    [Signal]
+    public delegate void IncapacitatedEventHandler(
+    HeroActorController hero);
+
+    private enum HeroState
 	{
 		InFormation,
 		ApproachingTarget,
 		WaitingToAttack,
 		Attacking,
 		ReturningToFormation,
-		Dead
-	}
+        Incapacitated
+    }
 	
 	private Vector2 _visualRestPosition;
 	private double _animationTime;
@@ -27,6 +31,7 @@ public partial class HeroActorController : Node2D
 	private bool _attackReleaseEmitted;
 
     public HeroCombatProfile CombatProfile { get; } = new();
+    public bool IsIncapacitated => _state == HeroState.Incapacitated;
 
 
     [ExportCategory("Formation")]
@@ -196,7 +201,7 @@ public partial class HeroActorController : Node2D
 
                 break;
 
-            case HeroState.Dead:
+            case HeroState.Incapacitated:
 
 				StopMovementAnimation();
 
@@ -498,7 +503,31 @@ public partial class HeroActorController : Node2D
 				: HeroState.ApproachingTarget;
 	}
 
-	private void TryEmitAttackRelease(float attackProgress)
+    public void EnterIncapacitatedState()
+    {
+        if (IsIncapacitated)
+            return;
+
+        _state = HeroState.Incapacitated;
+        CurrentTarget = null;
+
+        _attackCooldownRemaining = 0.0;
+        _attackTimeRemaining = 0.0;
+        _attackReleaseEmitted = false;
+        _initialAttackPending = false;
+        _movementAnimationGraceRemaining = 0.0;
+
+        StopMovementAnimation();
+
+        GD.Print(
+            $"{Name} entered its Incapacitated state.");
+
+        EmitSignal(
+            SignalName.Incapacitated,
+            this);
+    }
+
+    private void TryEmitAttackRelease(float attackProgress)
 	{
 		if (_attackReleaseEmitted)
 			return;
@@ -559,6 +588,12 @@ public partial class HeroActorController : Node2D
 	private void ApplyJourneyState(
 	JourneyStateService.JourneyState state)
 	{
+        if (IsIncapacitated)
+        {
+            StopMovementAnimation();
+            return;
+        }
+        
 		_animationTime = 0.0;
 		_attackTimeRemaining = 0.0;
 		_attackCooldownRemaining = 0.0;
@@ -616,6 +651,9 @@ public partial class HeroActorController : Node2D
 
 	public void RefreshTarget(IReadOnlyList<MonsterActorController> candidates)
 	{
+        if (IsIncapacitated)
+            return;
+        
 		if (CurrentTarget is not null
 			&& Targeting.IsValidMonsterTarget(CurrentTarget)
 			&& ContainsTarget(candidates, CurrentTarget))
@@ -626,8 +664,7 @@ public partial class HeroActorController : Node2D
 		MonsterActorController? previousTarget =
 			CurrentTarget;
 
-		CurrentTarget =
-			Targeting.SelectPriorityMonster(candidates);
+		CurrentTarget = Targeting.SelectPriorityMonster(candidates);
 
 		if (CurrentTarget == previousTarget)
 			return;
@@ -670,6 +707,9 @@ public partial class HeroActorController : Node2D
 
 		CurrentTarget = null;
         _initialAttackPending = false;
+
+        if (IsIncapacitated)
+            return;
 
         if (JourneyState.CurrentState
 			== JourneyStateService.JourneyState.Traveling)

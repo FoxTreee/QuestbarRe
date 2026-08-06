@@ -25,8 +25,9 @@ public partial class MonsterActorController : Node2D
 	private double _attackCooldownRemaining;
 	private double _attackTimeRemaining;
 	private bool _attackReleaseEmitted;
-	
-	[ExportCategory("Visuals")]
+	public bool HasValidTarget => IsValidHeroTarget(CurrentTarget);
+
+    [ExportCategory("Visuals")]
 	[Export]
 	public Node2D VisualRoot { get; set; } = null!;
 
@@ -113,6 +114,29 @@ public partial class MonsterActorController : Node2D
 			$"Spawn={spawnPosition}, " +
 			$"Destination={entryDestination}");
 	}
+
+    public void RefreshTargetValidity()
+    {
+        if (IsDead)
+            return;
+
+        if (IsValidHeroTarget(CurrentTarget))
+            return;
+
+        CurrentTarget = null;
+
+        _attackCooldownRemaining = 0.0;
+        _attackTimeRemaining = 0.0;
+        _attackReleaseEmitted = false;
+
+        StopAttackPresentation();
+
+        _state =
+            MonsterState.WaitingForTarget;
+
+        GD.Print(
+            $"{Name} released its invalid hero target.");
+    }
 
     public void EnterDeadState()
     {
@@ -205,7 +229,8 @@ public partial class MonsterActorController : Node2D
 	{
 		return hero is not null
 			&& GodotObject.IsInstanceValid(hero)
-			&& hero.IsInsideTree();
+			&& hero.IsInsideTree()
+			&& !hero.IsIncapacitated;
 	}
 
 	private Vector2 CalculateAttackPosition(HeroActorController target)
@@ -319,10 +344,10 @@ public partial class MonsterActorController : Node2D
 		if (!IsValidHeroTarget(attacker))
 			return false;
 
-		if (HasTarget)
-			return false;
+        if (HasValidTarget)
+            return false;
 
-		CurrentTarget = attacker;
+        CurrentTarget = attacker;
 		_state = MonsterState.ApproachingTarget;
 
 		GD.Print(

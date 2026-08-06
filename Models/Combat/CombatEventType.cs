@@ -2,5 +2,6 @@ public enum CombatEventType
 {
     DamageApplied,
     ActorDied,
-    EncounterCompleted
+    EncounterCompleted,
+    ActorIncapacitated
 }
