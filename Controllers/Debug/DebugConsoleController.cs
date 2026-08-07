@@ -7,26 +7,26 @@ public partial class DebugConsoleController : Window
 	[ExportCategory("Dependencies")]
 	[Export]
 	public DebugCommandService Commands { get; set; } = null!;
-    [Export]
-    public CombatController Combat { get; set; } = null!;
-    [Export]
-    public JourneyStateService JourneyState { get; set; } = null!;
-    [Export]
-    public EncounterController Encounter { get; set; } = null!;
+	[Export]
+	public CombatController Combat { get; set; } = null!;
+	[Export]
+	public JourneyStateService JourneyState { get; set; } = null!;
+	[Export]
+	public EncounterController Encounter { get; set; } = null!;
 
-    [ExportCategory("Controls")]
+	[ExportCategory("Controls")]
 	[Export]
 	public RichTextLabel DebugOutput { get; set; } = null!;
 
 	[Export]
 	public LineEdit CommandInput { get; set; } = null!;
 
-    private readonly List<string> _commandHistory = new();
-    private int _historyIndex;
+	private readonly List<string> _commandHistory = new();
+	private int _historyIndex;
 
 
 
-    public override void _Ready()
+	public override void _Ready()
 	{
 		GD.Print(
 			"DebugConsoleController ready.");
@@ -36,15 +36,15 @@ public partial class DebugConsoleController : Window
 			
 		Combat.CombatEventOccurred += OnCombatEventOccurred;
 		CommandInput.TextSubmitted += OnCommandSubmitted;
-        CommandInput.GuiInput += OnCommandInputGuiInput;
-        CloseRequested += HideConsole;
+		CommandInput.GuiInput += OnCommandInputGuiInput;
+		CloseRequested += HideConsole;
 
-        JourneyState.StateChanged += OnJourneyStateChanged;
-        Encounter.EncounterStarted += OnEncounterStarted;
-        Encounter.EncounterCompleted += OnEncounterCompleted;
-        Encounter.MonsterRosterChanged += OnMonsterRosterChanged;
+		JourneyState.StateChanged += OnJourneyStateChanged;
+		Encounter.EncounterStarted += OnEncounterStarted;
+		Encounter.EncounterCompleted += OnEncounterCompleted;
+		Encounter.MonsterRosterChanged += OnMonsterRosterChanged;
 
-        AppendOutput(
+		AppendOutput(
 			"Questbar Debug Console ready.\n" +
 			"Type 'help' for available commands.");
 
@@ -63,26 +63,26 @@ public partial class DebugConsoleController : Window
 			Combat.CombatEventOccurred -= OnCombatEventOccurred;
 		}
 
-        if (GodotObject.IsInstanceValid(JourneyState))
-        {
-            JourneyState.StateChanged -= OnJourneyStateChanged;
-        }
+		if (GodotObject.IsInstanceValid(JourneyState))
+		{
+			JourneyState.StateChanged -= OnJourneyStateChanged;
+		}
 
-        if (GodotObject.IsInstanceValid(Encounter))
-        {
-            Encounter.EncounterStarted -= OnEncounterStarted;
-            Encounter.EncounterCompleted -= OnEncounterCompleted;
-            Encounter.MonsterRosterChanged -= OnMonsterRosterChanged;
-        }
-        if (GodotObject.IsInstanceValid(CommandInput))
-        {
-            CommandInput.TextSubmitted -= OnCommandSubmitted;
+		if (GodotObject.IsInstanceValid(Encounter))
+		{
+			Encounter.EncounterStarted -= OnEncounterStarted;
+			Encounter.EncounterCompleted -= OnEncounterCompleted;
+			Encounter.MonsterRosterChanged -= OnMonsterRosterChanged;
+		}
+		if (GodotObject.IsInstanceValid(CommandInput))
+		{
+			CommandInput.TextSubmitted -= OnCommandSubmitted;
 
-            CommandInput.GuiInput -= OnCommandInputGuiInput;
-        }
+			CommandInput.GuiInput -= OnCommandInputGuiInput;
+		}
 
 
-        CloseRequested -=
+		CloseRequested -=
 			HideConsole;
 	}
 
@@ -117,9 +117,9 @@ public partial class DebugConsoleController : Window
 			return;
 		}
 
-        AddCommandToHistory(trimmedCommand);
+		AddCommandToHistory(trimmedCommand);
 
-        AppendOutput(
+		AppendOutput(
 			$"> {trimmedCommand}");
 
 		if (trimmedCommand.Equals(
@@ -156,10 +156,10 @@ public partial class DebugConsoleController : Window
 		valid &= Require(DebugOutput, nameof(DebugOutput));
 		valid &= Require(CommandInput, nameof(CommandInput));
 		valid &= Require(Combat, nameof(Combat));
-        valid &= Require(JourneyState, nameof(JourneyState));
-        valid &= Require(Encounter, nameof(Encounter));
+		valid &= Require(JourneyState, nameof(JourneyState));
+		valid &= Require(Encounter, nameof(Encounter));
 
-        return valid;
+		return valid;
 	}
 
 	private static bool Require(GodotObject value, string propertyName)
@@ -174,145 +174,145 @@ public partial class DebugConsoleController : Window
 		return false;
 	}
 
-    private void OnCombatEventOccurred(CombatEvent combatEvent)
-    {
-        string message =
-            combatEvent.Type switch
-            {
-                CombatEventType.DamageApplied => BuildDamageMessage(combatEvent),
+	private void OnCombatEventOccurred(CombatEvent combatEvent)
+	{
+		string message =
+			combatEvent.Type switch
+			{
+				CombatEventType.DamageApplied => BuildDamageMessage(combatEvent),
 
-                CombatEventType.ActorDied => BuildDeathMessage(combatEvent),
+				CombatEventType.ActorDied => BuildDeathMessage(combatEvent),
 
-                CombatEventType.ActorIncapacitated => BuildIncapacitationMessage(combatEvent),
+				CombatEventType.ActorIncapacitated => BuildIncapacitationMessage(combatEvent),
 
-                _ => $"COMBAT  {combatEvent.Type}"
-            };
+				_ => $"COMBAT  {combatEvent.Type}"
+			};
 
-        AppendTimestampedOutput(message);
-    }
+		AppendTimestampedOutput(message);
+	}
 
-    private void OnJourneyStateChanged(JourneyStateService.JourneyState previousState, JourneyStateService.JourneyState currentState)
-    {
-        AppendTimestampedOutput(
+	private void OnJourneyStateChanged(JourneyStateService.JourneyState previousState, JourneyStateService.JourneyState currentState)
+	{
+		AppendTimestampedOutput(
 			$"JOURNEY  {previousState} → {currentState}");
-    }
+	}
 
-    private void OnEncounterStarted()
-    {
-        AppendTimestampedOutput(
-            "ENCOUNTER  Started");
-    }
+	private void OnEncounterStarted()
+	{
+		AppendTimestampedOutput(
+			"ENCOUNTER  Started");
+	}
 
-    private void OnEncounterCompleted()
-    {
-        AppendTimestampedOutput(
-            "ENCOUNTER  Completed");
-    }
+	private void OnEncounterCompleted()
+	{
+		AppendTimestampedOutput(
+			"ENCOUNTER  Completed");
+	}
 
-    private void OnMonsterRosterChanged(int activeMonsterCount)
-    {
-        AppendTimestampedOutput(
-            $"MONSTERS  Active count={activeMonsterCount}");
-    }
+	private void OnMonsterRosterChanged(int activeMonsterCount)
+	{
+		AppendTimestampedOutput(
+			$"MONSTERS  Active count={activeMonsterCount}");
+	}
 
-    private void AddCommandToHistory( string command)
-    {
-        if (_commandHistory.Count > 0
-            && _commandHistory[^1]
-                .Equals(
-                    command,
-                    StringComparison.Ordinal))
-        {
-            _historyIndex =
-                _commandHistory.Count;
+	private void AddCommandToHistory( string command)
+	{
+		if (_commandHistory.Count > 0
+			&& _commandHistory[^1]
+				.Equals(
+					command,
+					StringComparison.Ordinal))
+		{
+			_historyIndex =
+				_commandHistory.Count;
 
-            return;
-        }
+			return;
+		}
 
-        _commandHistory.Add(command);
+		_commandHistory.Add(command);
 
-        _historyIndex =
-            _commandHistory.Count;
-    }
+		_historyIndex =
+			_commandHistory.Count;
+	}
 
-    private void ShowHistoryCommand()
-    {
-        if (_historyIndex < 0
-            || _historyIndex
-                >= _commandHistory.Count)
-        {
-            return;
-        }
+	private void ShowHistoryCommand()
+	{
+		if (_historyIndex < 0
+			|| _historyIndex
+				>= _commandHistory.Count)
+		{
+			return;
+		}
 
-        CommandInput.Text =
-            _commandHistory[_historyIndex];
+		CommandInput.Text =
+			_commandHistory[_historyIndex];
 
-        CommandInput.CaretColumn =
-            CommandInput.Text.Length;
-    }
+		CommandInput.CaretColumn =
+			CommandInput.Text.Length;
+	}
 
-    private void ShowNextCommand()
-    {
-        if (_commandHistory.Count == 0)
-            return;
+	private void ShowNextCommand()
+	{
+		if (_commandHistory.Count == 0)
+			return;
 
-        if (_historyIndex
-            >= _commandHistory.Count - 1)
-        {
-            _historyIndex =
-                _commandHistory.Count;
+		if (_historyIndex
+			>= _commandHistory.Count - 1)
+		{
+			_historyIndex =
+				_commandHistory.Count;
 
-            CommandInput.Clear();
-            return;
-        }
+			CommandInput.Clear();
+			return;
+		}
 
-        _historyIndex++;
+		_historyIndex++;
 
-        ShowHistoryCommand();
-    }
+		ShowHistoryCommand();
+	}
 
-    private void ShowPreviousCommand()
-    {
-        if (_commandHistory.Count == 0)
-            return;
+	private void ShowPreviousCommand()
+	{
+		if (_commandHistory.Count == 0)
+			return;
 
-        _historyIndex =
-            Mathf.Max(
-                _historyIndex - 1,
-                0);
+		_historyIndex =
+			Mathf.Max(
+				_historyIndex - 1,
+				0);
 
-        ShowHistoryCommand();
-    }
+		ShowHistoryCommand();
+	}
 
-    private void OnCommandInputGuiInput( InputEvent @event)
-    {
-        if (@event is not InputEventKey keyEvent)
-            return;
+	private void OnCommandInputGuiInput( InputEvent @event)
+	{
+		if (@event is not InputEventKey keyEvent)
+			return;
 
-        if (!keyEvent.Pressed
-            || keyEvent.Echo)
-        {
-            return;
-        }
+		if (!keyEvent.Pressed
+			|| keyEvent.Echo)
+		{
+			return;
+		}
 
-        switch (keyEvent.Keycode)
-        {
-            case Key.Up:
-                ShowPreviousCommand();
-                break;
+		switch (keyEvent.Keycode)
+		{
+			case Key.Up:
+				ShowPreviousCommand();
+				break;
 
-            case Key.Down:
-                ShowNextCommand();
-                break;
+			case Key.Down:
+				ShowNextCommand();
+				break;
 
-            default:
-                return;
-        }
+			default:
+				return;
+		}
 
-        CommandInput.AcceptEvent();
-    }
+		CommandInput.AcceptEvent();
+	}
 
-    private static string BuildDamageMessage(CombatEvent combatEvent)
+	private static string BuildDamageMessage(CombatEvent combatEvent)
 	{
 		return
 			$"DAMAGE  " +

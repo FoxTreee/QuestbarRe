@@ -40,21 +40,21 @@ public partial class MonsterActorController : Node2D
 	[Export(PropertyHint.Range, "0,10,0.1")]
 	public float FacingDeadZone { get; set; } = 1.0f;
 
-    public float AttackDamage { get; set; }
+	public float AttackDamage { get; set; }
 
-    public MonsterDefinition Definition
-    {
-        get;
-        private set;
-    } = null!;
+	public MonsterDefinition Definition
+	{
+		get;
+		private set;
+	} = null!;
 
-    public string ContentId =>
-        Definition.ContentId;
+	public string ContentId =>
+		Definition.ContentId;
 
-    public string DisplayName =>
-        Definition.DisplayName;
+	public string DisplayName =>
+		Definition.DisplayName;
 
-    public MonsterCombatProfile CombatProfile { get; } = new();
+	public MonsterCombatProfile CombatProfile { get; } = new();
 
 	public Vector2 ImpactPosition => ImpactOrigin.GlobalPosition;
 
@@ -71,16 +71,16 @@ public partial class MonsterActorController : Node2D
 
 	public bool HasTarget => IsValidHeroTarget(CurrentTarget);
 
-    public void Configure(MonsterDefinition definition)
-    {
-        if (!GodotObject.IsInstanceValid(definition))
-        {
-            throw new System.ArgumentNullException(
-                nameof(definition));
-        }
+	public void Configure(MonsterDefinition definition)
+	{
+		if (!GodotObject.IsInstanceValid(definition))
+		{
+			throw new System.ArgumentNullException(
+				nameof(definition));
+		}
 
-        Definition = definition;
-    }
+		Definition = definition;
+	}
 
 	public void RefreshTargetValidity()
 	{
@@ -127,49 +127,49 @@ public partial class MonsterActorController : Node2D
 			this);
 	}
 
-    private void ApplyDefinition()
-    {
-        VisualRoot.Scale = Definition.VisualScale;
-        VisualRoot.Modulate = Definition.VisualModulate;
-        CombatProfile.MaximumHealth = Definition.MaximumHealth;
-        CombatProfile.AttackDamage = Definition.AttackDamage;
-        CombatProfile.AttackRange =  Definition.AttackRange;
-        CombatProfile.AttackInterval = Definition.AttackInterval;
-        CombatProfile.AttackDuration =  Definition.AttackDuration;
-        CombatProfile.AttackReleasePoint = Definition.AttackReleasePoint;
-        CombatProfile.AttackLungeDistance = Definition.AttackLungeDistance;
-        CombatProfile.MoveSpeed = Definition.CombatMoveSpeed;
-        CombatProfile.AttackDelivery = Definition.AttackDelivery;
-    }
-
-    public override void _Ready()
+	private void ApplyDefinition()
 	{
-        if (!GodotObject.IsInstanceValid(Definition))
-        {
-            GD.PushError(
-                $"{Name} cannot initialize because no " +
-                "MonsterDefinition was configured.");
+		VisualRoot.Scale = Definition.VisualScale;
+		VisualRoot.Modulate = Definition.VisualModulate;
+		CombatProfile.MaximumHealth = Definition.MaximumHealth;
+		CombatProfile.AttackDamage = Definition.AttackDamage;
+		CombatProfile.AttackRange =  Definition.AttackRange;
+		CombatProfile.AttackInterval = Definition.AttackInterval;
+		CombatProfile.AttackDuration =  Definition.AttackDuration;
+		CombatProfile.AttackReleasePoint = Definition.AttackReleasePoint;
+		CombatProfile.AttackLungeDistance = Definition.AttackLungeDistance;
+		CombatProfile.MoveSpeed = Definition.CombatMoveSpeed;
+		CombatProfile.AttackDelivery = Definition.AttackDelivery;
+	}
 
-            SetProcess(false);
-            return;
-        }
+	public override void _Ready()
+	{
+		if (!GodotObject.IsInstanceValid(Definition))
+		{
+			GD.PushError(
+				$"{Name} cannot initialize because no " +
+				"MonsterDefinition was configured.");
 
-        System.Collections.Generic.IReadOnlyList<string>
-    definitionErrors =
-        Definition.GetValidationErrors();
+			SetProcess(false);
+			return;
+		}
 
-        if (definitionErrors.Count > 0)
-        {
-            foreach (string error in definitionErrors)
-            {
-                GD.PushError(error);
-            }
+		System.Collections.Generic.IReadOnlyList<string>
+	definitionErrors =
+		Definition.GetValidationErrors();
 
-            SetProcess(false);
-            return;
-        }
+		if (definitionErrors.Count > 0)
+		{
+			foreach (string error in definitionErrors)
+			{
+				GD.PushError(error);
+			}
 
-        if (!GodotObject.IsInstanceValid(VisualRoot))
+			SetProcess(false);
+			return;
+		}
+
+		if (!GodotObject.IsInstanceValid(VisualRoot))
 		{
 			GD.PushError(
 				"MonsterActorController is missing its " +
@@ -189,19 +189,19 @@ public partial class MonsterActorController : Node2D
 			return;
 		}
 
-        ApplyDefinition();
+		ApplyDefinition();
 
-        Health.Initialize(
-            CombatProfile.MaximumHealth);
-        _visualRestPosition = VisualRoot.Position;
+		Health.Initialize(
+			CombatProfile.MaximumHealth);
+		_visualRestPosition = VisualRoot.Position;
 
-        GD.Print(
+		GD.Print(
 			$"{Name} initialized as " +
 			$"{Definition.ContentId} " +
 			$"('{Definition.DisplayName}') with " +
 			$"{Health.CurrentHealth}/" +
 			$"{Health.MaximumHealth} health.");
-    }
+	}
 
 	private static bool IsValidHeroTarget(HeroActorController? hero)
 	{
@@ -314,36 +314,36 @@ public partial class MonsterActorController : Node2D
 		BeginAttack();
 	}
 
-    public bool TryAcquireTarget( HeroActorController target)
-    {
-        if (IsDead)
-            return false;
+	public bool TryAcquireTarget( HeroActorController target)
+	{
+		if (IsDead)
+			return false;
 
-        if (!IsValidHeroTarget(target))
-            return false;
+		if (!IsValidHeroTarget(target))
+			return false;
 
-        if (HasValidTarget)
-            return false;
+		if (HasValidTarget)
+			return false;
 
-        CurrentTarget = target;
-        _state = MonsterState.ApproachingTarget;
+		CurrentTarget = target;
+		_state = MonsterState.ApproachingTarget;
 
-        GD.Print(
-            $"{Name} locked onto {target.Name}.");
+		GD.Print(
+			$"{Name} locked onto {target.Name}.");
 
-        return true;
-    }
+		return true;
+	}
 
-    private void BeginAttack()
+	private void BeginAttack()
 	{
 		if (!IsValidHeroTarget(CurrentTarget))
 			return;
 
 		_state = MonsterState.Attacking;
 
-        _attackTimeRemaining = CombatProfile.AttackDuration;
+		_attackTimeRemaining = CombatProfile.AttackDuration;
 
-        _attackReleaseEmitted = false;
+		_attackReleaseEmitted = false;
 
 		StopAttackPresentation();
 
@@ -361,9 +361,9 @@ public partial class MonsterActorController : Node2D
 
 		_attackTimeRemaining -= delta;
 
-        float duration = Mathf.Max( CombatProfile.AttackDuration, 0.001f);
+		float duration = Mathf.Max( CombatProfile.AttackDuration, 0.001f);
 
-        float progress =
+		float progress =
 			1.0f
 			- (float)(_attackTimeRemaining / duration);
 
@@ -385,8 +385,8 @@ public partial class MonsterActorController : Node2D
 		VisualRoot.Position =
 			_visualRestPosition
 			+ attackDirection
-            * CombatProfile.AttackLungeDistance
-            * lungeCurve;
+			* CombatProfile.AttackLungeDistance
+			* lungeCurve;
 
 		if (_attackTimeRemaining > 0.0)
 			return;
@@ -428,7 +428,7 @@ public partial class MonsterActorController : Node2D
 
 		if (attackProgress
 			< CombatProfile.AttackReleasePoint)
-        {
+		{
 			return;
 		}
 

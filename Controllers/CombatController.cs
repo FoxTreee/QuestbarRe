@@ -15,12 +15,12 @@ public partial class CombatController : Node
 	
 	[Export]
 	public Node2D ActorLayer { get; set; } = null!;
-    
+	
 	[Export]
-    public TargetingService Targeting{ get; set; } = null!;
+	public TargetingService Targeting{ get; set; } = null!;
 
 
-    [ExportCategory("Combat Content")]
+	[ExportCategory("Combat Content")]
 	[Export]
 	public PackedScene ProjectileScene { get; set; } = null!;
 
@@ -43,9 +43,9 @@ public partial class CombatController : Node
 		_monsterParticipants;
 
 	public event Action<CombatEvent>? CombatEventOccurred;
-    public event Action<TargetChangedEvent>? TargetChanged;
+	public event Action<TargetChangedEvent>? TargetChanged;
 
-    public int HeroParticipantCount =>
+	public int HeroParticipantCount =>
 		_heroParticipants.Count;
 
 	public int MonsterParticipantCount =>
@@ -142,19 +142,19 @@ public partial class CombatController : Node
 		}
 	}
 
-    private void OnActiveMonsterCountChanged(
-    int activeMonsterCount)
-    {
-        RefreshMonsterParticipants();
-        ApplyCombatState();
+	private void OnActiveMonsterCountChanged(
+	int activeMonsterCount)
+	{
+		RefreshMonsterParticipants();
+		ApplyCombatState();
 
-        RefreshHeroTargets();
-        RefreshMonsterTargets();
+		RefreshHeroTargets();
+		RefreshMonsterTargets();
 
-        EmitParticipantsChanged();
-    }
+		EmitParticipantsChanged();
+	}
 
-    private void OnHeroAttackReleased(HeroActorController attacker, MonsterActorController target)
+	private void OnHeroAttackReleased(HeroActorController attacker, MonsterActorController target)
 	{
 		if (!GodotObject.IsInstanceValid(attacker)
 			|| !GodotObject.IsInstanceValid(target))
@@ -286,88 +286,88 @@ public partial class CombatController : Node
 				continue;
 			}
 
-            MonsterActorController? previousTarget = hero.CurrentTarget;
+			MonsterActorController? previousTarget = hero.CurrentTarget;
 
-            hero.RefreshTarget( _monsterParticipants);
+			hero.RefreshTarget( _monsterParticipants);
 
-            if (hero.CurrentTarget != previousTarget)
-            {
-                RaiseTargetChanged(
-                    hero,
-                    previousTarget,
-                    hero.CurrentTarget);
-            }
+			if (hero.CurrentTarget != previousTarget)
+			{
+				RaiseTargetChanged(
+					hero,
+					previousTarget,
+					hero.CurrentTarget);
+			}
 
-                if (previousTarget is not null)
-                {
-                    RaiseTargetChanged(
-                        hero,
-                        previousTarget,
-                        null);
-                }
+				if (previousTarget is not null)
+				{
+					RaiseTargetChanged(
+						hero,
+						previousTarget,
+						null);
+				}
 
-                continue;
-        }
+				continue;
+		}
 	}
 
-    private void RefreshMonsterTargets()
-    {
-        foreach (
-            MonsterActorController monster
-            in _monsterParticipants)
-        {
-            if (!GodotObject.IsInstanceValid(monster)
-                || monster.IsDead)
-            {
-                continue;
-            }
+	private void RefreshMonsterTargets()
+	{
+		foreach (
+			MonsterActorController monster
+			in _monsterParticipants)
+		{
+			if (!GodotObject.IsInstanceValid(monster)
+				|| monster.IsDead)
+			{
+				continue;
+			}
 
-            HeroActorController? previousTarget =
-                monster.CurrentTarget;
+			HeroActorController? previousTarget =
+				monster.CurrentTarget;
 
-            monster.RefreshTargetValidity();
+			monster.RefreshTargetValidity();
 
-            if (monster.HasValidTarget)
-                continue;
+			if (monster.HasValidTarget)
+				continue;
 
-            HeroActorController? replacementTarget = Targeting.SelectHeroTarget(monster, _heroParticipants);
+			HeroActorController? replacementTarget = Targeting.SelectHeroTarget(monster, _heroParticipants);
 
-            if (replacementTarget is null)
-            {
-                if (previousTarget is not null)
-                {
-                    RaiseTargetChanged(
-                        monster,
-                        previousTarget,
-                        null);
-                }
+			if (replacementTarget is null)
+			{
+				if (previousTarget is not null)
+				{
+					RaiseTargetChanged(
+						monster,
+						previousTarget,
+						null);
+				}
 
-                GD.Print(
-                    $"{monster.Name} has no living hero target.");
+				GD.Print(
+					$"{monster.Name} has no living hero target.");
 
-                continue;
-            }
+				continue;
+			}
 
-            bool targetAccepted =
-                monster.TryAcquireTarget(
-                    replacementTarget);
+			bool targetAccepted =
+				monster.TryAcquireTarget(
+					replacementTarget);
 
-            if (!targetAccepted)
-                continue;
+			if (!targetAccepted)
+				continue;
 
-            RaiseTargetChanged(
-                monster,
-                previousTarget,
-                replacementTarget);
+			RaiseTargetChanged(
+				monster,
+				previousTarget,
+				replacementTarget);
 
-            GD.Print(
+			GD.Print(
 				$"{monster.Name} selected " +
 				$"{replacementTarget.Name} using " +
 				$"{monster.Definition.TargetingStyle}.");
-        }
-    }
+		}
+	}
 
-    private void RefreshMonsterParticipants()
+	private void RefreshMonsterParticipants()
 	{
 		foreach (
 			MonsterActorController monster
@@ -437,29 +437,29 @@ public partial class CombatController : Node
 
 		PrintDamageResult(attacker.Name,  target.Name, result);
 
-        RaiseCombatEvent(
-    new CombatEvent
-    {
-        Type = CombatEventType.DamageApplied,
-        Attacker = attacker,
-        Target = target,
-        Damage = result
-    });
+		RaiseCombatEvent(
+	new CombatEvent
+	{
+		Type = CombatEventType.DamageApplied,
+		Attacker = attacker,
+		Target = target,
+		Damage = result
+	});
 
-        if (!result.WasLethal)
-            return;
+		if (!result.WasLethal)
+			return;
 
-        target.EnterIncapacitatedState();
+		target.EnterIncapacitatedState();
 
-        RaiseCombatEvent(
-            new CombatEvent
-            {
-                Type = CombatEventType.ActorIncapacitated,
-                Attacker = attacker,
-                Target = target,
-                Damage = result
-            });
-    }
+		RaiseCombatEvent(
+			new CombatEvent
+			{
+				Type = CombatEventType.ActorIncapacitated,
+				Attacker = attacker,
+				Target = target,
+				Damage = result
+			});
+	}
 
 	private void RaiseCombatEvent(
 	CombatEvent combatEvent)
@@ -467,21 +467,21 @@ public partial class CombatController : Node
 		CombatEventOccurred?.Invoke(combatEvent);
 	}
 
-    private void RaiseTargetChanged(
-    Node actor,
-    Node? previousTarget,
-    Node? currentTarget)
-    {
-        TargetChanged?.Invoke(
-            new TargetChangedEvent
-            {
-                Actor = actor,
-                PreviousTarget = previousTarget,
-                CurrentTarget = currentTarget
-            });
-    }
+	private void RaiseTargetChanged(
+	Node actor,
+	Node? previousTarget,
+	Node? currentTarget)
+	{
+		TargetChanged?.Invoke(
+			new TargetChangedEvent
+			{
+				Actor = actor,
+				PreviousTarget = previousTarget,
+				CurrentTarget = currentTarget
+			});
+	}
 
-    private static void PrintDamageResult(
+	private static void PrintDamageResult(
 	StringName attackerName,
 	StringName targetName,
 	DamageResult result)
@@ -563,15 +563,15 @@ public partial class CombatController : Node
 			"ActorLayer Inspector reference.");
 		return false;
 		}
-        if (!GodotObject.IsInstanceValid(Targeting))
-        {
-            GD.PushError(
-                "CombatController is missing its " +
-                "Targeting Inspector reference.");
+		if (!GodotObject.IsInstanceValid(Targeting))
+		{
+			GD.PushError(
+				"CombatController is missing its " +
+				"Targeting Inspector reference.");
 
-            return false;
-        }
-        if (!GodotObject.IsInstanceValid(ProjectileScene))
+			return false;
+		}
+		if (!GodotObject.IsInstanceValid(ProjectileScene))
 		{
 		GD.PushError(
 			"CombatController is missing its " +

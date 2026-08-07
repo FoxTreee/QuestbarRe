@@ -21,6 +21,7 @@
 [ext_resource type="Script" uid="uid://wv8afqfkrl6i" path="res://Controllers/CombatController.cs" id="12_grg3l"]
 [ext_resource type="PackedScene" uid="uid://bnrollfc0yukf" path="res://Scenes/Combat/ProjectileActor.tscn" id="14_1p5hy"]
 [ext_resource type="Resource" uid="uid://dk2o50nyo823k" path="res://Content/Monsters/Core/monster.core.training_monster.tres" id="14_erwvk"]
+[ext_resource type="Script" uid="uid://b2j7xvtmqxfa0" path="res://Controllers/Actors/HeroScalePresentationController.cs" id="17_hwpts"]
 
 [node name="Main" type="Node" unique_id=644726071]
 
@@ -92,7 +93,7 @@ default_color = Color(0.5330062, 0.7372065, 0.5126692, 1)
 z_index = 10
 
 [node name="MonsterSpawnAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer" unique_id=1720500992]
-position = Vector2(-40, 160)
+position = Vector2(-40.277775, 190.81482)
 color = Color(0.82674575, 0.23699889, 0.46144724, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 
@@ -125,7 +126,7 @@ z_index = 2
 position = Vector2(720, 160)
 script = ExtResource("3_vy5pj")
 FormationAnchor = NodePath("../HeroFormationAnchor")
-FormationOffset = Vector2(-5, 3)
+FormationOffset = Vector2(-25, 8)
 JourneyState = NodePath("../../../../../Services/JourneyStateService")
 VisualRoot = NodePath("VisualRoot")
 ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
@@ -250,6 +251,11 @@ Registry = NodePath("../MonsterContentRegistry")
 [node name="DesktopWindowHostController" type="Node" parent="Controllers" unique_id=1521543708]
 script = ExtResource("1_r150o")
 TopmostRefreshIntervalSeconds = 0.5
+
+[node name="HeroScalePresentationController" type="Node" parent="Controllers" unique_id=378371453 node_paths=PackedStringArray("ActorLayer", "WindowHost")]
+script = ExtResource("17_hwpts")
+ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer")
+WindowHost = NodePath("../DesktopWindowHostController")
 
 [node name="WindowSettingsPanelController" type="Node" parent="Controllers" unique_id=334099255 node_paths=PackedStringArray("WidthSlider", "WidthValue", "CollapsedHeightSlider", "CollapsedHeightValue", "ExpandedHeightSlider", "ExpandedHeightValue", "HorizontalAdjustmentSlider", "HorizontalAdjustmentValue")]
 script = ExtResource("3_kln2b")

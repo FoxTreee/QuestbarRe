@@ -18,48 +18,48 @@ public partial class EncounterController : Node
 	[Export]
 	public Node2D MonsterSpawnAnchor { get; set; } = null!;
 
-    [Export]
-    public MonsterFactory MonsterFactory { get; set; } = null!;
+	[Export]
+	public MonsterFactory MonsterFactory { get; set; } = null!;
 
-    [ExportCategory("Monster Spawn Formation")]
+	[ExportCategory("Monster Spawn Formation")]
 
-    [Export(PropertyHint.Range, "1,10,1")]
-    public int SpawnRows { get; set; } = 4;
+	[Export(PropertyHint.Range, "1,10,1")]
+	public int SpawnRows { get; set; } = 4;
 
-    [Export(PropertyHint.Range, "1,20,1")]
-    public int StartingSpawnColumns { get; set; } = 2;
+	[Export(PropertyHint.Range, "1,20,1")]
+	public int StartingSpawnColumns { get; set; } = 2;
 
-    [Export(PropertyHint.Range, "1,100,1")]
-    public int SpawnsPerColumnExpansion { get; set; } = 6;
+	[Export(PropertyHint.Range, "1,100,1")]
+	public int SpawnsPerColumnExpansion { get; set; } = 6;
 
-    [Export(PropertyHint.Range, "0,200,1")]
-    public float VerticalSpawnSpacing { get; set; } = 24.0f;
+	[Export(PropertyHint.Range, "0,200,1")]
+	public float VerticalSpawnSpacing { get; set; } = 24.0f;
 
-    [Export(PropertyHint.Range, "0,500,1")]
-    public float HorizontalSpawnSpacing { get; set; } = 48.0f;
+	[Export(PropertyHint.Range, "0,500,1")]
+	public float HorizontalSpawnSpacing { get; set; } = 48.0f;
 
-    [ExportCategory("Encounter Content")]
-    [Export]
-    public string DefaultMonsterContentId{ get; set; } = "monster.core.training_monster";
+	[ExportCategory("Encounter Content")]
+	[Export]
+	public string DefaultMonsterContentId{ get; set; } = "monster.core.training_monster";
 
-    public IReadOnlyList<MonsterActorController> ActiveMonsters => _activeMonsters;
+	public IReadOnlyList<MonsterActorController> ActiveMonsters => _activeMonsters;
 
-    private readonly List<MonsterActorController> _activeMonsters = new();
-    private int _nextMonsterDebugId = 1;
+	private readonly List<MonsterActorController> _activeMonsters = new();
+	private int _nextMonsterDebugId = 1;
 
-    private readonly RandomNumberGenerator _spawnRandom = new();
+	private readonly RandomNumberGenerator _spawnRandom = new();
 
-    private readonly HashSet<Vector2I> _usedSpawnSlots = new();
+	private readonly HashSet<Vector2I> _usedSpawnSlots = new();
 
-    private int _spawnSequenceCount;
+	private int _spawnSequenceCount;
 
-    public event Action? EncounterStarted;
-    public event Action? EncounterCompleted;
-    public event Action<int>? MonsterRosterChanged;
+	public event Action? EncounterStarted;
+	public event Action? EncounterCompleted;
+	public event Action<int>? MonsterRosterChanged;
 	public int ActiveMonsterCount => _activeMonsters.Count;
 
-    // Spawn monsters -- DEBUG ONLY
-    public void DebugSpawnMonsters(int count)
+	// Spawn monsters -- DEBUG ONLY
+	public void DebugSpawnMonsters(int count)
 	{
 		int validCount =
 			Mathf.Clamp(count, 1, 100);
@@ -79,8 +79,8 @@ public partial class EncounterController : Node
 
 		for (int i = 0; i < monstersToAdd; i++)
 		{
-            SpawnMonster(DefaultMonsterContentId);
-        }
+			SpawnMonster(DefaultMonsterContentId);
+		}
 
 		GD.Print(
 			$"Debug ensured {validCount} active monster(s). " +
@@ -112,65 +112,65 @@ public partial class EncounterController : Node
 
 		for (int i = 0; i < remainingToAdd; i++)
 		{
-            SpawnMonster(DefaultMonsterContentId);
-        }
+			SpawnMonster(DefaultMonsterContentId);
+		}
 
 		GD.Print(
 			$"Debug added {validCount} monster(s). " +
 			$"Active monsters={_activeMonsters.Count}");
 	}
 
-    //DEBUG ONLY
-    public int DebugAddMonsters(
-    string contentId,
-    int count)
-    {
-        int validCount =Mathf.Clamp(count, 1, 100);
+	//DEBUG ONLY
+	public int DebugAddMonsters(
+	string contentId,
+	int count)
+	{
+		int validCount =Mathf.Clamp(count, 1, 100);
 
-        int successfullySpawned =0;
+		int successfullySpawned =0;
 
-        int countBeforeTransition =_activeMonsters.Count;
+		int countBeforeTransition =_activeMonsters.Count;
 
-        if (JourneyState.CurrentState
-            != JourneyStateService.JourneyState.Encounter)
-        {
-            JourneyState.BeginEncounter();
-        }
+		if (JourneyState.CurrentState
+			!= JourneyStateService.JourneyState.Encounter)
+		{
+			JourneyState.BeginEncounter();
+		}
 
-        bool automaticSpawnMatchesRequest =
-            _activeMonsters.Count > countBeforeTransition
-            && string.Equals(
-                DefaultMonsterContentId,
-                contentId,
-                System.StringComparison.OrdinalIgnoreCase);
+		bool automaticSpawnMatchesRequest =
+			_activeMonsters.Count > countBeforeTransition
+			&& string.Equals(
+				DefaultMonsterContentId,
+				contentId,
+				System.StringComparison.OrdinalIgnoreCase);
 
-        if (automaticSpawnMatchesRequest)
-        {
-            successfullySpawned++;
-        }
+		if (automaticSpawnMatchesRequest)
+		{
+			successfullySpawned++;
+		}
 
-        while (successfullySpawned < validCount)
-        {
-            MonsterActorController? monster =
-                SpawnMonster(contentId);
+		while (successfullySpawned < validCount)
+		{
+			MonsterActorController? monster =
+				SpawnMonster(contentId);
 
-            if (monster is null)
-                break;
+			if (monster is null)
+				break;
 
-            successfullySpawned++;
-        }
+			successfullySpawned++;
+		}
 
-        return successfullySpawned;
-    }
+		return successfullySpawned;
+	}
 
-    public override void _Ready()
+	public override void _Ready()
 	{
 		if (!ValidateReferences())
 			return;
 
-        _spawnRandom.Randomize();
+		_spawnRandom.Randomize();
 
-        JourneyState.StateChanged += OnJourneyStateChanged;
+		JourneyState.StateChanged += OnJourneyStateChanged;
 
 		ApplyJourneyState(JourneyState.CurrentState);
 	}
@@ -204,171 +204,171 @@ public partial class EncounterController : Node
 		EndEncounterPresentation();
 	}
 
-    private void ResetSpawnFormation()
-    {
-        _spawnSequenceCount = 0;
-        _usedSpawnSlots.Clear();
-
-        GD.Print(
-            "Monster spawn formation reset.");
-    }
-
-    private void BeginEncounterPresentation()
+	private void ResetSpawnFormation()
 	{
-        RemoveInvalidMonsterReferences();
+		_spawnSequenceCount = 0;
+		_usedSpawnSlots.Clear();
 
-        if (_activeMonsters.Count > 0)
-            return;
+		GD.Print(
+			"Monster spawn formation reset.");
+	}
 
-        ResetSpawnFormation();
+	private void BeginEncounterPresentation()
+	{
+		RemoveInvalidMonsterReferences();
 
-        SpawnMonster(
-            DefaultMonsterContentId);
+		if (_activeMonsters.Count > 0)
+			return;
 
-        EncounterStarted?.Invoke();
-    }
+		ResetSpawnFormation();
 
-    private Vector2 GetNextRandomGridSpawnPosition()
-    {
-        _spawnSequenceCount++;
+		SpawnMonster(
+			DefaultMonsterContentId);
 
-        int expansionInterval =
-            Mathf.Max(
-                SpawnsPerColumnExpansion,
-                1);
+		EncounterStarted?.Invoke();
+	}
 
-        int availableColumns =
-            Mathf.Max(
-                StartingSpawnColumns,
-                1)
-            + (_spawnSequenceCount
-                / expansionInterval);
+	private Vector2 GetNextRandomGridSpawnPosition()
+	{
+		_spawnSequenceCount++;
 
-        int rows =
-            Mathf.Max(
-                SpawnRows,
-                1);
+		int expansionInterval =
+			Mathf.Max(
+				SpawnsPerColumnExpansion,
+				1);
 
-        List<Vector2I> availableSlots =
-            new();
+		int availableColumns =
+			Mathf.Max(
+				StartingSpawnColumns,
+				1)
+			+ (_spawnSequenceCount
+				/ expansionInterval);
 
-        for (int column = 0;
-            column < availableColumns;
-            column++)
-        {
-            for (int row = 0;
-                row < rows;
-                row++)
-            {
-                Vector2I slot =
-                    new(
-                        column,
-                        row);
+		int rows =
+			Mathf.Max(
+				SpawnRows,
+				1);
 
-                if (!_usedSpawnSlots.Contains(slot))
-                {
-                    availableSlots.Add(slot);
-                }
-            }
-        }
+		List<Vector2I> availableSlots =
+			new();
 
-        if (availableSlots.Count == 0)
-        {
-            _usedSpawnSlots.Clear();
+		for (int column = 0;
+			column < availableColumns;
+			column++)
+		{
+			for (int row = 0;
+				row < rows;
+				row++)
+			{
+				Vector2I slot =
+					new(
+						column,
+						row);
 
-            for (int column = 0;
-                column < availableColumns;
-                column++)
-            {
-                for (int row = 0;
-                    row < rows;
-                    row++)
-                {
-                    availableSlots.Add(
-                        new Vector2I(
-                            column,
-                            row));
-                }
-            }
+				if (!_usedSpawnSlots.Contains(slot))
+				{
+					availableSlots.Add(slot);
+				}
+			}
+		}
 
-            GD.Print(
-                "Monster spawn grid exhausted. " +
-                "Spawn slot shuffle bag reset.");
-        }
+		if (availableSlots.Count == 0)
+		{
+			_usedSpawnSlots.Clear();
 
-        int randomIndex =
-            _spawnRandom.RandiRange(
-                0,
-                availableSlots.Count - 1);
+			for (int column = 0;
+				column < availableColumns;
+				column++)
+			{
+				for (int row = 0;
+					row < rows;
+					row++)
+				{
+					availableSlots.Add(
+						new Vector2I(
+							column,
+							row));
+				}
+			}
 
-        Vector2I selectedSlot =
-            availableSlots[randomIndex];
+			GD.Print(
+				"Monster spawn grid exhausted. " +
+				"Spawn slot shuffle bag reset.");
+		}
 
-        _usedSpawnSlots.Add(
-            selectedSlot);
+		int randomIndex =
+			_spawnRandom.RandiRange(
+				0,
+				availableSlots.Count - 1);
 
-        float centeredRow =
-            selectedSlot.Y
-            - ((rows - 1) / 2.0f);
+		Vector2I selectedSlot =
+			availableSlots[randomIndex];
 
-        Vector2 offset =
-            new(
-                -selectedSlot.X
-                    * HorizontalSpawnSpacing,
+		_usedSpawnSlots.Add(
+			selectedSlot);
 
-                centeredRow
-                    * VerticalSpawnSpacing);
+		float centeredRow =
+			selectedSlot.Y
+			- ((rows - 1) / 2.0f);
 
-        Vector2 spawnPosition =
-            MonsterSpawnAnchor.GlobalPosition
-            + offset;
+		Vector2 offset =
+			new(
+				-selectedSlot.X
+					* HorizontalSpawnSpacing,
 
-        GD.Print(
-            $"Spawn slot selected: " +
-            $"Column={selectedSlot.X}, " +
-            $"Row={selectedSlot.Y}, " +
-            $"Position={spawnPosition}, " +
-            $"UnlockedColumns={availableColumns}.");
+				centeredRow
+					* VerticalSpawnSpacing);
 
-        return spawnPosition;
-    }
+		Vector2 spawnPosition =
+			MonsterSpawnAnchor.GlobalPosition
+			+ offset;
 
-    private MonsterActorController? SpawnMonster(string contentId)
-    {
-        if (!MonsterFactory.TryCreate(
-            contentId,
-            out MonsterActorController monster,
-            out string error))
-        {
-            GD.PushError(error);
-            return null;
-        }
+		GD.Print(
+			$"Spawn slot selected: " +
+			$"Column={selectedSlot.X}, " +
+			$"Row={selectedSlot.Y}, " +
+			$"Position={spawnPosition}, " +
+			$"UnlockedColumns={availableColumns}.");
 
-        monster.Name =
-            $"{monster.DisplayName.Replace(" ", string.Empty)}" +
-            $"{_nextMonsterDebugId++}";
+		return spawnPosition;
+	}
 
-        ActorLayer.AddChild(monster);
+	private MonsterActorController? SpawnMonster(string contentId)
+	{
+		if (!MonsterFactory.TryCreate(
+			contentId,
+			out MonsterActorController monster,
+			out string error))
+		{
+			GD.PushError(error);
+			return null;
+		}
 
-        monster.GlobalPosition =
-            GetNextRandomGridSpawnPosition();
+		monster.Name =
+			$"{monster.DisplayName.Replace(" ", string.Empty)}" +
+			$"{_nextMonsterDebugId++}";
 
-        _activeMonsters.Add(monster);
+		ActorLayer.AddChild(monster);
 
-        monster.Died +=
-            OnMonsterDied;
+		monster.GlobalPosition =
+			GetNextRandomGridSpawnPosition();
 
-        EmitActiveMonsterCountChanged();
+		_activeMonsters.Add(monster);
 
-        GD.Print(
-            $"{monster.Name} spawned from " +
-            $"{monster.ContentId}. " +
-            $"Active monsters={_activeMonsters.Count}");
+		monster.Died +=
+			OnMonsterDied;
 
-        return monster;
-    }
+		EmitActiveMonsterCountChanged();
 
-    private void EndEncounterPresentation()
+		GD.Print(
+			$"{monster.Name} spawned from " +
+			$"{monster.ContentId}. " +
+			$"Active monsters={_activeMonsters.Count}");
+
+		return monster;
+	}
+
+	private void EndEncounterPresentation()
 	{
 		RemoveInvalidMonsterReferences();
 
@@ -397,8 +397,8 @@ public partial class EncounterController : Node
 		GD.Print(
 		"Encounter completed. Returning journey to Traveling.");
 
-        EncounterCompleted?.Invoke();
-        JourneyState.EndEncounter();
+		EncounterCompleted?.Invoke();
+		JourneyState.EndEncounter();
 	}
 
 	private void OnMonsterDied(
@@ -453,67 +453,67 @@ public partial class EncounterController : Node
 			MonsterSpawnAnchor,
 			nameof(MonsterSpawnAnchor));
 
-        valid &= Require(
+		valid &= Require(
 			MonsterFactory,
 			nameof(MonsterFactory));
 
-        if (string.IsNullOrWhiteSpace(DefaultMonsterContentId))
-        {
-            GD.PushError( "EncounterController requires a default " + "monster Content ID.");
+		if (string.IsNullOrWhiteSpace(DefaultMonsterContentId))
+		{
+			GD.PushError( "EncounterController requires a default " + "monster Content ID.");
 
-            valid = false;
-        }
-        else if (
-            GodotObject.IsInstanceValid(MonsterFactory)
-            && !MonsterFactory.Registry.TryGet(
-                DefaultMonsterContentId,
-                out _))
-        {
-            GD.PushError(
-                $"EncounterController's default monster " +
-                $"Content ID '{DefaultMonsterContentId}' " +
-                $"is not registered.");
+			valid = false;
+		}
+		else if (
+			GodotObject.IsInstanceValid(MonsterFactory)
+			&& !MonsterFactory.Registry.TryGet(
+				DefaultMonsterContentId,
+				out _))
+		{
+			GD.PushError(
+				$"EncounterController's default monster " +
+				$"Content ID '{DefaultMonsterContentId}' " +
+				$"is not registered.");
 
-            valid = false;
-        }
+			valid = false;
+		}
 
-        if (SpawnRows < 1)
-        {
-            GD.PushError(
-                "EncounterController requires at least " +
-                "one monster spawn row.");
+		if (SpawnRows < 1)
+		{
+			GD.PushError(
+				"EncounterController requires at least " +
+				"one monster spawn row.");
 
-            valid = false;
-        }
+			valid = false;
+		}
 
-        if (StartingSpawnColumns < 1)
-        {
-            GD.PushError(
-                "EncounterController requires at least " +
-                "one starting spawn column.");
+		if (StartingSpawnColumns < 1)
+		{
+			GD.PushError(
+				"EncounterController requires at least " +
+				"one starting spawn column.");
 
-            valid = false;
-        }
+			valid = false;
+		}
 
-        if (SpawnsPerColumnExpansion < 1)
-        {
-            GD.PushError(
-                "EncounterController's spawn expansion " +
-                "interval must be at least one.");
+		if (SpawnsPerColumnExpansion < 1)
+		{
+			GD.PushError(
+				"EncounterController's spawn expansion " +
+				"interval must be at least one.");
 
-            valid = false;
-        }
+			valid = false;
+		}
 
-        if (VerticalSpawnSpacing < 0.0f
-            || HorizontalSpawnSpacing < 0.0f)
-        {
-            GD.PushError(
-                "Monster spawn spacing cannot be negative.");
+		if (VerticalSpawnSpacing < 0.0f
+			|| HorizontalSpawnSpacing < 0.0f)
+		{
+			GD.PushError(
+				"Monster spawn spacing cannot be negative.");
 
-            valid = false;
-        }
+			valid = false;
+		}
 
-        return valid;
+		return valid;
 	}
 
 	private void EmitActiveMonsterCountChanged()
@@ -522,9 +522,9 @@ public partial class EncounterController : Node
 			SignalName.ActiveMonsterCountChanged,
 			_activeMonsters.Count);
 
-        MonsterRosterChanged?.Invoke(
-            _activeMonsters.Count);
-    }
+		MonsterRosterChanged?.Invoke(
+			_activeMonsters.Count);
+	}
 
 	private static bool Require(
 		GodotObject value,
