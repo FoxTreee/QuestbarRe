@@ -208,13 +208,46 @@ public partial class MonsterActorController : Node2D
 		return hero is not null
 			&& GodotObject.IsInstanceValid(hero)
 			&& hero.IsInsideTree()
+			&& hero.Health.IsAlive
 			&& !hero.IsIncapacitated;
 	}
 
-	private Vector2 CalculateAttackPosition(HeroActorController target)
+	private bool IsTargetWithinAttackRange(HeroActorController target)
 	{
+		float horizontalDistance =
+			Mathf.Abs(
+				GlobalPosition.X
+				- target.GlobalPosition.X);
+
+		return horizontalDistance
+			<= CombatProfile.AttackRange
+			+ CombatArrivalDistance;
+	}
+
+	private bool IsVerticallyAligned(HeroActorController target)
+	{
+		return Mathf.Abs(
+			GlobalPosition.Y
+			- target.GlobalPosition.Y)
+			<= CombatArrivalDistance;
+	}
+
+	private Vector2 CalculateApproachPosition(HeroActorController target)
+	{
+		float horizontalDifference =
+			target.GlobalPosition.X
+			- GlobalPosition.X;
+
+		float destinationX =
+			Mathf.Abs(horizontalDifference)
+			<= CombatProfile.AttackRange
+				? GlobalPosition.X
+				: target.GlobalPosition.X
+					- Mathf.Sign(horizontalDifference)
+					* CombatProfile.AttackRange;
+
 		return new Vector2(
-			target.GlobalPosition.X - CombatProfile.AttackRange,
+			destinationX,
 			target.GlobalPosition.Y);
 	}
 	
@@ -257,29 +290,39 @@ public partial class MonsterActorController : Node2D
 			return;
 		}
 
-		Vector2 attackPosition =
-			CalculateAttackPosition(CurrentTarget!);
+		HeroActorController target =
+			CurrentTarget!;
+
+		if (IsTargetWithinAttackRange(target)
+			&& IsVerticallyAligned(target))
+		{
+			_attackCooldownRemaining = 0.0;
+			_state = MonsterState.WaitingToAttack;
+			return;
+		}
+
+		Vector2 approachPosition =
+			CalculateApproachPosition(target);
 
 		float movementDistance =
 			CombatProfile.MoveSpeed * (float)delta;
 
 		GlobalPosition = GlobalPosition.MoveToward(
-			attackPosition,
+			approachPosition,
 			movementDistance);
 
-		if (GlobalPosition.DistanceTo(attackPosition)
-			> CombatArrivalDistance)
+		if (!IsTargetWithinAttackRange(target)
+			|| !IsVerticallyAligned(target))
 		{
 			return;
 		}
 
-		GlobalPosition = attackPosition;
 		_attackCooldownRemaining = 0.0;
 		_state = MonsterState.WaitingToAttack;
 
 		GD.Print(
-			$"{Name} reached attack position for " +
-			$"{CurrentTarget!.Name} at {attackPosition}.");
+			$"{Name} entered attack range for " +
+			$"{target.Name}.");
 	}
 
 	private void UpdateWaitingToAttack(double delta)
@@ -293,12 +336,9 @@ public partial class MonsterActorController : Node2D
 			return;
 		}
 
-		Vector2 attackPosition =
-			CalculateAttackPosition(CurrentTarget!);
-
 		bool targetMovedOutOfRange =
-			GlobalPosition.DistanceTo(attackPosition)
-			> CombatArrivalDistance;
+			!IsTargetWithinAttackRange(CurrentTarget!)
+			|| !IsVerticallyAligned(CurrentTarget!);
 
 		if (targetMovedOutOfRange)
 		{
@@ -458,12 +498,9 @@ public partial class MonsterActorController : Node2D
 			return;
 		}
 
-		Vector2 attackPosition =
-			CalculateAttackPosition(CurrentTarget!);
-
 		bool targetStillInRange =
-			GlobalPosition.DistanceTo(attackPosition)
-			<= CombatArrivalDistance;
+			IsTargetWithinAttackRange(CurrentTarget!)
+			&& IsVerticallyAligned(CurrentTarget!);
 
 		_state =
 			targetStillInRange

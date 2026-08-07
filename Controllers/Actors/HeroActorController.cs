@@ -33,6 +33,20 @@ public partial class HeroActorController : Node2D
 	public HeroCombatProfile CombatProfile { get; } = new();
 	public bool IsIncapacitated => _state == HeroState.Incapacitated;
 
+	[ExportCategory("Combat Identity")]
+	[Export(PropertyHint.Flags, "Melee,Ranged,Caster,Healer,Tank,Summoner,Armored")]
+	public int CombatTagMask { get; set; } =
+		(int)HeroCombatTag.Melee;
+
+	public HeroCombatTag CombatTags =>
+		(HeroCombatTag)CombatTagMask;
+
+	public bool HasCombatTag(HeroCombatTag tag)
+	{
+		return tag != HeroCombatTag.None
+			&& (CombatTags & tag) != 0;
+	}
+
 
 	[ExportCategory("Formation")]
 	[Export]
@@ -199,7 +213,8 @@ public partial class HeroActorController : Node2D
 			$"{FormationPosition}." +
 			$"{Name} initialized with " +
 			$"{Health.CurrentHealth}/" +
-			$"{Health.MaximumHealth} health.");
+			$"{Health.MaximumHealth} health. " +
+			$"Combat tags={CombatTags}.");
 	}
 	
 	public FacingDirection Facing { get; private set; }

@@ -52,6 +52,7 @@ public partial class EncounterController : Node
 	private readonly HashSet<Vector2I> _usedSpawnSlots = new();
 
 	private int _spawnSequenceCount;
+	private bool _suppressAutomaticEncounterSpawn;
 
 	public event Action? EncounterStarted;
 	public event Action? EncounterCompleted;
@@ -125,28 +126,22 @@ public partial class EncounterController : Node
 	string contentId,
 	int count)
 	{
-		int validCount =Mathf.Clamp(count, 1, 100);
-
-		int successfullySpawned =0;
-
-		int countBeforeTransition =_activeMonsters.Count;
+		int validCount = Mathf.Clamp(count, 1, 100);
+		int successfullySpawned = 0;
 
 		if (JourneyState.CurrentState
 			!= JourneyStateService.JourneyState.Encounter)
 		{
-			JourneyState.BeginEncounter();
-		}
+			_suppressAutomaticEncounterSpawn = true;
 
-		bool automaticSpawnMatchesRequest =
-			_activeMonsters.Count > countBeforeTransition
-			&& string.Equals(
-				DefaultMonsterContentId,
-				contentId,
-				System.StringComparison.OrdinalIgnoreCase);
-
-		if (automaticSpawnMatchesRequest)
-		{
-			successfullySpawned++;
+			try
+			{
+				JourneyState.BeginEncounter();
+			}
+			finally
+			{
+				_suppressAutomaticEncounterSpawn = false;
+			}
 		}
 
 		while (successfullySpawned < validCount)
@@ -222,8 +217,11 @@ public partial class EncounterController : Node
 
 		ResetSpawnFormation();
 
-		SpawnMonster(
-			DefaultMonsterContentId);
+		if (!_suppressAutomaticEncounterSpawn)
+		{
+			SpawnMonster(
+				DefaultMonsterContentId);
+		}
 
 		EncounterStarted?.Invoke();
 	}

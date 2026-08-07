@@ -29,12 +29,19 @@ public partial class DesktopWindowHostController : Node
 	[Export(PropertyHint.Range, "0.1,5.0,0.1")]
 	public double TopmostRefreshIntervalSeconds { get; set; } = 0.25;
 
+	[Export(PropertyHint.Range, "0.25,10.0,0.25")]
+	public double TaskbarRefreshIntervalSeconds { get; set; } = 1.0;
+
 	private Window _window = null!;
 	private bool _isExpanded;
 	private double _topmostRefreshElapsed;
+	private double _taskbarRefreshElapsed;
+	private bool _taskbarReadFailureReported;
 	public bool IsExpanded => _isExpanded;
+	public WindowsTaskbarGeometry? CurrentTaskbarGeometry { get; private set; }
 	public event Action<bool>? ExpandedChanged;
 	public event Action? WindowPlacementApplied;
+	public event Action<WindowsTaskbarGeometry?>? TaskbarGeometryChanged;
 
 	public override void _Ready()
 	{
@@ -61,6 +68,7 @@ public partial class DesktopWindowHostController : Node
 		ConfigureNativeWindow();
 		ApplyWindowPlacement();
 		EnforceNativeTopmost();
+		RefreshTaskbarGeometry(forceLog: true);
 
 		GD.Print(
 			$"Questbar window initialized. " +
@@ -97,15 +105,91 @@ public partial class DesktopWindowHostController : Node
 			return;
 
 		_topmostRefreshElapsed += delta;
+		_taskbarRefreshElapsed += delta;
 
 		if (_topmostRefreshElapsed
-			< TopmostRefreshIntervalSeconds)
+			>= TopmostRefreshIntervalSeconds)
 		{
-			return;
+			_topmostRefreshElapsed = 0.0;
+			EnforceNativeTopmost();
 		}
 
-		_topmostRefreshElapsed = 0.0;
-		EnforceNativeTopmost();
+		if (_taskbarRefreshElapsed
+			>= TaskbarRefreshIntervalSeconds)
+		{
+			_taskbarRefreshElapsed = 0.0;
+			RefreshTaskbarGeometry();
+		}
+	}
+
+	public bool RefreshTaskbarGeometry(
+		bool forceLog = false)
+	{
+		if (!OS.HasFeature("windows"))
+			return false;
+
+		if (!WindowsTaskbarGeometryReader.TryRead(
+			out WindowsTaskbarGeometry geometry))
+		{
+			bool hadGeometry = CurrentTaskbarGeometry.HasValue;
+			CurrentTaskbarGeometry = null;
+
+			if (hadGeometry)
+				TaskbarGeometryChanged?.Invoke(null);
+
+			if (!_taskbarReadFailureReported)
+			{
+				_taskbarReadFailureReported = true;
+
+				GD.PushWarning(
+					"Questbar could not read the Windows " +
+					"system taskbar rectangle. Current fixed " +
+					"placement remains active.");
+			}
+
+			return false;
+		}
+
+		_taskbarReadFailureReported = false;
+
+		bool changed =
+			!CurrentTaskbarGeometry.HasValue
+			|| CurrentTaskbarGeometry.Value != geometry;
+
+		CurrentTaskbarGeometry = geometry;
+
+		if (changed)
+			TaskbarGeometryChanged?.Invoke(geometry);
+
+		if (forceLog || changed)
+			PrintTaskbarDiagnostic(geometry);
+
+		return true;
+	}
+
+	private static void PrintTaskbarDiagnostic(
+		WindowsTaskbarGeometry geometry)
+	{
+		string screenScale =
+			geometry.ScreenIndex >= 0
+				? DisplayServer
+					.ScreenGetScale(geometry.ScreenIndex)
+					.ToString("0.###")
+				: "Unmatched";
+
+		GD.Print(
+			$"Windows taskbar detected. " +
+			$"Screen={geometry.ScreenIndex}, " +
+			$"Edge={geometry.Edge}, " +
+			$"Position={geometry.Bounds.Position}, " +
+			$"Size={geometry.Bounds.Size}, " +
+			$"Rectangle=(X={geometry.Bounds.Position.X}, " +
+			$"Y={geometry.Bounds.Position.Y}, " +
+			$"W={geometry.Bounds.Size.X}, " +
+			$"H={geometry.Bounds.Size.Y}), " +
+			$"ScreenBounds={geometry.ScreenBounds}, " +
+			$"ScreenScale={screenScale}. " +
+			$"Diagnostic only; fixed placement remains active.");
 	}
 
 	public override void _UnhandledKeyInput(InputEvent @event)

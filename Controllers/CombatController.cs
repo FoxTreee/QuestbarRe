@@ -280,23 +280,12 @@ public partial class CombatController : Node
 			if (!GodotObject.IsInstanceValid(hero))
 				continue;
 
+			MonsterActorController? previousTarget =
+				hero.CurrentTarget;
+
 			if (MonsterParticipantCount == 0)
 			{
 				hero.ClearTarget();
-				continue;
-			}
-
-			MonsterActorController? previousTarget = hero.CurrentTarget;
-
-			hero.RefreshTarget( _monsterParticipants);
-
-			if (hero.CurrentTarget != previousTarget)
-			{
-				RaiseTargetChanged(
-					hero,
-					previousTarget,
-					hero.CurrentTarget);
-			}
 
 				if (previousTarget is not null)
 				{
@@ -307,6 +296,17 @@ public partial class CombatController : Node
 				}
 
 				continue;
+			}
+
+			hero.RefreshTarget(_monsterParticipants);
+
+			if (hero.CurrentTarget == previousTarget)
+				continue;
+
+			RaiseTargetChanged(
+				hero,
+				previousTarget,
+				hero.CurrentTarget);
 		}
 	}
 

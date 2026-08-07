@@ -2,9 +2,26 @@ using Godot;
 
 public partial class PresentationFrameController : Node
 {
+    private static readonly Vector2I LogicalSize =
+        new(800, 192);
+
     [ExportCategory("Dependencies")]
     [Export]
     public SubViewportContainer PresentationFrame
+    {
+        get;
+        set;
+    } = null!;
+
+    [Export]
+    public SubViewport RegionViewport
+    {
+        get;
+        set;
+    } = null!;
+
+    [Export]
+    public Polygon2D Ground
     {
         get;
         set;
@@ -22,84 +39,94 @@ public partial class PresentationFrameController : Node
         if (!ValidateReferences())
             return;
 
-        WindowHost.ExpandedChanged +=
-            OnExpandedChanged;
+        ConfigureLogicalViewport();
 
-        WindowHost.PlacementSettings.Changed +=
-            OnPlacementSettingsChanged;
+        WindowHost.WindowPlacementApplied +=
+            OnWindowPlacementApplied;
 
-        PrepareFrameLayout();
-        ApplyFrame();
+        ApplyPresentationFrame();
     }
 
     public override void _ExitTree()
     {
         if (GodotObject.IsInstanceValid(WindowHost))
         {
-            WindowHost.ExpandedChanged -=
-                OnExpandedChanged;
-
-            if (WindowHost.PlacementSettings is not null)
-            {
-                WindowHost.PlacementSettings.Changed -=
-                    OnPlacementSettingsChanged;
-            }
+            WindowHost.WindowPlacementApplied -=
+                OnWindowPlacementApplied;
         }
     }
 
-    private void OnExpandedChanged(
-        bool isExpanded)
-    {
-        ApplyFrame();
-    }
-
-    private void OnPlacementSettingsChanged()
-    {
-        ApplyFrame();
-    }
-
-    private void PrepareFrameLayout()
+    private void ConfigureLogicalViewport()
     {
         PresentationFrame.AnchorLeft = 0.0f;
         PresentationFrame.AnchorTop = 0.0f;
         PresentationFrame.AnchorRight = 0.0f;
         PresentationFrame.AnchorBottom = 0.0f;
+        PresentationFrame.Stretch = true;
+
+        RegionViewport.Size2DOverride = LogicalSize;
+        RegionViewport.Size2DOverrideStretch = true;
     }
 
-    private void ApplyFrame()
+    private void OnWindowPlacementApplied()
     {
-        int expandedWidth =
-            Mathf.Max(
-                WindowHost.PlacementSettings.WindowWidth,
-                1);
+        ApplyPresentationFrame();
+    }
 
-        int expandedHeight =
-            Mathf.Max(
-                WindowHost.PlacementSettings.ExpandedHeight,
-                1);
+    private void ApplyPresentationFrame()
+    {
+        Vector2I windowSize = GetWindow().Size;
 
-        int visibleHeight =
-            WindowHost.IsExpanded
-                ? expandedHeight
-                : Mathf.Max(
-                    WindowHost.PlacementSettings.CollapsedHeight,
-                    1);
+        float uniformScale = Mathf.Max(
+            windowSize.X / (float)LogicalSize.X,
+            0.01f);
 
-        PresentationFrame.Size =
-            new Vector2(
-                expandedWidth,
-                expandedHeight);
+        float frameHeight =
+            LogicalSize.Y * uniformScale;
 
-        PresentationFrame.Position =
-            new Vector2(
-                0.0f,
-                visibleHeight - expandedHeight);
+        PresentationFrame.Size = new Vector2(
+            windowSize.X,
+            frameHeight);
+
+        PresentationFrame.Position = new Vector2(
+            0.0f,
+            windowSize.Y - frameHeight);
+
+        ApplyGroundHeight(uniformScale);
 
         GD.Print(
-            $"Presentation frame updated. " +
-            $"Expanded={WindowHost.IsExpanded}, " +
-            $"FrameSize={PresentationFrame.Size}, " +
-            $"FramePosition={PresentationFrame.Position}");
+            $"Presentation frame applied. " +
+            $"LogicalSize={LogicalSize}, " +
+            $"WindowSize={windowSize}, " +
+            $"UniformScale={uniformScale:0.###}, " +
+            $"FramePosition={PresentationFrame.Position}, " +
+            $"FrameSize={PresentationFrame.Size}");
+    }
+
+    private void ApplyGroundHeight(float uniformScale)
+    {
+        float collapsedHeight = Mathf.Clamp(
+            WindowHost.PlacementSettings.CollapsedHeight,
+            1,
+            GetWindow().Size.Y);
+
+        float logicalGroundHeight = Mathf.Clamp(
+            collapsedHeight / uniformScale,
+            1.0f,
+            LogicalSize.Y);
+
+        float groundTop =
+            LogicalSize.Y - logicalGroundHeight;
+
+        Ground.Position = Vector2.Zero;
+        Ground.Scale = Vector2.One;
+        Ground.Polygon = new Vector2[]
+        {
+            new(0.0f, groundTop),
+            new(LogicalSize.X, groundTop),
+            new(LogicalSize.X, LogicalSize.Y),
+            new(0.0f, LogicalSize.Y)
+        };
     }
 
     private bool ValidateReferences()
@@ -109,6 +136,14 @@ public partial class PresentationFrameController : Node
         valid &= Require(
             PresentationFrame,
             nameof(PresentationFrame));
+
+        valid &= Require(
+            RegionViewport,
+            nameof(RegionViewport));
+
+        valid &= Require(
+            Ground,
+            nameof(Ground));
 
         valid &= Require(
             WindowHost,
