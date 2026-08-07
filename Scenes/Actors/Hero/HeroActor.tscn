@@ -5,5 +5,6 @@
 [node name="VisualRoot" type="Node2D" parent="." unique_id=18405630]
 
 [node name="HeroBody" type="Polygon2D" parent="VisualRoot" unique_id=1886110105]
+scale = Vector2(0.6, 1)
 color = Color(0.44638622, 0.8959402, 0.30923367, 1)
-polygon = PackedVector2Array(-12, -40, 12, -40, 12, 0, -12, 0)
+polygon = PackedVector2Array(-12, -40, 12, -40, 12, -20, 12, 0, -12, 0)

@@ -32,6 +32,8 @@ public partial class DesktopWindowHostController : Node
     private Window _window = null!;
     private bool _isExpanded;
     private double _topmostRefreshElapsed;
+    public bool IsExpanded => _isExpanded;
+    public event Action<bool>? ExpandedChanged;
 
     public override void _Ready()
     {
@@ -161,6 +163,8 @@ public partial class DesktopWindowHostController : Node
         ApplyWindowPlacement();
         EnforceNativeTopmost();
 
+        ExpandedChanged?.Invoke(_isExpanded);
+
         GD.Print(
             $"Questbar expanded state changed. " +
             $"Expanded={_isExpanded}, " +
@@ -271,9 +275,27 @@ public partial class DesktopWindowHostController : Node
             minimumY,
             maximumY);
 
+        GD.Print(
+            $"Window placement diagnostic: " +
+            $"Monitor={validMonitor}, " +
+            $"ScreenPosition={screenPosition}, " +
+            $"ScreenSize={screenSize}, " +
+            $"ScreenScale={DisplayServer.ScreenGetScale(validMonitor):0.###}, " +
+            $"ConfiguredWidth={PlacementSettings.WindowWidth}, " +
+            $"CollapsedHeight={PlacementSettings.CollapsedHeight}, " +
+            $"ExpandedHeight={PlacementSettings.ExpandedHeight}, " +
+            $"RequestedHeight={requestedHeight}, " +
+            $"FinalSize={finalSize}, " +
+            $"RequestedPosition=({requestedX}, {requestedY})");
+
         _window.Size = finalSize;
         _window.Position =
             new Vector2I(clampedX, clampedY);
+
+        GD.Print(
+            $"Native window applied. " +
+            $"ActualPosition={_window.Position}, " +
+            $"ActualSize={_window.Size}");
     }
 
     private void ConfigureNativeWindow()
@@ -282,6 +304,9 @@ public partial class DesktopWindowHostController : Node
         _window.Borderless = true;
         _window.AlwaysOnTop = true;
         _window.Unresizable = true;
+        _window.Transparent = true;
+
+        GetViewport().TransparentBg = true;
     }
 
     private int GetRequestedHeight()
