@@ -273,8 +273,52 @@ public partial class DebugCommandService : Node
 
 		GetViewport().SetInputAsHandled();
 	}
-	
-	public string Execute(string commandText)
+
+    private string ExecuteSpawnMonster(
+    string[] parts)
+    {
+        if (parts.Length < 2)
+        {
+            return
+                "Usage: monster.spawn " +
+                "<content_id> [count]\n" +
+                "Example: monster.spawn " +
+                "monster.core.training_monster 5";
+        }
+
+        string contentId =
+            parts[1];
+
+        int count =
+            1;
+
+        if (parts.Length >= 3
+            && (!int.TryParse(
+                    parts[2],
+                    NumberStyles.Integer,
+                    CultureInfo.InvariantCulture,
+                    out count)
+                || count < 1))
+        {
+            return
+                "Count must be a positive integer.";
+        }
+
+        count = Math.Clamp(count, 1, 100);
+
+        int spawned =
+            Encounter.DebugAddMonsters(
+                contentId,
+                count);
+
+        return spawned == count
+            ? $"Spawned {spawned} instance(s) of " +
+              $"{contentId}."
+            : $"Spawned {spawned} of {count} requested " +
+              $"instance(s) of {contentId}.";
+    }
+
+    public string Execute(string commandText)
 {
 	string[] parts =
 		commandText.Trim().Split(
@@ -310,7 +354,10 @@ public partial class DebugCommandService : Node
 		"encounter.end" =>
 			ExecuteEndEncounter(),
 
-		_ =>
+        "monster.spawn" =>
+		 ExecuteSpawnMonster(parts),
+
+        _ =>
 			$"Unknown command: {command}\n" +
             "Type 'help' for available commands."
 	};

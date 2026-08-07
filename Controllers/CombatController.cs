@@ -15,8 +15,12 @@ public partial class CombatController : Node
 	
 	[Export]
 	public Node2D ActorLayer { get; set; } = null!;
+    
+	[Export]
+    public TargetingService Targeting{ get; set; } = null!;
 
-	[ExportCategory("Combat Content")]
+
+    [ExportCategory("Combat Content")]
 	[Export]
 	public PackedScene ProjectileScene { get; set; } = null!;
 
@@ -138,15 +142,19 @@ public partial class CombatController : Node
 		}
 	}
 
-	private void OnActiveMonsterCountChanged(int activeMonsterCount)
-	{
-		RefreshMonsterParticipants();
-		ApplyCombatState();
-		RefreshHeroTargets();
-		EmitParticipantsChanged();
-	}
+    private void OnActiveMonsterCountChanged(
+    int activeMonsterCount)
+    {
+        RefreshMonsterParticipants();
+        ApplyCombatState();
 
-	private void OnHeroAttackReleased(HeroActorController attacker, MonsterActorController target)
+        RefreshHeroTargets();
+        RefreshMonsterTargets();
+
+        EmitParticipantsChanged();
+    }
+
+    private void OnHeroAttackReleased(HeroActorController attacker, MonsterActorController target)
 	{
 		if (!GodotObject.IsInstanceValid(attacker)
 			|| !GodotObject.IsInstanceValid(target))
@@ -189,16 +197,6 @@ public partial class CombatController : Node
 		GD.Print(
 			$"Hero impact confirmed: " +
 			$"{attacker.Name} → {target.Name}");
-
-		bool establishedInitialAggro =
-			target.TryEngage(attacker);
-
-		if (establishedInitialAggro)
-		{
-			GD.Print(
-				$"Initial monster aggro established: " +
-				$"{target.Name} → {attacker.Name}");
-		}
 
 		DamageResult result = target.Health.ApplyDamage(attacker.CombatProfile.AttackDamage);
 
@@ -275,36 +273,6 @@ public partial class CombatController : Node
 			projectile.QueueFree();
 	}
 
-	private HeroActorController?
-	SelectLowestHealthHero()
-	{
-		HeroActorController? selectedHero = null;
-
-		foreach (
-			HeroActorController hero
-			in _heroParticipants)
-		{
-			if (!GodotObject.IsInstanceValid(hero))
-				continue;
-
-			if (!hero.IsInsideTree()
-				|| hero.IsIncapacitated
-				|| !hero.Health.IsAlive)
-			{
-				continue;
-			}
-
-			if (selectedHero is null
-				|| hero.Health.CurrentHealth
-					< selectedHero.Health.CurrentHealth)
-			{
-				selectedHero = hero;
-			}
-		}
-
-		return selectedHero;
-	}
-
 	private void RefreshHeroTargets()
 	{
 		foreach (HeroActorController hero in _heroParticipants)
@@ -362,8 +330,7 @@ public partial class CombatController : Node
             if (monster.HasValidTarget)
                 continue;
 
-            HeroActorController? replacementTarget =
-                SelectLowestHealthHero();
+            HeroActorController? replacementTarget = Targeting.SelectHeroTarget(monster, _heroParticipants);
 
             if (replacementTarget is null)
             {
@@ -382,7 +349,7 @@ public partial class CombatController : Node
             }
 
             bool targetAccepted =
-                monster.TryEngage(
+                monster.TryAcquireTarget(
                     replacementTarget);
 
             if (!targetAccepted)
@@ -394,9 +361,9 @@ public partial class CombatController : Node
                 replacementTarget);
 
             GD.Print(
-                $"{monster.Name} automatically retargeted " +
-                $"{replacementTarget.Name} with " +
-                $"{replacementTarget.Health.CurrentHealth} health.");
+				$"{monster.Name} selected " +
+				$"{replacementTarget.Name} using " +
+				$"{monster.Definition.TargetingStyle}.");
         }
     }
 
@@ -596,7 +563,15 @@ public partial class CombatController : Node
 			"ActorLayer Inspector reference.");
 		return false;
 		}
-		if (!GodotObject.IsInstanceValid(ProjectileScene))
+        if (!GodotObject.IsInstanceValid(Targeting))
+        {
+            GD.PushError(
+                "CombatController is missing its " +
+                "Targeting Inspector reference.");
+
+            return false;
+        }
+        if (!GodotObject.IsInstanceValid(ProjectileScene))
 		{
 		GD.PushError(
 			"CombatController is missing its " +

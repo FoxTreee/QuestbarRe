@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="MonsterDefinition" format=3 uid="uid://dk2o50nyo823k"]
+
+[ext_resource type="PackedScene" uid="uid://bxp73ohtqn7ga" path="res://Scenes/Actors/Monster/MonsterActor.tscn" id="1_3m56n"]
+[ext_resource type="Script" uid="uid://bwnluygsef150" path="res://Scripts/Content/Definitions/MonsterDefinition.cs" id="1_ooqr6"]
+
+[resource]
+script = ExtResource("1_ooqr6")
+ContentId = "monster.core.training_monster"
+DisplayName = "Training Monster"
+ActorScene = ExtResource("1_3m56n")
+TargetingStyle = 3
+metadata/_custom_type_script = "uid://bwnluygsef150"

@@ -12,10 +12,14 @@
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
 [ext_resource type="Script" uid="uid://ccdcfymdch8h5" path="res://Scripts/Services/TargetingService.cs" id="6_frkhe"]
 [ext_resource type="Script" uid="uid://cxklmvye8ghgt" path="res://Scripts/Services/DebugCommandService.cs" id="7_h1m7h"]
+[ext_resource type="Script" uid="uid://s3pr1p2lapds" path="res://Content/Registries/MonsterContentRegistry.cs" id="8_346fj"]
+[ext_resource type="Script" uid="uid://bwnluygsef150" path="res://Scripts/Content/Definitions/MonsterDefinition.cs" id="9_0sclb"]
 [ext_resource type="Script" uid="uid://n85xspfr8gm5" path="res://Controllers/EncounterController.cs" id="11_grg3l"]
-[ext_resource type="PackedScene" uid="uid://bxp73ohtqn7ga" path="res://Scenes/Actors/Monster/MonsterActor.tscn" id="12_frkhe"]
+[ext_resource type="Resource" uid="uid://bnb4dy32spiuv" path="res://Content/Monsters/Core/monster.core.heavy_training_monster.tres" id="11_sxkr1"]
+[ext_resource type="Script" uid="uid://b8bcqttr8ndmt" path="res://Content/Factories/MonsterFactory.cs" id="12_0sclb"]
 [ext_resource type="Script" uid="uid://wv8afqfkrl6i" path="res://Controllers/CombatController.cs" id="12_grg3l"]
 [ext_resource type="PackedScene" uid="uid://bnrollfc0yukf" path="res://Scenes/Combat/ProjectileActor.tscn" id="14_1p5hy"]
+[ext_resource type="Resource" uid="uid://dk2o50nyo823k" path="res://Content/Monsters/Core/monster.core.training_monster.tres" id="14_erwvk"]
 
 [sub_resource type="Resource" id="Resource_d6g1g"]
 script = ExtResource("1_idj7w")
@@ -59,7 +63,7 @@ color = Color(0.44291073, 0.4429108, 0.4429106, 1)
 polygon = PackedVector2Array(0, 0, 800, 0, 800, 192, 0, 192)
 
 [node name="GroundGuide" type="Line2D" parent="RegionViewportContainer/RegionViewport/RegionPresentation" unique_id=1508151550]
-points = PackedVector2Array(0, 160, 800, 160)
+points = PackedVector2Array(0, 160, 261.98914, 160, 446.30307, 160, 800, 160)
 width = 2.0
 default_color = Color(0.5330062, 0.7372065, 0.5126692, 1)
 
@@ -68,12 +72,6 @@ default_color = Color(0.5330062, 0.7372065, 0.5126692, 1)
 [node name="MonsterSpawnAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=1720500992]
 position = Vector2(-40, 160)
 color = Color(0.82674575, 0.23699889, 0.46144724, 1)
-polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
-
-[node name="MonsterEntryAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=845393241]
-visible = false
-position = Vector2(180, 160)
-color = Color(0.79823756, 0.3226114, 0.21111429, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 
 [node name="HeroFormationAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=79130758]
@@ -91,7 +89,9 @@ VisualRoot = NodePath("VisualRoot")
 ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 BobHeight = 6.0
 BobSpeed = 5.1
-TemporaryMaximumHealth = 4741.0
+TemporaryMaximumHealth = 13573.0
+TemporaryAttackDamage = 2.0
+CombatMoveSpeed = 120.0
 Targeting = NodePath("../../../../Services/TargetingService")
 
 [node name="ProjectileOrigin" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor/VisualRoot" parent_id_path=PackedInt32Array(162660220, 18405630) index="1" unique_id=805389202]
@@ -108,15 +108,39 @@ ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 BobHeight = 6.0
 BobSpeed = 5.0
 BobPhaseOffset = 3.14
-TemporaryMaximumHealth = 4142.0
-TemporaryAttackRange = 140.0
+TemporaryMaximumHealth = 150.0
+TemporaryAttackDamage = 50.0
+CombatMoveSpeed = 120.0
+TemporaryAttackRange = 2.0
 AttackRangeTolerance = 9.0
 TemporaryAttackDelivery = 1
 Targeting = NodePath("../../../../Services/TargetingService")
 
+[node name="HeroBody" parent="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2/VisualRoot" parent_id_path=PackedInt32Array(1393210593, 18405630) index="0" unique_id=1886110105]
+polygon = PackedVector2Array(-12, -40, 12, -40, 12, 0, -12, 0, -12.361145, -14.518524)
+
 [node name="ProjectileOrigin" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2/VisualRoot" parent_id_path=PackedInt32Array(1393210593, 18405630) index="1" unique_id=1283317173]
 position = Vector2(-12, -24)
 rotation = 0.01555259
+
+[node name="HeroActor3" parent="RegionViewportContainer/RegionViewport/ActorLayer" unique_id=101258880 node_paths=PackedStringArray("FormationAnchor", "JourneyState", "VisualRoot", "ProjectileOrigin", "Targeting") instance=ExtResource("2_50glp")]
+visible = false
+position = Vector2(720, 160)
+script = ExtResource("3_vy5pj")
+FormationAnchor = NodePath("../HeroFormationAnchor")
+FormationOffset = Vector2(-80, -40)
+JourneyState = NodePath("../../../../Services/JourneyStateService")
+VisualRoot = NodePath("VisualRoot")
+ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
+BobHeight = 6.0
+BobSpeed = 5.1
+TemporaryMaximumHealth = 13573.0
+TemporaryAttackDamage = 2.0
+CombatMoveSpeed = 120.0
+Targeting = NodePath("../../../../Services/TargetingService")
+
+[node name="ProjectileOrigin" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor3/VisualRoot" parent_id_path=PackedInt32Array(101258880, 18405630) index="1" unique_id=2036933504]
+position = Vector2(-11.999939, -24.000015)
 
 [node name="RegionEffects" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=2113048403]
 
@@ -152,15 +176,23 @@ keep_editing_on_text_submit = true
 [node name="JourneyStateService" type="Node" parent="Services" unique_id=2091345235]
 script = ExtResource("3_jw32o")
 
-[node name="TargetingService" type="Node" parent="Services" unique_id=1900580469]
-script = ExtResource("6_frkhe")
-
 [node name="DebugCommandService" type="Node" parent="Services" unique_id=67226220 node_paths=PackedStringArray("Encounter", "Combat", "Heroes", "Console")]
 script = ExtResource("7_h1m7h")
 Encounter = NodePath("../../Controllers/EncounterController")
 Combat = NodePath("../../Controllers/CombatController")
-Heroes = [NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor"), NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2")]
+Heroes = [NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor"), NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2"), NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor3")]
 Console = NodePath("../../PopupWindows/DebugConsoleWindow")
+
+[node name="MonsterContentRegistry" type="Node" parent="Services" unique_id=436469126]
+script = ExtResource("8_346fj")
+Definitions = Array[ExtResource("9_0sclb")]([ExtResource("14_erwvk"), ExtResource("11_sxkr1")])
+
+[node name="TargetingService" type="Node" parent="Services" unique_id=1900580469]
+script = ExtResource("6_frkhe")
+
+[node name="MonsterFactory" type="Node" parent="Services" unique_id=583709723 node_paths=PackedStringArray("Registry")]
+script = ExtResource("12_0sclb")
+Registry = NodePath("../MonsterContentRegistry")
 
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 
@@ -186,22 +218,24 @@ WindowHost = NodePath("../DesktopWindowHostController")
 SettingsWindow = NodePath("../../PopupWindows/WindowSettingsPopup")
 PanelController = NodePath("../WindowSettingsPanelController")
 
-[node name="EncounterController" type="Node" parent="Controllers" unique_id=292181593 node_paths=PackedStringArray("JourneyState", "ActorLayer", "MonsterSpawnAnchor", "MonsterEntryAnchor")]
+[node name="EncounterController" type="Node" parent="Controllers" unique_id=292181593 node_paths=PackedStringArray("JourneyState", "ActorLayer", "MonsterSpawnAnchor", "MonsterFactory")]
 script = ExtResource("11_grg3l")
 JourneyState = NodePath("../../Services/JourneyStateService")
 ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer")
 MonsterSpawnAnchor = NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/MonsterSpawnAnchor")
-MonsterEntryAnchor = NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/MonsterEntryAnchor")
-MonsterScene = ExtResource("12_frkhe")
+MonsterFactory = NodePath("../../Services/MonsterFactory")
+SpawnsPerColumnExpansion = 4
 
-[node name="CombatController" type="Node" parent="Controllers" unique_id=1601105505 node_paths=PackedStringArray("Encounter", "ActorLayer", "ConfiguredHeroes")]
+[node name="CombatController" type="Node" parent="Controllers" unique_id=1601105505 node_paths=PackedStringArray("Encounter", "ActorLayer", "Targeting", "ConfiguredHeroes")]
 script = ExtResource("12_grg3l")
 Encounter = NodePath("../EncounterController")
 ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer")
+Targeting = NodePath("../../Services/TargetingService")
 ProjectileScene = ExtResource("14_1p5hy")
 ConfiguredHeroes = [NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor"), NodePath("../../RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2")]
 
 [editable path="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor"]
 [editable path="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor2"]
+[editable path="RegionViewportContainer/RegionViewport/ActorLayer/HeroActor3"]
 [editable path="PopupWindows/WindowSettingsPopup"]
 [editable path="PopupWindows/DebugConsoleWindow"]
