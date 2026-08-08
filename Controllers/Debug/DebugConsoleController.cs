@@ -48,7 +48,7 @@ public partial class DebugConsoleController : Window
 
 		AppendOutput(
 			"Questbar Debug Console ready.\n" +
-			"Type 'help' for available commands.");
+			"Type '.help' for available commands.");
 
 		Hide();
 	}
@@ -160,7 +160,10 @@ public partial class DebugConsoleController : Window
 	{
 		if (commandText.Equals(
 			"clear",
-			StringComparison.OrdinalIgnoreCase))
+			StringComparison.OrdinalIgnoreCase)
+			|| commandText.Equals(
+				".clear",
+				StringComparison.OrdinalIgnoreCase))
 		{
 			DebugOutput.Clear();
 			return;

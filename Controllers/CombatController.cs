@@ -19,6 +19,9 @@ public partial class CombatController : Node
 	[Export]
 	public TargetingService Targeting{ get; set; } = null!;
 
+	[Export]
+	public CombatDamageResolver DamageResolver { get; set; } = null!;
+
 
 	[ExportCategory("Combat Content")]
 	[Export]
@@ -232,7 +235,12 @@ public partial class CombatController : Node
 			$"Hero impact confirmed: " +
 			$"{attacker.Name} → {target.Name}");
 
-		DamageResult result = target.Health.ApplyDamage(attacker.CombatProfile.AttackDamage);
+		DamageResult result = DamageResolver.Resolve(
+			new DamageRequest(
+				attacker,
+				target,
+				attacker.CombatProfile.AttackDamage),
+			target.Health);
 
 			RaiseCombatEvent(
 		new CombatEvent
@@ -466,8 +474,12 @@ public partial class CombatController : Node
 			$"Monster impact confirmed: " +
 			$"{attacker.Name} → {target.Name}");
 
-		DamageResult result =
-			target.Health.ApplyDamage(attacker.CombatProfile.AttackDamage);
+		DamageResult result = DamageResolver.Resolve(
+			new DamageRequest(
+				attacker,
+				target,
+				attacker.CombatProfile.AttackDamage),
+			target.Health);
 
 		PrintDamageResult(attacker.Name,  target.Name, result);
 
@@ -634,6 +646,14 @@ public partial class CombatController : Node
 			GD.PushError(
 				"CombatController is missing its " +
 				"Targeting Inspector reference.");
+
+			return false;
+		}
+		if (!GodotObject.IsInstanceValid(DamageResolver))
+		{
+			GD.PushError(
+				"CombatController is missing its " +
+				"DamageResolver Inspector reference.");
 
 			return false;
 		}

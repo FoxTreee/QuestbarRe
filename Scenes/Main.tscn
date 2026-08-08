@@ -24,11 +24,15 @@
 [ext_resource type="Resource" uid="uid://dk2o50nyo823k" path="res://Content/Monsters/Core/monster.core.training_monster.tres" id="14_erwvk"]
 [ext_resource type="Script" uid="uid://j08orv8sgbi4" path="res://Scripts/Content/Definitions/EncounterDefinition.cs" id="15_kpo4j"]
 [ext_resource type="Resource" uid="uid://cvojm6bgn34m6" path="res://Content/Encounters/Core/encounter.core.training_mix.tres" id="16_4n42c"]
-[ext_resource type="Resource" path="res://Content/Encounters/Core/encounter.core.training_swarm.tres" id="17_4n42c"]
-[ext_resource type="Resource" path="res://Content/Encounters/Core/encounter.core.heavy_patrol.tres" id="18_c5snn"]
+[ext_resource type="Resource" uid="uid://cx14umn3yguoq" path="res://Content/Encounters/Core/encounter.core.training_swarm.tres" id="17_4n42c"]
+[ext_resource type="Resource" uid="uid://c7h6rj8sng7x5" path="res://Content/Encounters/Core/encounter.core.heavy_patrol.tres" id="18_c5snn"]
+[ext_resource type="Script" uid="uid://mps2em11c1vu" path="res://Content/Registries/EncounterPoolContentRegistry.cs" id="21_u7mjy"]
+[ext_resource type="Script" uid="uid://dwbxn4a32qi2l" path="res://Scripts/Content/Definitions/EncounterPoolDefinition.cs" id="22_4yxf6"]
 [ext_resource type="Script" uid="uid://bayd7wivcbwut" path="res://Controllers/ActorScalePresentationController.cs" id="23_3tgeq"]
 [ext_resource type="Script" uid="uid://td4n1ix6p7xi" path="res://Scripts/Presentation/PresentationFrameController.cs" id="23_jyqft"]
+[ext_resource type="Resource" uid="uid://b4fd04q72ynj6" path="res://Content/EncounterPools/Core/encounter_pool.core.training_region.tres" id="23_qta6b"]
 [ext_resource type="Script" uid="uid://o8hq53b3qdg" path="res://Controllers/ActorGroundConstraintController.cs" id="24_3tgeq"]
+[ext_resource type="Script" uid="uid://yaghcenkkidu" path="res://Scripts/Services/CombatDamageResolver.cs" id="30_4yxf6"]
 
 [node name="Main" type="Node" unique_id=644726071]
 
@@ -40,7 +44,7 @@ CloudBackground = NodePath("CloudBackground")
 [node name="BackgroundGuide" type="Polygon2D" parent="BackgroundPresentation" unique_id=877634073]
 visible = false
 scale = Vector2(1.0125, 1.0620915)
-color = Color(0, 1, 1, 0)
+color = Color(0, 1, 1, 0.77254903)
 polygon = PackedVector2Array(0, 0, 800, 0, 800, 306, 0, 306)
 
 [node name="CloudBackground" type="Sprite2D" parent="BackgroundPresentation" unique_id=12908989]
@@ -74,6 +78,7 @@ z_index = -100
 
 [node name="RegionPresentation" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=1090747989 node_paths=PackedStringArray("RegionTileA", "RegionTileB", "JourneyState")]
 visible = false
+z_index = -40
 script = ExtResource("1_v1gob")
 RegionTileA = NodePath("RegionTileA")
 RegionTileB = NodePath("RegionTileB")
@@ -96,8 +101,22 @@ points = PackedVector2Array(0, 160, 261.98914, 160, 446.30307, 160, 800, 160)
 width = 2.0
 default_color = Color(0.5330062, 0.7372065, 0.5126692, 1)
 
+[node name="GroundLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=1759177754]
+z_index = -20
+
+[node name="GroundPlaceholder" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer" unique_id=1761926106]
+position = Vector2(0, 89.04266)
+scale = Vector2(1.3092331, 0.4788925)
+color = Color(0.5177069, 0.42025474, 0.42084682, 1)
+polygon = PackedVector2Array(0, 164.37497, 305.5229, 164.37497, 611, 164.37497, 611, 215, 305.73227, 215, 0, 215)
+
+[node name="GroundTopBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer" unique_id=581002143]
+position = Vector2(0, 144)
+
+[node name="GroundBottomBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer" unique_id=74778667]
+position = Vector2(0, 190.81482)
+
 [node name="ActorLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=997391345]
-z_index = 10
 
 [node name="MonsterSpawnAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer" unique_id=1720500992]
 position = Vector2(-40, 160)
@@ -106,12 +125,11 @@ polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 
 [node name="HeroFormationAnchor" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer" unique_id=79130758]
 visible = false
-position = Vector2(720, 175)
+position = Vector2(563.88885, 173.03703)
 color = Color(2.3102762e-06, 0.8720522, 0.87253284, 1)
 polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 
 [node name="HeroActor" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer" unique_id=162660220 node_paths=PackedStringArray("FormationAnchor", "JourneyState", "VisualRoot", "ProjectileOrigin", "Targeting") instance=ExtResource("2_50glp")]
-z_index = 2
 position = Vector2(720, 160)
 script = ExtResource("3_vy5pj")
 FormationAnchor = NodePath("../HeroFormationAnchor")
@@ -126,7 +144,6 @@ Targeting = NodePath("../../../../../Services/TargetingService")
 position = Vector2(-11.999939, -24.000015)
 
 [node name="HeroActor2" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer" unique_id=1393210593 node_paths=PackedStringArray("FormationAnchor", "JourneyState", "VisualRoot", "ProjectileOrigin", "Targeting") instance=ExtResource("2_50glp")]
-z_index = 2
 position = Vector2(720, 160)
 script = ExtResource("3_vy5pj")
 CombatTagMask = 2
@@ -174,38 +191,35 @@ Targeting = NodePath("../../../../../Services/TargetingService")
 position = Vector2(-11.999939, -24.000015)
 
 [node name="ForegroundLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1354326323]
-
-[node name="GroundPlaceholder" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ForegroundLayer" unique_id=1761926106]
-position = Vector2(0, 89.04266)
-scale = Vector2(1.3666121, 0.50918996)
-color = Color(0.5177069, 0.42025474, 0.42084682, 1)
-polygon = PackedVector2Array(0, 164.37497, 611, 164.37497, 611, 215, 305.73227, 215, 0, 215)
-
-[node name="GroundTopBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ForegroundLayer" unique_id=581002143]
-position = Vector2(0, 144)
-
-[node name="GroundBottomBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ForegroundLayer" unique_id=74778667]
-position = Vector2(0, 190.81482)
+z_index = 20
 
 [node name="RegionEffects" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=2113048403]
+z_index = 30
 
-[node name="ScreenEffects" type="CanvasLayer" parent="RegionViewportContainer/RegionViewport" unique_id=1414903031]
+[node name="ScreenEffects" type="CanvasLayer" parent="RegionViewportContainer" unique_id=1414903031]
+
+[node name="FogPlaceholder" type="ColorRect" parent="RegionViewportContainer/ScreenEffects" unique_id=1655118385]
 visible = false
-
-[node name="FogPlaceholder" type="ColorRect" parent="RegionViewportContainer/RegionViewport/ScreenEffects" unique_id=1655118385]
-offset_right = 835.0
-offset_bottom = 195.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0.48235294, 0.48235294, 0.48235294, 0.39607844)
 
-[node name="ColorOverlay" type="ColorRect" parent="RegionViewportContainer/RegionViewport/ScreenEffects" unique_id=1640741264]
+[node name="ColorOverlay" type="ColorRect" parent="RegionViewportContainer/ScreenEffects" unique_id=1640741264]
+visible = false
+z_index = 10
 offset_top = 30.518518
 offset_right = 835.0
 offset_bottom = 195.0
 color = Color(1, 1, 1, 0)
 
-[node name="VignettePlaceholder" type="ColorRect" parent="RegionViewportContainer/RegionViewport/ScreenEffects" unique_id=1803333236]
+[node name="VignettePlaceholder" type="ColorRect" parent="RegionViewportContainer/ScreenEffects" unique_id=1803333236]
+z_index = 10
 offset_right = 835.0
 offset_bottom = 195.0
+scale = Vector2(0.9701331, 1.6670202)
 color = Color(0, 1, 1, 0.26666668)
 
 [node name="PopupWindows" type="Node" parent="." unique_id=165967780]
@@ -263,6 +277,11 @@ script = ExtResource("6_frkhe")
 script = ExtResource("12_0sclb")
 Registry = NodePath("../MonsterContentRegistry")
 
+[node name="EncounterPoolContentRegistry" type="Node" parent="Services" unique_id=297296029 node_paths=PackedStringArray("EncounterRegistry")]
+script = ExtResource("21_u7mjy")
+EncounterRegistry = NodePath("../EncounterContentRegistry")
+Definitions = Array[ExtResource("22_4yxf6")]([ExtResource("23_qta6b")])
+
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 
 [node name="DesktopWindowHostController" type="Node" parent="Controllers" unique_id=1521543708]
@@ -287,23 +306,28 @@ WindowHost = NodePath("../DesktopWindowHostController")
 SettingsWindow = NodePath("../../PopupWindows/WindowSettingsPopup")
 PanelController = NodePath("../WindowSettingsPanelController")
 
-[node name="EncounterController" type="Node" parent="Controllers" unique_id=292181593 node_paths=PackedStringArray("JourneyState", "ActorLayer", "MonsterSpawnAnchor", "MonsterFactory", "EncounterRegistry")]
+[node name="EncounterController" type="Node" parent="Controllers" unique_id=292181593 node_paths=PackedStringArray("JourneyState", "ActorLayer", "MonsterSpawnAnchor", "MonsterFactory", "EncounterRegistry", "EncounterPoolRegistry")]
 script = ExtResource("11_grg3l")
 JourneyState = NodePath("../../Services/JourneyStateService")
 ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer")
 MonsterSpawnAnchor = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/MonsterSpawnAnchor")
 MonsterFactory = NodePath("../../Services/MonsterFactory")
 EncounterRegistry = NodePath("../../Services/EncounterContentRegistry")
+EncounterPoolRegistry = NodePath("../../Services/EncounterPoolContentRegistry")
 SpawnRows = 5
 SpawnsPerColumnExpansion = 4
 
-[node name="CombatController" type="Node" parent="Controllers" unique_id=1601105505 node_paths=PackedStringArray("Encounter", "ActorLayer", "Targeting", "ConfiguredHeroes")]
+[node name="CombatController" type="Node" parent="Controllers" unique_id=1601105505 node_paths=PackedStringArray("Encounter", "ActorLayer", "Targeting", "DamageResolver", "ConfiguredHeroes")]
 script = ExtResource("12_grg3l")
 Encounter = NodePath("../EncounterController")
 ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer")
 Targeting = NodePath("../../Services/TargetingService")
+DamageResolver = NodePath("../CombatDamageResolver")
 ProjectileScene = ExtResource("14_1p5hy")
 ConfiguredHeroes = [NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/HeroActor"), NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/HeroActor2"), NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/HeroActor3")]
+
+[node name="CombatDamageResolver" type="Node" parent="Controllers" unique_id=1803014460]
+script = ExtResource("30_4yxf6")
 
 [node name="WorldScaleController" type="Node" parent="Controllers" unique_id=190385101]
 
@@ -311,7 +335,7 @@ ConfiguredHeroes = [NodePath("../../RegionViewportContainer/RegionViewport/Scala
 script = ExtResource("23_jyqft")
 PresentationFrame = NodePath("../../RegionViewportContainer")
 RegionViewport = NodePath("../../RegionViewportContainer/RegionViewport")
-Ground = NodePath("../../RegionViewportContainer/RegionViewport/ForegroundLayer/GroundPlaceholder")
+Ground = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer/GroundPlaceholder")
 WindowHost = NodePath("../DesktopWindowHostController")
 
 [node name="ActoreScalePresentationController" type="Node" parent="Controllers" unique_id=234683437 node_paths=PackedStringArray("ActorLayer", "WindowHost")]
@@ -322,8 +346,8 @@ WindowHost = NodePath("../DesktopWindowHostController")
 [node name="ActorGroundConstraintController" type="Node" parent="Controllers" unique_id=715707471 node_paths=PackedStringArray("ActorLayer", "GroundTopBoundary", "GroundBottomBoundary")]
 script = ExtResource("24_3tgeq")
 ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer")
-GroundTopBoundary = NodePath("../../RegionViewportContainer/RegionViewport/ForegroundLayer/GroundTopBoundary")
-GroundBottomBoundary = NodePath("../../RegionViewportContainer/RegionViewport/ForegroundLayer/GroundBottomBoundary")
+GroundTopBoundary = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer/GroundTopBoundary")
+GroundBottomBoundary = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer/GroundBottomBoundary")
 
 [editable path="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/HeroActor"]
 [editable path="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/HeroActor2"]

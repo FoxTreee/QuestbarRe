@@ -4,15 +4,27 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class EncounterMonsterEntry : Resource
 {
-    [Export]
+    [ExportCategory("Monster")]
+
+    [Export(
+        PropertyHint.PlaceholderText,
+        "monster.core.training_monster")]
     public string MonsterContentId { get; set; } =
         string.Empty;
+
+    [ExportCategory("Count Range")]
 
     [Export(PropertyHint.Range, "0,100,1")]
     public int MinimumCount { get; set; } = 1;
 
     [Export(PropertyHint.Range, "0,100,1")]
     public int MaximumCount { get; set; } = 1;
+
+    [ExportCategory("Authoring")]
+
+    [Export(PropertyHint.MultilineText)]
+    public string DesignerNotes { get; set; } =
+        string.Empty;
 
     public IReadOnlyList<string> GetValidationErrors()
     {

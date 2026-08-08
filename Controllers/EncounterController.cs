@@ -24,6 +24,9 @@ public partial class EncounterController : Node
 	[Export]
 	public EncounterContentRegistry EncounterRegistry { get; set; } = null!;
 
+	[Export]
+	public EncounterPoolContentRegistry EncounterPoolRegistry { get; set; } = null!;
+
 	[ExportCategory("Monster Spawn Formation")]
 
 	[Export(PropertyHint.Range, "1,10,1")]
@@ -42,6 +45,10 @@ public partial class EncounterController : Node
 	public float HorizontalSpawnSpacing { get; set; } = 48.0f;
 
 	[ExportCategory("Encounter Content")]
+	[Export]
+	public string DefaultEncounterPoolContentId { get; set; } =
+		"encounter_pool.core.training_region";
+
 	[Export]
 	public string DefaultEncounterContentId { get; set; } =
 		"encounter.core.training_mix";
@@ -79,7 +86,7 @@ public partial class EncounterController : Node
 		{
 			result =
 				"An encounter is already active. " +
-				"Use encounter.end before starting another.";
+				"Use .endEncounter before starting another.";
 
 			return false;
 		}
@@ -132,6 +139,109 @@ public partial class EncounterController : Node
 		result =
 			$"Started {definition.ContentId} with " +
 			$"{successfullySpawned} monster(s).";
+
+		return true;
+	}
+
+
+	// Start a registered encounter pool -- DEBUG ONLY
+	public bool TryDebugStartEncounterPool(
+		string poolContentId,
+		out string result)
+	{
+		result = string.Empty;
+
+		if (JourneyState.CurrentState
+			== JourneyStateService.JourneyState.Encounter)
+		{
+			result =
+				"An encounter is already active. " +
+				"Use .endEncounter before starting another.";
+
+			return false;
+		}
+
+		if (!EncounterPoolRegistry.TryGet(
+			poolContentId,
+			out EncounterPoolDefinition pool))
+		{
+			result =
+				$"Unknown encounter pool Content ID '{poolContentId}'.";
+
+			return false;
+		}
+
+		if (!TrySelectEncounterFromPool(
+			pool,
+			out EncounterPoolEntry selectedEntry,
+			out int roll,
+			out result))
+		{
+			return false;
+		}
+
+		DebugLog.Print(
+			$"Encounter selection: {pool.DisplayName} " +
+			$"({pool.ContentId})");
+
+		DebugLog.Print(
+			$"  Roll: {roll} / {pool.GetTotalWeight()}");
+
+		DebugLog.Print(
+			$"  Selected: {selectedEntry.EncounterContentId}");
+
+		DebugLog.Print(
+			$"  Weight: {selectedEntry.Weight}");
+
+		if (!EncounterRegistry.TryGet(
+			selectedEntry.EncounterContentId,
+			out EncounterDefinition definition))
+		{
+			result =
+				$"Encounter pool '{pool.ContentId}' selected unknown " +
+				$"encounter '{selectedEntry.EncounterContentId}'.";
+
+			return false;
+		}
+
+		if (!TryRollEncounterComposition(
+			definition,
+			out List<(EncounterMonsterEntry Entry, int Count)> rolledComposition,
+			out _,
+			out result))
+		{
+			return false;
+		}
+
+		_suppressAutomaticEncounterSpawn = true;
+
+		try
+		{
+			JourneyState.BeginEncounter();
+		}
+		finally
+		{
+			_suppressAutomaticEncounterSpawn = false;
+		}
+
+		if (!TrySpawnRolledComposition(
+			definition,
+			rolledComposition,
+			out int successfullySpawned,
+			out result))
+		{
+			JourneyState.EndEncounter();
+			return false;
+		}
+
+		DebugLog.Print(
+			$"Encounter pool started: {pool.ContentId}. " +
+			$"Selected={definition.ContentId}. " +
+			$"Active monsters={_activeMonsters.Count}");
+
+		result =
+			$"Started pool {pool.ContentId}; selected " +
+			$"{definition.ContentId} with {successfullySpawned} monster(s).";
 
 		return true;
 	}
@@ -377,17 +487,79 @@ public partial class EncounterController : Node
 
 		if (!_suppressAutomaticEncounterSpawn)
 		{
-			StartDefaultEncounterDefinition();
+			StartDefaultJourneyEncounter();
 		}
 
 		EncounterStarted?.Invoke();
 	}
 
-	private void StartDefaultEncounterDefinition()
+	private void StartDefaultJourneyEncounter()
 	{
+		EncounterDefinition? selectedDefinition = null;
+
+		if (EncounterPoolRegistry.TryGet(
+			DefaultEncounterPoolContentId,
+			out EncounterPoolDefinition pool))
+		{
+			if (TrySelectEncounterFromPool(
+				pool,
+				out EncounterPoolEntry selectedEntry,
+				out int roll,
+				out string selectionError))
+			{
+				DebugLog.Print(
+					$"Encounter selection: {pool.DisplayName} " +
+					$"({pool.ContentId})");
+
+				DebugLog.Print(
+					$"  Roll: {roll} / {pool.GetTotalWeight()}");
+
+				DebugLog.Print(
+					$"  Selected: {selectedEntry.EncounterContentId}");
+
+				DebugLog.Print(
+					$"  Weight: {selectedEntry.Weight}");
+
+				if (EncounterRegistry.TryGet(
+					selectedEntry.EncounterContentId,
+					out EncounterDefinition resolvedDefinition))
+				{
+					selectedDefinition = resolvedDefinition;
+				}
+				else
+				{
+					DebugLog.Print(
+						$"Selected encounter " +
+						$"'{selectedEntry.EncounterContentId}' " +
+						"could not be resolved. Falling back to " +
+						$"{DefaultEncounterContentId}.");
+				}
+			}
+			else
+			{
+				DebugLog.Print(
+					$"Encounter pool selection failed: " +
+					$"{selectionError} Falling back to " +
+					$"{DefaultEncounterContentId}.");
+			}
+		}
+		else
+		{
+			DebugLog.Print(
+				$"Default encounter pool " +
+				$"'{DefaultEncounterPoolContentId}' is not registered. " +
+				$"Falling back to {DefaultEncounterContentId}.");
+		}
+
+		if (selectedDefinition is not null)
+		{
+			StartJourneyEncounterDefinition(selectedDefinition);
+			return;
+		}
+
 		if (!EncounterRegistry.TryGet(
 			DefaultEncounterContentId,
-			out EncounterDefinition definition))
+			out EncounterDefinition fallbackDefinition))
 		{
 			DebugLog.Print(
 				$"Default encounter '{DefaultEncounterContentId}' " +
@@ -398,6 +570,60 @@ public partial class EncounterController : Node
 			return;
 		}
 
+		StartJourneyEncounterDefinition(fallbackDefinition);
+	}
+
+	private bool TrySelectEncounterFromPool(
+		EncounterPoolDefinition pool,
+		out EncounterPoolEntry selectedEntry,
+		out int roll,
+		out string result)
+	{
+		selectedEntry = null!;
+		roll = 0;
+		result = string.Empty;
+
+		int totalWeight = pool.GetTotalWeight();
+
+		if (totalWeight <= 0)
+		{
+			result =
+				$"Encounter pool '{pool.ContentId}' has no " +
+				"positive selection weight.";
+
+			return false;
+		}
+
+		roll = _spawnRandom.RandiRange(1, totalWeight);
+		int cumulativeWeight = 0;
+
+		foreach (EncounterPoolEntry entry in pool.Entries)
+		{
+			if (!GodotObject.IsInstanceValid(entry)
+				|| entry.Weight <= 0)
+			{
+				continue;
+			}
+
+			cumulativeWeight += entry.Weight;
+
+			if (roll <= cumulativeWeight)
+			{
+				selectedEntry = entry;
+				return true;
+			}
+		}
+
+		result =
+			$"Encounter pool '{pool.ContentId}' could not map " +
+			$"roll {roll} to an entry.";
+
+		return false;
+	}
+
+	private void StartJourneyEncounterDefinition(
+		EncounterDefinition definition)
+	{
 		if (!TryRollEncounterComposition(
 			definition,
 			out List<(EncounterMonsterEntry Entry, int Count)> rolledComposition,
@@ -405,7 +631,7 @@ public partial class EncounterController : Node
 			out string result))
 		{
 			DebugLog.Print(
-				$"Default encounter could not roll: {result} " +
+				$"Journey encounter could not roll: {result} " +
 				$"Falling back to {DefaultMonsterContentId}.");
 
 			SpawnMonster(DefaultMonsterContentId);
@@ -419,12 +645,12 @@ public partial class EncounterController : Node
 			out result))
 		{
 			DebugLog.Print(
-				$"Default encounter spawn failed: {result}");
+				$"Journey encounter spawn failed: {result}");
 			return;
 		}
 
 		DebugLog.Print(
-			$"Default encounter definition started: " +
+			$"Journey encounter definition started: " +
 			$"{definition.ContentId}. " +
 			$"Active monsters={successfullySpawned}");
 	}
@@ -676,6 +902,32 @@ public partial class EncounterController : Node
 		valid &= Require(
 			EncounterRegistry,
 			nameof(EncounterRegistry));
+
+		valid &= Require(
+			EncounterPoolRegistry,
+			nameof(EncounterPoolRegistry));
+
+		if (string.IsNullOrWhiteSpace(DefaultEncounterPoolContentId))
+		{
+			GD.PushError(
+				"EncounterController requires a default " +
+				"encounter pool Content ID.");
+
+			valid = false;
+		}
+		else if (
+			GodotObject.IsInstanceValid(EncounterPoolRegistry)
+			&& !EncounterPoolRegistry.TryGet(
+				DefaultEncounterPoolContentId,
+				out _))
+		{
+			GD.PushError(
+				$"EncounterController's default encounter pool " +
+				$"Content ID '{DefaultEncounterPoolContentId}' " +
+				"is not registered.");
+
+			valid = false;
+		}
 
 		if (string.IsNullOrWhiteSpace(DefaultEncounterContentId))
 		{

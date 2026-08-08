@@ -6,13 +6,17 @@ public partial class EncounterDefinition : Resource
 {
     [ExportCategory("Identity")]
 
-    [Export]
+    [Export(PropertyHint.PlaceholderText, "encounter.core.training_mix")]
     public string ContentId { get; set; } =
         string.Empty;
 
-    [Export]
+    [Export(PropertyHint.PlaceholderText, "Training Mix")]
     public string DisplayName { get; set; } =
         "Unnamed Encounter";
+
+    [Export(PropertyHint.MultilineText)]
+    public string Description { get; set; } =
+        string.Empty;
 
     [ExportCategory("Composition")]
 
@@ -20,6 +24,12 @@ public partial class EncounterDefinition : Resource
     public Godot.Collections.Array<EncounterMonsterEntry>
         MonsterComposition
     { get; set; } = new();
+
+    [ExportCategory("Authoring")]
+
+    [Export(PropertyHint.MultilineText)]
+    public string DesignerNotes { get; set; } =
+        string.Empty;
 
     public IReadOnlyList<string> GetValidationErrors()
     {

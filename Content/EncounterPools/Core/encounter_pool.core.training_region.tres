@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="EncounterPoolDefinition" format=3 uid="uid://b4fd04q72ynj6"]
+
+[ext_resource type="Script" uid="uid://dwbxn4a32qi2l" path="res://Scripts/Content/Definitions/EncounterPoolDefinition.cs" id="1_pool"]
+[ext_resource type="Script" uid="uid://b5prde13vi805" path="res://Scripts/Content/Definitions/EncounterPoolEntry.cs" id="2_entry"]
+
+[sub_resource type="Resource" id="EncounterPoolEntry_mix"]
+script = ExtResource("2_entry")
+EncounterContentId = "encounter.core.training_mix"
+Weight = 60
+
+[sub_resource type="Resource" id="EncounterPoolEntry_swarm"]
+script = ExtResource("2_entry")
+EncounterContentId = "encounter.core.training_swarm"
+Weight = 25
+
+[sub_resource type="Resource" id="EncounterPoolEntry_heavy"]
+script = ExtResource("2_entry")
+EncounterContentId = "encounter.core.heavy_patrol"
+Weight = 15
+
+[resource]
+script = ExtResource("1_pool")
+ContentId = "encounter_pool.core.training_region"
+DisplayName = "Training Region"
+Entries = Array[ExtResource("2_entry")]([SubResource("EncounterPoolEntry_mix"), SubResource("EncounterPoolEntry_swarm"), SubResource("EncounterPoolEntry_heavy")])

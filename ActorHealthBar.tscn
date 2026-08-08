@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://b8j8ii2jqo33s"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d6g1g"]
+bg_color = Color(0.032967977, 0.032968, 0.03296794, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_crbv8"]
+bg_color = Color(0.5341797, 0.15333116, 0.17800349, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n50nr"]
+bg_color = Color(0.44363627, 0.93973815, 0.48811263, 1)
+
+[node name="ActorHealthBar" type="Node2D" unique_id=1290293826]
+z_index = 5
+
+[node name="Outline" type="Panel" parent="." unique_id=1260669656]
+offset_left = -19.0
+offset_top = -4.0
+offset_right = 19.0
+offset_bottom = 4.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_d6g1g")
+
+[node name="HealthProgress" type="ProgressBar" parent="." unique_id=1275673503]
+custom_maximum_size = Vector2(100, 100)
+offset_left = -18.0
+offset_top = -3.0
+offset_right = 18.0
+offset_bottom = 3.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_crbv8")
+theme_override_styles/fill = SubResource("StyleBoxFlat_n50nr")
+step = 0.1
+show_percentage = false

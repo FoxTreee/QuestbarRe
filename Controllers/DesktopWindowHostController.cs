@@ -32,25 +32,15 @@ public partial class DesktopWindowHostController : Node
 	[Export(PropertyHint.Range, "0.25,10.0,0.25")]
 	public double TaskbarRefreshIntervalSeconds { get; set; } = 1.0;
 
-	[Export(PropertyHint.Range, "0.5,10.0,0.5")]
-	public double TaskbarButtonRefreshIntervalSeconds { get; set; } = 2.0;
-
 	private Window _window = null!;
 	private bool _isExpanded;
 	private double _topmostRefreshElapsed;
 	private double _taskbarRefreshElapsed;
-	private double _taskbarButtonRefreshElapsed;
 	private bool _taskbarReadFailureReported;
 	private bool _notificationAreaReadFailureReported;
-	private bool _taskbarButtonReadFailureReported;
 	public bool IsExpanded => _isExpanded;
 	public WindowsTaskbarGeometry? CurrentTaskbarGeometry { get; private set; }
 	public WindowsNotificationAreaGeometry? CurrentNotificationAreaGeometry
-	{
-		get;
-		private set;
-	}
-	public WindowsTaskbarButtonSnapshot? CurrentTaskbarButtonSnapshot
 	{
 		get;
 		private set;
@@ -60,8 +50,6 @@ public partial class DesktopWindowHostController : Node
 	public event Action<WindowsTaskbarGeometry?>? TaskbarGeometryChanged;
 	public event Action<WindowsNotificationAreaGeometry?>?
 		NotificationAreaGeometryChanged;
-	public event Action<WindowsTaskbarButtonSnapshot?>?
-		TaskbarButtonSnapshotChanged;
 
 	public override void _Ready()
 	{
@@ -126,7 +114,6 @@ public partial class DesktopWindowHostController : Node
 
 		_topmostRefreshElapsed += delta;
 		_taskbarRefreshElapsed += delta;
-		_taskbarButtonRefreshElapsed += delta;
 
 		if (_topmostRefreshElapsed
 			>= TopmostRefreshIntervalSeconds)
@@ -140,18 +127,6 @@ public partial class DesktopWindowHostController : Node
 		{
 			_taskbarRefreshElapsed = 0.0;
 			RefreshTaskbarGeometry();
-		}
-
-		if (_taskbarButtonRefreshElapsed
-			>= TaskbarButtonRefreshIntervalSeconds)
-		{
-			_taskbarButtonRefreshElapsed = 0.0;
-
-			if (CurrentTaskbarGeometry.HasValue)
-			{
-				RefreshTaskbarButtonGeometry(
-					CurrentTaskbarGeometry.Value);
-			}
 		}
 	}
 
@@ -168,7 +143,6 @@ public partial class DesktopWindowHostController : Node
 			CurrentTaskbarGeometry = null;
 			bool hadNotificationAreaGeometry =
 				ClearNotificationAreaGeometry();
-			ClearTaskbarButtonSnapshot();
 
 			if (hadGeometry)
 				TaskbarGeometryChanged?.Invoke(null);
@@ -206,15 +180,6 @@ public partial class DesktopWindowHostController : Node
 		RefreshNotificationAreaGeometry(
 			geometry,
 			forceLog);
-
-		if (forceLog)
-		{
-			_taskbarButtonRefreshElapsed = 0.0;
-			RefreshTaskbarButtonGeometry(
-				geometry,
-				forceLog: true);
-		}
-
 		return true;
 	}
 
@@ -278,242 +243,6 @@ public partial class DesktopWindowHostController : Node
 		CurrentNotificationAreaGeometry = null;
 		NotificationAreaGeometryChanged?.Invoke(null);
 		return true;
-	}
-
-	private bool RefreshTaskbarButtonGeometry(
-		WindowsTaskbarGeometry taskbarGeometry,
-		bool forceLog = false)
-	{
-		if (!WindowsTaskbarButtonGeometryReader.TryRead(
-			taskbarGeometry,
-			CurrentNotificationAreaGeometry,
-			out WindowsTaskbarButtonSnapshot snapshot,
-			out string failureReason))
-		{
-			ClearTaskbarButtonSnapshot();
-
-			if (!_taskbarButtonReadFailureReported)
-			{
-				_taskbarButtonReadFailureReported = true;
-
-				GD.PushWarning(
-					$"Questbar could not read Windows taskbar " +
-					$"button rectangles. {failureReason} " +
-					$"Notification-area placement remains active; " +
-					$"button collision handling is unavailable.");
-			}
-
-			return false;
-		}
-
-		_taskbarButtonReadFailureReported = false;
-
-		bool changed =
-			!CurrentTaskbarButtonSnapshot.HasValue
-			|| !AreTaskbarButtonSnapshotsEquivalent(
-				CurrentTaskbarButtonSnapshot.Value,
-				snapshot);
-
-		CurrentTaskbarButtonSnapshot = snapshot;
-
-		if (changed)
-			TaskbarButtonSnapshotChanged?.Invoke(snapshot);
-
-		if (forceLog || changed)
-			PrintTaskbarButtonDiagnostic(snapshot);
-
-		return true;
-	}
-
-	private bool ClearTaskbarButtonSnapshot()
-	{
-		if (!CurrentTaskbarButtonSnapshot.HasValue)
-			return false;
-
-		CurrentTaskbarButtonSnapshot = null;
-		TaskbarButtonSnapshotChanged?.Invoke(null);
-		return true;
-	}
-
-	private static bool AreTaskbarButtonSnapshotsEquivalent(
-		WindowsTaskbarButtonSnapshot first,
-		WindowsTaskbarButtonSnapshot second)
-	{
-		if (first.ScreenIndex != second.ScreenIndex
-			|| first.TaskbarBounds != second.TaskbarBounds
-			|| first.WasTraversalCapped != second.WasTraversalCapped
-			|| first.Buttons.Length != second.Buttons.Length)
-		{
-			return false;
-		}
-
-		for (int index = 0;
-			index < first.Buttons.Length;
-			index++)
-		{
-			if (first.Buttons[index] != second.Buttons[index])
-				return false;
-		}
-
-		return true;
-	}
-
-	private void PrintTaskbarButtonDiagnostic(
-		WindowsTaskbarButtonSnapshot snapshot)
-	{
-		bool hasCandidate = TryGetTaskbarQuestbarCandidate(
-			snapshot,
-			out Rect2I candidateBounds);
-
-		int collisionCount = 0;
-
-		for (int index = 0;
-			index < snapshot.Buttons.Length;
-			index++)
-		{
-			if (hasCandidate
-				&& GetIntersectionArea(
-					candidateBounds,
-					snapshot.Buttons[index].Bounds) > 0)
-			{
-				collisionCount++;
-			}
-		}
-
-		string candidateDescription = hasCandidate
-			? FormatRectangle(candidateBounds)
-			: "Unavailable";
-
-		GD.Print(
-			$"Windows taskbar buttons detected. " +
-			$"Screen={snapshot.ScreenIndex}, " +
-			$"ButtonCount={snapshot.Buttons.Length}, " +
-			$"ScannedElements={snapshot.ScannedElementCount}, " +
-			$"TraversalCapped={snapshot.WasTraversalCapped}, " +
-			$"QuestbarCandidate={candidateDescription}, " +
-			$"Collision={(hasCandidate && collisionCount > 0)}, " +
-			$"CollisionCount={collisionCount}. " +
-			$"Diagnostic only; button collisions do not change " +
-			$"placement yet.");
-
-		for (int index = 0;
-			index < snapshot.Buttons.Length;
-			index++)
-		{
-			WindowsTaskbarButtonGeometry button =
-				snapshot.Buttons[index];
-
-			bool collides = hasCandidate
-				&& GetIntersectionArea(
-					candidateBounds,
-					button.Bounds) > 0;
-
-			string roleName = GetAccessibilityRoleName(
-				button.AccessibilityRole);
-
-			GD.Print(
-				$"Taskbar button detected. " +
-				$"Name=\"{SanitizeForLog(button.Name)}\", " +
-				$"Role={roleName}, " +
-				$"Rectangle={FormatRectangle(button.Bounds)}, " +
-				$"CollidesWithQuestbar={collides}");
-		}
-	}
-
-	private bool TryGetTaskbarQuestbarCandidate(
-		WindowsTaskbarButtonSnapshot snapshot,
-		out Rect2I candidateBounds)
-	{
-		candidateBounds = default;
-
-		if (!CanUseNotificationAreaPlacement(
-			snapshot.ScreenIndex))
-		{
-			return false;
-		}
-
-		int windowWidth = Mathf.Clamp(
-			PlacementSettings.WindowWidth,
-			1,
-			CurrentTaskbarGeometry!.Value.ScreenBounds.Size.X);
-
-		int candidateX =
-			CurrentNotificationAreaGeometry!.Value.Bounds.Position.X
-			- windowWidth;
-
-		candidateBounds = new Rect2I(
-			candidateX,
-			snapshot.TaskbarBounds.Position.Y,
-			windowWidth,
-			snapshot.TaskbarBounds.Size.Y);
-
-		return true;
-	}
-
-	private static string FormatRectangle(Rect2I rectangle)
-	{
-		return
-			$"(X={rectangle.Position.X}, " +
-			$"Y={rectangle.Position.Y}, " +
-			$"W={rectangle.Size.X}, " +
-			$"H={rectangle.Size.Y})";
-	}
-
-	private static string SanitizeForLog(string value)
-	{
-		if (string.IsNullOrWhiteSpace(value))
-			return "<unnamed>";
-
-		return value
-			.Replace("\\", "\\\\", StringComparison.Ordinal)
-			.Replace("\"", "\\\"", StringComparison.Ordinal)
-			.Replace("\r", " ", StringComparison.Ordinal)
-			.Replace("\n", " ", StringComparison.Ordinal);
-	}
-
-	private static string GetAccessibilityRoleName(int role)
-	{
-		return role switch
-		{
-			0x0C => "MenuItem",
-			0x1E => "Link",
-			0x22 => "ListItem",
-			0x2B => "PushButton",
-			0x2C => "CheckButton",
-			0x2D => "RadioButton",
-			0x38 => "ButtonDropDown",
-			0x39 => "ButtonMenu",
-			0x3A => "ButtonDropDownGrid",
-			0x3E => "SplitButton",
-			0x40 => "OutlineButton",
-			_ => $"Unknown({role})"
-		};
-	}
-
-	private static long GetIntersectionArea(
-		Rect2I first,
-		Rect2I second)
-	{
-		int left = Math.Max(
-			first.Position.X,
-			second.Position.X);
-
-		int top = Math.Max(
-			first.Position.Y,
-			second.Position.Y);
-
-		int right = Math.Min(
-			first.End.X,
-			second.End.X);
-
-		int bottom = Math.Min(
-			first.End.Y,
-			second.End.Y);
-
-		long width = Math.Max(right - left, 0);
-		long height = Math.Max(bottom - top, 0);
-
-		return width * height;
 	}
 
 	private static void PrintTaskbarDiagnostic(
