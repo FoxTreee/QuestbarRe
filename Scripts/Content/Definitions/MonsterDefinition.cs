@@ -85,8 +85,16 @@ public partial class MonsterDefinition : Resource
 
     [ExportCategory("Targeting")]
 
+    [Export(PropertyHint.Flags, "Melee,Ranged,Caster,Healer,Tank,Summoner,Armored")]
+    public int PreferredTargetTagMask { get; set; } =
+        (int)HeroCombatTag.None;
+
+    public HeroCombatTag PreferredTargetTags =>
+        (HeroCombatTag)PreferredTargetTagMask;
+
     [Export]
-    public MonsterTargetingStyle TargetingStyle { get; set; } = MonsterTargetingStyle.LowestHealthHero;
+    public MonsterTargetingStyle TargetingStyle { get; set; } =
+        MonsterTargetingStyle.LowestHealthHero;
 
 
     public IReadOnlyList<string>

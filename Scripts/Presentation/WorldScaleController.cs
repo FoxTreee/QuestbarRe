@@ -73,7 +73,7 @@ public partial class WorldScaleController : Node
         0.0f,
         192.0f * (1.0f - scale));
 
-        GD.Print(
+        DebugLog.Print(
             $"World scale changed. " +
             $"Expanded={isExpanded}, " +
             $"Scale={scale:0.###}, " +

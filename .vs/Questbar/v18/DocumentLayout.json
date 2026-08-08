@@ -7,28 +7,20 @@
       "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\desktopwindowhostcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\windowstaskbarbuttongeometryreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\windowstaskbarbuttongeometryreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\content\\registries\\encountercontentregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:content\\registries\\encountercontentregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\actors\\heroactorcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\actors\\heroactorcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\actorscalepresentationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\actorscalepresentationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\regionpresentationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\regionpresentationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\scripts\\presentation\\backgroundpresentationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:scripts\\presentation\\backgroundpresentationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\scripts\\presentation\\worldscalecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:scripts\\presentation\\worldscalecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\scripts\\presentation\\presentationframecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:scripts\\presentation\\presentationframecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\actors\\monsteractorcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\actors\\monsteractorcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -38,7 +30,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -47,74 +39,15 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "HeroActorController.cs",
-              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\HeroActorController.cs",
-              "RelativeDocumentMoniker": "Controllers\\Actors\\HeroActorController.cs",
-              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\HeroActorController.cs",
-              "RelativeToolTip": "Controllers\\Actors\\HeroActorController.cs",
-              "ViewState": "AgIAAAUAAAAAAAAAAAAAwCkAAAA9AAAAAAAAAA==",
+              "Title": "WindowsTaskbarButtonGeometryReader.cs",
+              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\WindowsTaskbarButtonGeometryReader.cs",
+              "RelativeDocumentMoniker": "Controllers\\WindowsTaskbarButtonGeometryReader.cs",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\WindowsTaskbarButtonGeometryReader.cs",
+              "RelativeToolTip": "Controllers\\WindowsTaskbarButtonGeometryReader.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAABIAAAA2AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-07T22:16:50.609Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "ActorScalePresentationController.cs",
-              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\ActorScalePresentationController.cs",
-              "RelativeDocumentMoniker": "Controllers\\ActorScalePresentationController.cs",
-              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\ActorScalePresentationController.cs",
-              "RelativeToolTip": "Controllers\\ActorScalePresentationController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB8AAAAmAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-07T20:27:36.824Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "BackgroundPresentationController.cs",
-              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Scripts\\Presentation\\BackgroundPresentationController.cs",
-              "RelativeDocumentMoniker": "Scripts\\Presentation\\BackgroundPresentationController.cs",
-              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Scripts\\Presentation\\BackgroundPresentationController.cs",
-              "RelativeToolTip": "Scripts\\Presentation\\BackgroundPresentationController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAA+AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-07T06:10:22.638Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "WorldScaleController.cs",
-              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Scripts\\Presentation\\WorldScaleController.cs",
-              "RelativeDocumentMoniker": "Scripts\\Presentation\\WorldScaleController.cs",
-              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Scripts\\Presentation\\WorldScaleController.cs",
-              "RelativeToolTip": "Scripts\\Presentation\\WorldScaleController.cs",
-              "ViewState": "AgIAAC0AAAAAAAAAAAAowE4AAAAmAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-07T05:06:57.442Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "PresentationFrameController.cs",
-              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Scripts\\Presentation\\PresentationFrameController.cs",
-              "RelativeDocumentMoniker": "Scripts\\Presentation\\PresentationFrameController.cs",
-              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Scripts\\Presentation\\PresentationFrameController.cs",
-              "RelativeToolTip": "Scripts\\Presentation\\PresentationFrameController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAgAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-07T04:58:20.299Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "RegionPresentationController.cs",
-              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\RegionPresentationController.cs",
-              "RelativeDocumentMoniker": "Controllers\\RegionPresentationController.cs",
-              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\RegionPresentationController.cs",
-              "RelativeToolTip": "Controllers\\RegionPresentationController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-07T03:36:35.047Z"
+              "WhenOpened": "2026-08-08T00:49:25.576Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -124,10 +57,46 @@
               "RelativeDocumentMoniker": "Controllers\\DesktopWindowHostController.cs",
               "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\DesktopWindowHostController.cs",
               "RelativeToolTip": "Controllers\\DesktopWindowHostController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAA/AAAAAAAAAA==",
+              "ViewState": "AgIAABQBAAAAAAAAAAAgwDYBAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-07T02:53:21.823Z",
+              "WhenOpened": "2026-08-08T00:45:49.573Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "EncounterContentRegistry.cs",
+              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Content\\Registries\\EncounterContentRegistry.cs",
+              "RelativeDocumentMoniker": "Content\\Registries\\EncounterContentRegistry.cs",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Content\\Registries\\EncounterContentRegistry.cs",
+              "RelativeToolTip": "Content\\Registries\\EncounterContentRegistry.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-07T23:59:56.379Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "HeroActorController.cs",
+              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\HeroActorController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Actors\\HeroActorController.cs",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\HeroActorController.cs",
+              "RelativeToolTip": "Controllers\\Actors\\HeroActorController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-07T23:58:21.65Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "MonsterActorController.cs",
+              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\MonsterActorController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Actors\\MonsterActorController.cs",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\MonsterActorController.cs",
+              "RelativeToolTip": "Controllers\\Actors\\MonsterActorController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-07T23:52:27.708Z"
             }
           ]
         }

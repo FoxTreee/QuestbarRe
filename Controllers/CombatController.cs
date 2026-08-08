@@ -44,6 +44,7 @@ public partial class CombatController : Node
 
 	public event Action<CombatEvent>? CombatEventOccurred;
 	public event Action<TargetChangedEvent>? TargetChanged;
+	public event Action<CombatOutcome>? CombatResolved;
 
 	public int HeroParticipantCount =>
 		_heroParticipants.Count;
@@ -52,6 +53,8 @@ public partial class CombatController : Node
 		_monsterParticipants.Count;
 
 	public bool IsCombatActive { get; private set; }
+	public CombatOutcome CurrentOutcome { get; private set; }
+		= CombatOutcome.None;
 	public bool IsInitialized { get; private set; }
 
 	// Reffresh heroes -- DEBUG ONLY
@@ -78,7 +81,7 @@ public partial class CombatController : Node
 
 		EmitParticipantsChanged();
 
-		GD.Print(
+		DebugLog.Print(
 			$"Debug-respawned heroes into current combat. " +
 			$"Active heroes={_heroParticipants.Count}, " +
 			$"existing monsters={_monsterParticipants.Count}");
@@ -112,11 +115,17 @@ public partial class CombatController : Node
 		Encounter.ActiveMonsterCountChanged +=
 			OnActiveMonsterCountChanged;
 
+		Encounter.EncounterStarted +=
+			OnEncounterStarted;
+
+		Encounter.EncounterCompleted +=
+			OnEncounterCompleted;
+
 		RefreshMonsterParticipants();
 		ApplyCombatState();
 		RefreshHeroTargets();
 
-		GD.Print(
+		DebugLog.Print(
 			$"Combat participants initialized. " +
 			$"Heroes={HeroParticipantCount}, " +
 			$"Monsters={MonsterParticipantCount}");
@@ -142,10 +151,35 @@ public partial class CombatController : Node
 		}
 	}
 
+	private void OnEncounterStarted()
+	{
+		CurrentOutcome = CombatOutcome.None;
+
+		DebugLog.Print(
+			"Combat outcome reset for new encounter.");
+
+		ApplyCombatState();
+	}
+
+	private void OnEncounterCompleted()
+	{
+		ResolveCombatOutcome(CombatOutcome.Victory);
+	}
+
 	private void OnActiveMonsterCountChanged(
 	int activeMonsterCount)
 	{
 		RefreshMonsterParticipants();
+
+		if (activeMonsterCount == 0
+			&& CurrentOutcome == CombatOutcome.None
+			&& Encounter.JourneyState.CurrentState
+				== JourneyStateService.JourneyState.Encounter)
+		{
+			ResolveCombatOutcome(
+				CombatOutcome.Victory);
+		}
+
 		ApplyCombatState();
 
 		RefreshHeroTargets();
@@ -162,7 +196,7 @@ public partial class CombatController : Node
 			return;
 		}
 
-		GD.Print(
+		DebugLog.Print(
 			$"Combat received attack release: " +
 			$"{attacker.Name} → {target.Name}");
 
@@ -194,7 +228,7 @@ public partial class CombatController : Node
 			return;
 		}
 
-		GD.Print(
+		DebugLog.Print(
 			$"Hero impact confirmed: " +
 			$"{attacker.Name} → {target.Name}");
 
@@ -245,7 +279,7 @@ public partial class CombatController : Node
 			target,
 			attacker.ProjectileOrigin.GlobalPosition);
 
-		GD.Print(
+		DebugLog.Print(
 			$"Projectile created: " +
 			$"{attacker.Name} → {target.Name}");
 	}
@@ -342,7 +376,7 @@ public partial class CombatController : Node
 						null);
 				}
 
-				GD.Print(
+				DebugLog.Print(
 					$"{monster.Name} has no living hero target.");
 
 				continue;
@@ -360,7 +394,7 @@ public partial class CombatController : Node
 				previousTarget,
 				replacementTarget);
 
-			GD.Print(
+			DebugLog.Print(
 				$"{monster.Name} selected " +
 				$"{replacementTarget.Name} using " +
 				$"{monster.Definition.TargetingStyle}.");
@@ -409,7 +443,7 @@ public partial class CombatController : Node
 			return;
 		}
 
-		GD.Print(
+		DebugLog.Print(
 			$"Combat received monster attack release: " +
 			$"{attacker.Name} → {target.Name}");
 
@@ -428,7 +462,7 @@ public partial class CombatController : Node
 			return;
 		}
 
-		GD.Print(
+		DebugLog.Print(
 			$"Monster impact confirmed: " +
 			$"{attacker.Name} → {target.Name}");
 
@@ -486,7 +520,7 @@ public partial class CombatController : Node
 	StringName targetName,
 	DamageResult result)
 		{
-			GD.Print(
+			DebugLog.Print(
 				$"{attackerName} dealt " +
 				$"{result.AppliedDamage} damage to " +
 				$"{targetName}. " +
@@ -496,7 +530,7 @@ public partial class CombatController : Node
 			if (!result.WasLethal)
 				return;
 
-			GD.Print(
+			DebugLog.Print(
 				$"{targetName} received lethal damage.");
 		}
 
@@ -506,7 +540,7 @@ public partial class CombatController : Node
 		if (!GodotObject.IsInstanceValid(hero))
 			return;
 
-		GD.Print(
+		DebugLog.Print(
 			$"Combat handling incapacitation for {hero.Name}.");
 
 		bool wasRemoved =
@@ -519,26 +553,58 @@ public partial class CombatController : Node
 
 		hero.Incapacitated -= OnHeroIncapacitated;
 
-		GD.Print(
+		DebugLog.Print(
 			$"{hero.Name} removed from active combat. " +
 			$"Active heroes={_heroParticipants.Count}");
 
 		RefreshMonsterTargets();
+
+		if (HeroParticipantCount == 0
+			&& MonsterParticipantCount > 0)
+		{
+			ResolveCombatOutcome(
+				CombatOutcome.Defeat);
+
+			Encounter.EndEncounterAsDefeat();
+		}
+
 		ApplyCombatState();
 		EmitParticipantsChanged();
+	}
+
+	private void ResolveCombatOutcome(
+	CombatOutcome outcome)
+	{
+		if (outcome == CombatOutcome.None
+			|| CurrentOutcome != CombatOutcome.None)
+		{
+			return;
+		}
+
+		CurrentOutcome = outcome;
+
+		DebugLog.Print(
+			$"Combat resolved: {CurrentOutcome}. " +
+			$"Heroes={HeroParticipantCount}, " +
+			$"Monsters={MonsterParticipantCount}");
+
+		ApplyCombatState();
+		CombatResolved?.Invoke(CurrentOutcome);
 	}
 
 	private void ApplyCombatState()
 	{
 		bool shouldCombatBeActive =
-			MonsterParticipantCount > 0;
+			CurrentOutcome == CombatOutcome.None
+			&& HeroParticipantCount > 0
+			&& MonsterParticipantCount > 0;
 
 		if (IsCombatActive == shouldCombatBeActive)
 			return;
 
 		IsCombatActive = shouldCombatBeActive;
 
-		GD.Print(
+		DebugLog.Print(
 			IsCombatActive
 				? $"Combat activated. " +
 				  $"Heroes={HeroParticipantCount}, " +
@@ -608,6 +674,12 @@ public partial class CombatController : Node
 		{
 			Encounter.ActiveMonsterCountChanged -=
 				OnActiveMonsterCountChanged;
+
+			Encounter.EncounterStarted -=
+				OnEncounterStarted;
+
+			Encounter.EncounterCompleted -=
+				OnEncounterCompleted;
 		}
 	}
 }

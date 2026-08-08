@@ -150,7 +150,7 @@ public partial class HeroActorController : Node2D
 		_state =
 			HeroState.InFormation;
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} debug-reset with " +
 			$"{Health.CurrentHealth}/" +
 			$"{Health.MaximumHealth} health.");
@@ -186,7 +186,7 @@ public partial class HeroActorController : Node2D
 		_state =
 			HeroState.ApproachingTarget;
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} rejoined combat against " +
 			$"{CurrentTarget!.Name}.");
 	}
@@ -208,7 +208,7 @@ public partial class HeroActorController : Node2D
 		ApplyJourneyState(JourneyState.CurrentState);
 		SnapToFormation();
 
-		GD.Print(
+		DebugLog.Print(
 			$"HeroActor initialized at formation position " +
 			$"{FormationPosition}." +
 			$"{Name} initialized with " +
@@ -398,7 +398,7 @@ public partial class HeroActorController : Node2D
 
 		Facing = newFacing;
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} now faces {Facing} toward " +
 			$"{CurrentTarget.Name}.");
 	}
@@ -497,7 +497,7 @@ public partial class HeroActorController : Node2D
 
 		StopMovementAnimation();
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} began attacking {CurrentTarget!.Name}.");
 	}
 
@@ -524,6 +524,16 @@ public partial class HeroActorController : Node2D
 			1.0f);
 
 		TryEmitAttackRelease(progress);
+
+		// AttackReleased is synchronous. The resulting impact can kill the
+		// target, retarget this hero, or end the encounter before this attack
+		// frame resumes. Respect that newer state instead of letting stale
+		// attack processing overwrite it.
+		if (_state != HeroState.Attacking)
+		{
+			VisualRoot.Position = _visualRestPosition;
+			return;
+		}
 
 		float lungeCurve =
 			Mathf.Sin(progress * Mathf.Pi);
@@ -591,7 +601,7 @@ public partial class HeroActorController : Node2D
 
 		StopMovementAnimation();
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} entered its Incapacitated state.");
 
 		EmitSignal(
@@ -652,7 +662,7 @@ public partial class HeroActorController : Node2D
 		VisualRoot.Position =
 			_visualRestPosition;
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} returned to formation at " +
 			$"{FormationPosition}.");
 	}
@@ -743,7 +753,7 @@ public partial class HeroActorController : Node2D
 
 		if (CurrentTarget is null)
 		{
-			GD.Print(
+			DebugLog.Print(
 				$"{Name} has no valid monster target.");
 
 			return;
@@ -751,7 +761,7 @@ public partial class HeroActorController : Node2D
 
 		_initialAttackPending = true;
 		
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} targeted {CurrentTarget.Name} " +
 			$"at X={CurrentTarget.GlobalPosition.X}.");
 
@@ -796,7 +806,7 @@ public partial class HeroActorController : Node2D
 					: HeroState.ReturningToFormation;
 		}
 
-		GD.Print($"{Name} cleared its monster target.");
+		DebugLog.Print($"{Name} cleared its monster target.");
 	}
 	private static bool Require(GodotObject value, string propertyName)
 	{

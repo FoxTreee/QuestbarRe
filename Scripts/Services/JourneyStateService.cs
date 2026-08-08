@@ -26,7 +26,7 @@ public partial class JourneyStateService : Node
 	{
 		SetState(InitialState);
 
-		GD.Print(
+		DebugLog.Print(
 			$"Journey state initialized: {CurrentState}");
 	}
 
@@ -43,7 +43,7 @@ public partial class JourneyStateService : Node
 			(int)previousState,
 			(int)CurrentState);
 
-		GD.Print(
+		DebugLog.Print(
 			$"Journey state changed: " +
 			$"{previousState} → {CurrentState}");
 	}

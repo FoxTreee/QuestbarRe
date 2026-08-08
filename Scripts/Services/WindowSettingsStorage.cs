@@ -18,7 +18,7 @@ public static class WindowSettingsStorage
 
         if (loadResult != Error.Ok)
         {
-            GD.Print(
+            DebugLog.Print(
                 "No saved window placement settings were loaded. " +
                 "Questbar will use its configured defaults.");
 
@@ -78,7 +78,7 @@ public static class WindowSettingsStorage
                 "bottom_offset",
                 settings.BottomOffset);
 
-        GD.Print(
+        DebugLog.Print(
             "Window placement settings loaded successfully.");
 
         return true;
@@ -135,7 +135,7 @@ public static class WindowSettingsStorage
             return false;
         }
 
-        GD.Print(
+        DebugLog.Print(
             "Window placement settings saved successfully.");
 
         return true;

@@ -31,7 +31,7 @@ public partial class ProjectileActorController : Node2D
 		GlobalPosition = spawnPosition;
 		_isActive = true;
 
-		GD.Print(
+		DebugLog.Print(
 			$"Projectile initialized: " +
 			$"{attacker.Name} → {target.Name}");
 	}
@@ -82,7 +82,7 @@ public partial class ProjectileActorController : Node2D
 
 		_isActive = false;
 
-		GD.Print(
+		DebugLog.Print(
 			$"Projectile reached {Target!.Name}.");
 
 		EmitSignal(
@@ -96,7 +96,7 @@ public partial class ProjectileActorController : Node2D
 	{
 		_isActive = false;
 
-		GD.Print(
+		DebugLog.Print(
 			"Projectile cancelled because its attacker " +
 			"or target became invalid.");
 

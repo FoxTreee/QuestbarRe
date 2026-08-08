@@ -28,11 +28,13 @@ public partial class DebugConsoleController : Window
 
 	public override void _Ready()
 	{
-		GD.Print(
+		DebugLog.Print(
 			"DebugConsoleController ready.");
 			
 		if (!ValidateReferences())
 			return;
+
+		DebugLog.Subscribe(OnDebugLogMessage);
 			
 		Combat.CombatEventOccurred += OnCombatEventOccurred;
 		CommandInput.TextSubmitted += OnCommandSubmitted;
@@ -53,6 +55,8 @@ public partial class DebugConsoleController : Window
 
 	public override void _ExitTree()
 	{
+		DebugLog.Unsubscribe(OnDebugLogMessage);
+
 		if (GodotObject.IsInstanceValid(CommandInput))
 		{
 			CommandInput.TextSubmitted -= OnCommandSubmitted;
@@ -122,24 +126,53 @@ public partial class DebugConsoleController : Window
 		AppendOutput(
 			$"> {trimmedCommand}");
 
-		if (trimmedCommand.Equals(
+		ExecuteCommandChain(trimmedCommand);
+
+		CommandInput.GrabFocus();
+	}
+
+	private void ExecuteCommandChain(string commandText)
+	{
+		string[] commands =
+			commandText.Split(
+				"&&",
+				StringSplitOptions.None);
+
+		foreach (string rawCommand in commands)
+		{
+			if (string.IsNullOrWhiteSpace(rawCommand))
+			{
+				AppendOutput(
+					"Invalid command chain. " +
+					"Place a complete command on both sides of '&&'.");
+
+				return;
+			}
+		}
+
+		foreach (string rawCommand in commands)
+		{
+			ExecuteSingleCommand(rawCommand.Trim());
+		}
+	}
+
+	private void ExecuteSingleCommand(string commandText)
+	{
+		if (commandText.Equals(
 			"clear",
-			System.StringComparison.OrdinalIgnoreCase))
+			StringComparison.OrdinalIgnoreCase))
 		{
 			DebugOutput.Clear();
-			CommandInput.GrabFocus();
 			return;
 		}
 
 		string result =
-			Commands.Execute(trimmedCommand);
+			Commands.Execute(commandText);
 
 		if (!string.IsNullOrWhiteSpace(result))
 		{
 			AppendOutput(result);
 		}
-
-		CommandInput.GrabFocus();
 	}
 
 	private void AppendOutput(string message)
@@ -336,6 +369,14 @@ public partial class DebugConsoleController : Window
 			$"final hit by {combatEvent.Attacker.Name}";
 	}
 	
+	private void OnDebugLogMessage(
+	DateTime timestamp,
+	string message)
+	{
+		AppendOutput(
+			$"[{timestamp:HH:mm:ss}] LOG  {message}");
+	}
+
 	private void AppendTimestampedOutput(string message)
 	{
 		string timestamp =

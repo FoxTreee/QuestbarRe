@@ -33,7 +33,7 @@ public partial class RegionPresentationController : Node2D
 
 		ApplyJourneyState(JourneyState.CurrentState);
 
-		GD.Print(
+		DebugLog.Print(
 			$"Region presentation initialized. " +
 			$"TravelSpeed={TravelSpeed}, " +
 			$"JourneyState={JourneyState.CurrentState}");

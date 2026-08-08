@@ -62,7 +62,7 @@ public partial class WindowSettingsPopupController : Node
         SettingsWindow.PopupCentered(PopupSize);
         SettingsWindow.GrabFocus();
 
-        GD.Print("Questbar settings window opened.");
+        DebugLog.Print("Questbar settings window opened.");
     }
 
     public void HideSettingsWindow()
@@ -72,7 +72,7 @@ public partial class WindowSettingsPopupController : Node
 
         SettingsWindow.Hide();
 
-        GD.Print("Questbar settings window hidden.");
+        DebugLog.Print("Questbar settings window hidden.");
     }
 
     private void OnCloseRequested()

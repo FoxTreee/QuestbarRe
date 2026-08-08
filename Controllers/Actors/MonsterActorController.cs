@@ -101,7 +101,7 @@ public partial class MonsterActorController : Node2D
 		_state =
 			MonsterState.WaitingForTarget;
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} released its invalid hero target.");
 	}
 
@@ -119,7 +119,7 @@ public partial class MonsterActorController : Node2D
 
 		StopAttackPresentation();
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} entered its Dead state.");
 
 		EmitSignal(
@@ -195,12 +195,19 @@ public partial class MonsterActorController : Node2D
 			CombatProfile.MaximumHealth);
 		_visualRestPosition = VisualRoot.Position;
 
-		GD.Print(
+		string targetPreference =
+			Definition.PreferredTargetTags == HeroCombatTag.None
+				? "Any"
+				: Definition.PreferredTargetTags.ToString();
+
+		DebugLog.Print(
 			$"{Name} initialized as " +
 			$"{Definition.ContentId} " +
 			$"('{Definition.DisplayName}') with " +
 			$"{Health.CurrentHealth}/" +
-			$"{Health.MaximumHealth} health.");
+			$"{Health.MaximumHealth} health. " +
+			$"Target preference={targetPreference}; " +
+			$"selection={Definition.TargetingStyle}.");
 	}
 
 	private static bool IsValidHeroTarget(HeroActorController? hero)
@@ -276,7 +283,7 @@ public partial class MonsterActorController : Node2D
 
 		Facing = newFacing;
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} now faces {Facing} toward " +
 			$"{CurrentTarget.Name}.");
 	}
@@ -320,7 +327,7 @@ public partial class MonsterActorController : Node2D
 		_attackCooldownRemaining = 0.0;
 		_state = MonsterState.WaitingToAttack;
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} entered attack range for " +
 			$"{target.Name}.");
 	}
@@ -368,7 +375,7 @@ public partial class MonsterActorController : Node2D
 		CurrentTarget = target;
 		_state = MonsterState.ApproachingTarget;
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} locked onto {target.Name}.");
 
 		return true;
@@ -387,7 +394,7 @@ public partial class MonsterActorController : Node2D
 
 		StopAttackPresentation();
 
-		GD.Print(
+		DebugLog.Print(
 			$"{Name} began attacking {CurrentTarget!.Name}.");
 	}
 	

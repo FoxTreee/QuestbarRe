@@ -66,7 +66,7 @@ public partial class BackgroundPresentationController : Node2D
 				CloudBackground.Position.X,
 				expandedHeight - cloudHeight);
 
-		GD.Print(
+		DebugLog.Print(
 			$"Background anchored. " +
 			$"WindowHeight={currentHeight}, " +
 			$"BackgroundY={Position.Y}");

@@ -23,7 +23,7 @@ public partial class MonsterContentRegistry : Node
     {
         Rebuild();
 
-        GD.Print(
+        DebugLog.Print(
             $"MonsterContentRegistry initialized with " +
             $"{Count} definition(s).");
     }

@@ -120,7 +120,7 @@ public partial class ActorScalePresentationController : Node
         foreach (Node actor in ActorLayer.GetChildren())
             ApplyScaleToActor(actor);
 
-        GD.Print(
+        DebugLog.Print(
             $"Actor presentation scale changed. " +
             $"Expanded={WindowHost.IsExpanded}, " +
             $"Scale={GetCurrentPresentationScale():0.###}, " +

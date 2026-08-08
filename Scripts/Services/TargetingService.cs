@@ -49,20 +49,25 @@ public partial class TargetingService : Node
             return null;
         }
 
+        IReadOnlyList<HeroActorController> candidatePool =
+            GetPreferredHeroCandidates(
+                monster,
+                candidates);
+
         return monster.Definition.TargetingStyle switch
         {
             MonsterTargetingStyle.NearestHero =>
                 SelectNearestHero(
                     monster,
-                    candidates),
+                    candidatePool),
 
             MonsterTargetingStyle.LowestHealthHero =>
                 SelectLowestHealthHero(
-                    candidates),
+                    candidatePool),
 
             MonsterTargetingStyle.RandomLivingHero =>
                 SelectRandomLivingHero(
-                    candidates),
+                    candidatePool),
 
             MonsterTargetingStyle.HighestThreatHero =>
                 HandleUnsupportedThreatTargeting(
@@ -71,6 +76,39 @@ public partial class TargetingService : Node
             _ =>
                 null
         };
+    }
+
+
+    private static IReadOnlyList<HeroActorController>
+        GetPreferredHeroCandidates(
+            MonsterActorController monster,
+            IReadOnlyList<HeroActorController> candidates)
+    {
+        HeroCombatTag preferredTags =
+            monster.Definition.PreferredTargetTags;
+
+        if (preferredTags == HeroCombatTag.None)
+            return candidates;
+
+        List<HeroActorController> preferredHeroes =
+            new();
+
+        foreach (
+            HeroActorController hero
+            in candidates)
+        {
+            if (!IsValidHeroTarget(hero))
+                continue;
+
+            if (hero.HasCombatTag(preferredTags))
+            {
+                preferredHeroes.Add(hero);
+            }
+        }
+
+        return preferredHeroes.Count > 0
+            ? preferredHeroes
+            : candidates;
     }
 
 

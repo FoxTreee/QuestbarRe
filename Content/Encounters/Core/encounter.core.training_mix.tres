@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="EncounterDefinition" format=3 uid="uid://cvojm6bgn34m6"]
+
+[ext_resource type="Script" uid="uid://j08orv8sgbi4" path="res://Scripts/Content/Definitions/EncounterDefinition.cs" id="1_encounter"]
+[ext_resource type="Script" uid="uid://dqnfbfud0btw0" path="res://Scripts/Content/Definitions/EncounterMonsterEntry.cs" id="2_entry"]
+
+[sub_resource type="Resource" id="EncounterMonsterEntry_regular"]
+script = ExtResource("2_entry")
+MonsterContentId = "monster.core.training_monster"
+MinimumCount = 2
+MaximumCount = 4
+
+[sub_resource type="Resource" id="EncounterMonsterEntry_heavy"]
+script = ExtResource("2_entry")
+MonsterContentId = "monster.core.heavy_training_monster"
+MinimumCount = 0
+
+[resource]
+script = ExtResource("1_encounter")
+ContentId = "encounter.core.training_mix"
+DisplayName = "Training Mix"
+MonsterComposition = Array[ExtResource("2_entry")]([SubResource("EncounterMonsterEntry_regular"), SubResource("EncounterMonsterEntry_heavy")])

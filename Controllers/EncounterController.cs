@@ -21,6 +21,9 @@ public partial class EncounterController : Node
 	[Export]
 	public MonsterFactory MonsterFactory { get; set; } = null!;
 
+	[Export]
+	public EncounterContentRegistry EncounterRegistry { get; set; } = null!;
+
 	[ExportCategory("Monster Spawn Formation")]
 
 	[Export(PropertyHint.Range, "1,10,1")]
@@ -40,7 +43,12 @@ public partial class EncounterController : Node
 
 	[ExportCategory("Encounter Content")]
 	[Export]
-	public string DefaultMonsterContentId{ get; set; } = "monster.core.training_monster";
+	public string DefaultEncounterContentId { get; set; } =
+		"encounter.core.training_mix";
+
+	[Export]
+	public string DefaultMonsterContentId { get; set; } =
+		"monster.core.training_monster";
 
 	public IReadOnlyList<MonsterActorController> ActiveMonsters => _activeMonsters;
 
@@ -58,6 +66,156 @@ public partial class EncounterController : Node
 	public event Action? EncounterCompleted;
 	public event Action<int>? MonsterRosterChanged;
 	public int ActiveMonsterCount => _activeMonsters.Count;
+
+	// Start a registered encounter definition -- DEBUG ONLY
+	public bool TryDebugStartEncounter(
+		string contentId,
+		out string result)
+	{
+		result = string.Empty;
+
+		if (JourneyState.CurrentState
+			== JourneyStateService.JourneyState.Encounter)
+		{
+			result =
+				"An encounter is already active. " +
+				"Use encounter.end before starting another.";
+
+			return false;
+		}
+
+		if (!EncounterRegistry.TryGet(
+			contentId,
+			out EncounterDefinition definition))
+		{
+			result =
+				$"Unknown encounter Content ID '{contentId}'.";
+
+			return false;
+		}
+
+		if (!TryRollEncounterComposition(
+			definition,
+			out List<(EncounterMonsterEntry Entry, int Count)> rolledComposition,
+			out int totalMonsterCount,
+			out result))
+		{
+			return false;
+		}
+
+		_suppressAutomaticEncounterSpawn = true;
+
+		try
+		{
+			JourneyState.BeginEncounter();
+		}
+		finally
+		{
+			_suppressAutomaticEncounterSpawn = false;
+		}
+
+		if (!TrySpawnRolledComposition(
+			definition,
+			rolledComposition,
+			out int successfullySpawned,
+			out result))
+		{
+			JourneyState.EndEncounter();
+			return false;
+		}
+
+		DebugLog.Print(
+			$"Encounter definition started: " +
+			$"{definition.ContentId}. " +
+			$"Active monsters={_activeMonsters.Count}");
+
+		result =
+			$"Started {definition.ContentId} with " +
+			$"{successfullySpawned} monster(s).";
+
+		return true;
+	}
+
+	private bool TryRollEncounterComposition(
+		EncounterDefinition definition,
+		out List<(EncounterMonsterEntry Entry, int Count)> rolledComposition,
+		out int totalMonsterCount,
+		out string result)
+	{
+		rolledComposition = new();
+		totalMonsterCount = 0;
+		result = string.Empty;
+
+		foreach (EncounterMonsterEntry entry
+			in definition.MonsterComposition)
+		{
+			int count =
+				_spawnRandom.RandiRange(
+					entry.MinimumCount,
+					entry.MaximumCount);
+
+			rolledComposition.Add((entry, count));
+			totalMonsterCount += count;
+		}
+
+		if (totalMonsterCount == 0)
+		{
+			result =
+				$"Encounter '{definition.ContentId}' rolled zero monsters.";
+
+			return false;
+		}
+
+		DebugLog.Print(
+			$"Encounter roll: {definition.DisplayName} " +
+			$"({definition.ContentId})");
+
+		foreach ((EncounterMonsterEntry entry, int count)
+			in rolledComposition)
+		{
+			DebugLog.Print(
+				$"  {entry.MonsterContentId}: {count}");
+		}
+
+		return true;
+	}
+
+	private bool TrySpawnRolledComposition(
+		EncounterDefinition definition,
+		IReadOnlyList<(EncounterMonsterEntry Entry, int Count)> rolledComposition,
+		out int successfullySpawned,
+		out string result)
+	{
+		successfullySpawned = 0;
+		result = string.Empty;
+
+		foreach ((EncounterMonsterEntry entry, int count)
+			in rolledComposition)
+		{
+			for (int i = 0; i < count; i++)
+			{
+				MonsterActorController? monster =
+					SpawnMonster(entry.MonsterContentId);
+
+				if (monster is null)
+				{
+					DebugLog.Print(
+						$"Encounter '{definition.ContentId}' failed " +
+						$"while spawning {entry.MonsterContentId}.");
+
+					result =
+						$"Encounter start failed after spawning " +
+						$"{successfullySpawned} monster(s).";
+
+					return false;
+				}
+
+				successfullySpawned++;
+			}
+		}
+
+		return true;
+	}
 
 	// Spawn monsters -- DEBUG ONLY
 	public void DebugSpawnMonsters(int count)
@@ -83,7 +241,7 @@ public partial class EncounterController : Node
 			SpawnMonster(DefaultMonsterContentId);
 		}
 
-		GD.Print(
+		DebugLog.Print(
 			$"Debug ensured {validCount} active monster(s). " +
 			$"Active monsters={_activeMonsters.Count}");
 	}
@@ -116,7 +274,7 @@ public partial class EncounterController : Node
 			SpawnMonster(DefaultMonsterContentId);
 		}
 
-		GD.Print(
+		DebugLog.Print(
 			$"Debug added {validCount} monster(s). " +
 			$"Active monsters={_activeMonsters.Count}");
 	}
@@ -204,7 +362,7 @@ public partial class EncounterController : Node
 		_spawnSequenceCount = 0;
 		_usedSpawnSlots.Clear();
 
-		GD.Print(
+		DebugLog.Print(
 			"Monster spawn formation reset.");
 	}
 
@@ -219,11 +377,56 @@ public partial class EncounterController : Node
 
 		if (!_suppressAutomaticEncounterSpawn)
 		{
-			SpawnMonster(
-				DefaultMonsterContentId);
+			StartDefaultEncounterDefinition();
 		}
 
 		EncounterStarted?.Invoke();
+	}
+
+	private void StartDefaultEncounterDefinition()
+	{
+		if (!EncounterRegistry.TryGet(
+			DefaultEncounterContentId,
+			out EncounterDefinition definition))
+		{
+			DebugLog.Print(
+				$"Default encounter '{DefaultEncounterContentId}' " +
+				$"is not registered. Falling back to " +
+				$"{DefaultMonsterContentId}.");
+
+			SpawnMonster(DefaultMonsterContentId);
+			return;
+		}
+
+		if (!TryRollEncounterComposition(
+			definition,
+			out List<(EncounterMonsterEntry Entry, int Count)> rolledComposition,
+			out _,
+			out string result))
+		{
+			DebugLog.Print(
+				$"Default encounter could not roll: {result} " +
+				$"Falling back to {DefaultMonsterContentId}.");
+
+			SpawnMonster(DefaultMonsterContentId);
+			return;
+		}
+
+		if (!TrySpawnRolledComposition(
+			definition,
+			rolledComposition,
+			out int successfullySpawned,
+			out result))
+		{
+			DebugLog.Print(
+				$"Default encounter spawn failed: {result}");
+			return;
+		}
+
+		DebugLog.Print(
+			$"Default encounter definition started: " +
+			$"{definition.ContentId}. " +
+			$"Active monsters={successfullySpawned}");
 	}
 
 	private Vector2 GetNextRandomGridSpawnPosition()
@@ -289,7 +492,7 @@ public partial class EncounterController : Node
 				}
 			}
 
-			GD.Print(
+			DebugLog.Print(
 				"Monster spawn grid exhausted. " +
 				"Spawn slot shuffle bag reset.");
 		}
@@ -321,7 +524,7 @@ public partial class EncounterController : Node
 			MonsterSpawnAnchor.GlobalPosition
 			+ offset;
 
-		GD.Print(
+		DebugLog.Print(
 			$"Spawn slot selected: " +
 			$"Column={selectedSlot.X}, " +
 			$"Row={selectedSlot.Y}, " +
@@ -358,7 +561,7 @@ public partial class EncounterController : Node
 
 		EmitActiveMonsterCountChanged();
 
-		GD.Print(
+		DebugLog.Print(
 			$"{monster.Name} spawned from " +
 			$"{monster.ContentId}. " +
 			$"Active monsters={_activeMonsters.Count}");
@@ -385,17 +588,32 @@ public partial class EncounterController : Node
 		_activeMonsters.Clear();
 		EmitActiveMonsterCountChanged();
 
-		GD.Print(
+		DebugLog.Print(
 			"Encounter monsters removed. " +
 			"Active monsters=0");
 	}
 
 	private void CompleteEncounter()
 	{
-		GD.Print(
+		DebugLog.Print(
 		"Encounter completed. Returning journey to Traveling.");
 
 		EncounterCompleted?.Invoke();
+		JourneyState.EndEncounter();
+	}
+
+	public void EndEncounterAsDefeat()
+	{
+		if (JourneyState.CurrentState
+			!= JourneyStateService.JourneyState.Encounter)
+		{
+			return;
+		}
+
+		DebugLog.Print(
+			"Encounter ended in defeat. " +
+			"Returning journey to Traveling.");
+
 		JourneyState.EndEncounter();
 	}
 
@@ -416,7 +634,7 @@ public partial class EncounterController : Node
 
 		EmitActiveMonsterCountChanged();
 
-		GD.Print(
+		DebugLog.Print(
 			$"{monster.Name} removed from encounter. " +
 			$"Active monsters={_activeMonsters.Count}");
 
@@ -454,6 +672,32 @@ public partial class EncounterController : Node
 		valid &= Require(
 			MonsterFactory,
 			nameof(MonsterFactory));
+
+		valid &= Require(
+			EncounterRegistry,
+			nameof(EncounterRegistry));
+
+		if (string.IsNullOrWhiteSpace(DefaultEncounterContentId))
+		{
+			GD.PushError(
+				"EncounterController requires a default " +
+				"encounter Content ID.");
+
+			valid = false;
+		}
+		else if (
+			GodotObject.IsInstanceValid(EncounterRegistry)
+			&& !EncounterRegistry.TryGet(
+				DefaultEncounterContentId,
+				out _))
+		{
+			GD.PushError(
+				$"EncounterController's default encounter " +
+				$"Content ID '{DefaultEncounterContentId}' " +
+				$"is not registered.");
+
+			valid = false;
+		}
 
 		if (string.IsNullOrWhiteSpace(DefaultMonsterContentId))
 		{

@@ -94,7 +94,7 @@ public partial class PresentationFrameController : Node
 
         ApplyGroundHeight(uniformScale);
 
-        GD.Print(
+        DebugLog.Print(
             $"Presentation frame applied. " +
             $"LogicalSize={LogicalSize}, " +
             $"WindowSize={windowSize}, " +
