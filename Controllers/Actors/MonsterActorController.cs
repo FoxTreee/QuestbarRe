@@ -105,6 +105,8 @@ public partial class MonsterActorController : Node2D
 
     public CombatHealthState Health { get; } = new();
 
+    public MonsterThreatState Threat { get; } = new();
+
     public bool HasTarget => IsValidHeroTarget(CurrentTarget);
 
     public void Configure(
@@ -118,6 +120,8 @@ public partial class MonsterActorController : Node2D
         }
 
         Definition = definition;
+
+        Threat.Clear();
 
         _abilities.Clear();
         _abilityCooldowns.Clear();

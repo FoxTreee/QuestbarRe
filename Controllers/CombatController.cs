@@ -290,6 +290,10 @@ public partial class CombatController : Node
                 attacker.CombatProfile.AttackDamage),
             target.Health);
 
+        target.Threat.AddThreat(
+            attacker,
+            result.AppliedDamage);
+
         RaiseCombatEvent(
     new CombatEvent
     {
