@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="HeroDefinition" format=3 uid="uid://dr031a00gvhxg"]
+
+[ext_resource type="PackedScene" uid="uid://cwql7jun21h0v" path="res://Allistar.tscn" id="1_icxwp"]
+[ext_resource type="Resource" uid="uid://dshs5bil76hq2" path="res://Content/HeroClasses/Core/class.core.priest.tres" id="2_wrmgm"]
+[ext_resource type="Script" uid="uid://b38xxk3rax5nx" path="res://Scripts/Content/Definitions/HeroDefinition.cs" id="3_roiul"]
+
+[resource]
+script = ExtResource("3_roiul")
+ContentId = "hero.core.allistar"
+DisplayName = "Allistar"
+ClassDefinition = ExtResource("2_wrmgm")
+ActorScene = ExtResource("1_icxwp")
+CombatTagMask = 8
+MaximumHealth = 13573.0
+AttackRange = 251.0
+AttackInterval = 1.7000000000000002
+AttackDuration = 0.25
+AttackReleasePoint = 0.2
+AttackLungeDistance = 5.0
+AttackDelivery = 1
+CombatMoveSpeed = 101.0
+metadata/_custom_type_script = "uid://b38xxk3rax5nx"

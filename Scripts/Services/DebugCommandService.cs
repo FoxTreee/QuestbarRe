@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
@@ -13,9 +14,7 @@ public partial class DebugCommandService : Node
     public CombatController Combat { get; set; } = null!;
 
     [Export]
-    public Godot.Collections.Array<HeroActorController>
-        Heroes
-    { get; set; } = new();
+    public PartyController Party { get; set; } = null!;
 
     [Export]
     public DebugConsoleController Console { get; set; } = null!;
@@ -168,10 +167,13 @@ public partial class DebugCommandService : Node
         output.AppendLine();
         output.AppendLine("Heroes:");
 
-        foreach (HeroActorController hero in Heroes)
+        foreach (HeroActorController hero in Party.SpawnedHeroes)
         {
             if (!GodotObject.IsInstanceValid(hero))
                 continue;
+
+            string contentId =
+                GetHeroContentId(hero);
 
             string state =
                 hero.IsIncapacitated
@@ -179,7 +181,7 @@ public partial class DebugCommandService : Node
                     : "Active";
 
             output.AppendLine(
-                $"- {hero.Name}: {state}, " +
+                $"- {hero.Name} [{contentId}]: {state}, " +
                 $"HP {hero.Health.CurrentHealth}/" +
                 $"{hero.Health.MaximumHealth}");
         }
@@ -230,15 +232,15 @@ public partial class DebugCommandService : Node
             "------\n" +
             ".revive <hero_id>\n" +
             "    Restore one hero to full health and return it to the active hero roster.\n" +
-            "    Until HeroDefinition IDs are introduced, the current actor node name is used as\n" +
-            "    the temporary hero ID. Matching is case-insensitive.\n" +
-            "    Current temporary IDs: HeroActor, HeroActor2, HeroActor3\n" +
+            "    Accepts a HeroDefinition content ID or a runtime party-slot name.\n" +
+            "    If multiple slots use the same hero content ID, use PartySlotNHero to choose.\n" +
+            "    Matching is case-insensitive.\n" +
             "    Examples:\n" +
-            "      .revive HeroActor2\n" +
-            "      .revive HeroActor3\n\n" +
+            "      .revive hero.core.starting_hero\n" +
+            "      .revive PartySlot1Hero\n\n" +
 
             ".reviveAll\n" +
-            "    Restore every configured hero, refill health, and rebuild combat participants.\n" +
+            "    Restore every equipped party hero, refill health, and rebuild combat participants.\n" +
             "    Best reset command after a Defeat.\n" +
             "    Examples:\n" +
             "      .reviveAll\n" +
@@ -336,7 +338,7 @@ public partial class DebugCommandService : Node
 
     public void ResetHeroes()
     {
-        foreach (HeroActorController hero in Heroes)
+        foreach (HeroActorController hero in Party.SpawnedHeroes)
         {
             if (!GodotObject.IsInstanceValid(hero))
                 continue;
@@ -500,22 +502,58 @@ public partial class DebugCommandService : Node
         {
             return
                 "Usage: .revive <hero_id>\n" +
-                "Example: .revive HeroActor2";
+                "Example: .revive hero.core.starting_hero";
         }
 
         string requestedHeroId = parts[1];
+        List<HeroActorController> matches = new();
 
-        foreach (HeroActorController hero in Heroes)
+        foreach (HeroActorController hero in Party.SpawnedHeroes)
         {
             if (!GodotObject.IsInstanceValid(hero))
                 continue;
 
-            if (!hero.Name.ToString().Equals(
-                requestedHeroId,
-                StringComparison.OrdinalIgnoreCase))
+            bool runtimeNameMatches =
+                hero.Name.ToString().Equals(
+                    requestedHeroId,
+                    StringComparison.OrdinalIgnoreCase);
+
+            bool contentIdMatches =
+                GetHeroContentId(hero).Equals(
+                    requestedHeroId,
+                    StringComparison.OrdinalIgnoreCase);
+
+            if (!runtimeNameMatches && !contentIdMatches)
             {
                 continue;
             }
+
+            matches.Add(hero);
+        }
+
+        if (matches.Count > 1)
+        {
+            StringBuilder output = new();
+
+            output.AppendLine(
+                $"Hero ID '{requestedHeroId}' matches " +
+                $"multiple party members.");
+
+            output.AppendLine(
+                "Use one runtime party-slot name:");
+
+            foreach (HeroActorController hero in matches)
+            {
+                output.AppendLine(
+                    $"- {hero.Name}");
+            }
+
+            return output.ToString().TrimEnd();
+        }
+
+        if (matches.Count == 1)
+        {
+            HeroActorController hero = matches[0];
 
             hero.DebugResetFromIncapacitation();
             Combat.DebugRefreshHeroParticipants();
@@ -531,7 +569,7 @@ public partial class DebugCommandService : Node
 
         return
             $"Unknown hero ID '{requestedHeroId}'.\n" +
-            "Current temporary IDs: HeroActor, HeroActor2, HeroActor3.";
+            BuildAvailableHeroIdsText();
     }
 
     private string ExecuteReviveAll()
@@ -539,8 +577,40 @@ public partial class DebugCommandService : Node
         ResetHeroes();
 
         return
-            "All configured heroes were restored " +
+            "All equipped party heroes were restored " +
             "and combat participants were refreshed.";
+    }
+
+    private string BuildAvailableHeroIdsText()
+    {
+        StringBuilder output = new(
+            "Current party heroes:");
+
+        foreach (HeroActorController hero in Party.SpawnedHeroes)
+        {
+            if (!GodotObject.IsInstanceValid(hero))
+                continue;
+
+            output.AppendLine();
+            output.Append(
+                $"- {hero.Name} " +
+                $"({GetHeroContentId(hero)})");
+        }
+
+        return output.ToString();
+    }
+
+    private static string GetHeroContentId(
+        HeroActorController hero)
+    {
+        if (GodotObject.IsInstanceValid(hero.Definition)
+            && !string.IsNullOrWhiteSpace(
+                hero.Definition!.ContentId))
+        {
+            return hero.Definition.ContentId.Trim();
+        }
+
+        return hero.Name.ToString();
     }
 
     private string ExecuteAddMonsters(string[] parts)

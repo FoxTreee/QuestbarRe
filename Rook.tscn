@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cudeye6bri0fl"]
+
+[ext_resource type="PackedScene" uid="uid://dqmvuh3bftuex" path="res://Scenes/Actors/Hero/HeroActor.tscn" id="1_k1fmh"]
+
+[node name="Rook" unique_id=162660220 instance=ExtResource("1_k1fmh")]
+
+[node name="HeroBody" parent="VisualRoot" parent_id_path=PackedInt32Array(18405630) index="1" unique_id=1886110105]
+color = Color(0.9990155, 0.9371135, 0.28788212, 1)

@@ -1,18 +1,35 @@
 [gd_scene format=3 uid="uid://bxp73ohtqn7ga"]
 
 [ext_resource type="Script" uid="uid://cjebar3h2j3m" path="res://Controllers/Actors/MonsterActorController.cs" id="1_qwhad"]
+[ext_resource type="Script" uid="uid://cl6hid01monyl" path="res://Controllers/Actors/BodyBounds2D.cs" id="2_2b0if"]
+[ext_resource type="PackedScene" uid="uid://b8j8ii2jqo33s" path="res://ActorHealthBar.tscn" id="2_v6gei"]
 
-[node name="MonsterActor" type="Node2D" unique_id=1953699697 node_paths=PackedStringArray("VisualRoot", "ImpactOrigin")]
+[node name="MonsterActor" type="Node2D" unique_id=1953699697 node_paths=PackedStringArray("PresentationRoot", "VisualRoot", "BodyBounds", "ImpactOrigin", "HealthBarAnchor")]
 rotation = -0.0022674962
 script = ExtResource("1_qwhad")
-VisualRoot = NodePath("VisualRoot")
-ImpactOrigin = NodePath("VisualRoot/ImpactOrigin")
+PresentationRoot = NodePath("PresentationRoot")
+VisualRoot = NodePath("PresentationRoot/VisualRoot")
+BodyBounds = NodePath("PresentationRoot/VisualRoot/BodyBounds")
+ImpactOrigin = NodePath("PresentationRoot/VisualRoot/ImpactOrigin")
+HealthBarAnchor = NodePath("PresentationRoot/VisualRoot/HealthBarAnchor")
 
-[node name="VisualRoot" type="Node2D" parent="." unique_id=1579220540]
+[node name="PresentationRoot" type="Node2D" parent="." unique_id=2029984864]
 
-[node name="MonsterBody" type="Polygon2D" parent="VisualRoot" unique_id=1973935004]
+[node name="VisualRoot" type="Node2D" parent="PresentationRoot" unique_id=1579220540]
+
+[node name="MonsterBody" type="Polygon2D" parent="PresentationRoot/VisualRoot" unique_id=1973935004]
 color = Color(0.8618303, 0.26922566, 0.27144888, 1)
 polygon = PackedVector2Array(-16, -32, 16, -32, 20, 0, -20, 0)
 
-[node name="ImpactOrigin" type="Marker2D" parent="VisualRoot" unique_id=1725275174]
+[node name="BodyBounds" type="Node2D" parent="PresentationRoot/VisualRoot" unique_id=560112177]
+script = ExtResource("2_2b0if")
+metadata/_custom_type_script = "uid://cl6hid01monyl"
+
+[node name="ImpactOrigin" type="Marker2D" parent="PresentationRoot/VisualRoot" unique_id=1725275174]
 position = Vector2(0, -18)
+
+[node name="HealthBarAnchor" type="Marker2D" parent="PresentationRoot/VisualRoot" unique_id=156696154]
+position = Vector2(0, -32)
+
+[node name="ActorHealthBar" parent="PresentationRoot" unique_id=1290293826 instance=ExtResource("2_v6gei")]
+position = Vector2(0, -50)

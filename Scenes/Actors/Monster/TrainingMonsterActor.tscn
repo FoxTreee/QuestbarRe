@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://bac0fx5pa4fgs"]
+
+[ext_resource type="PackedScene" uid="uid://bxp73ohtqn7ga" path="res://Scenes/Actors/Monster/MonsterActor.tscn" id="1_0vf3c"]
+
+[node name="MonsterActor" unique_id=1953699697 instance=ExtResource("1_0vf3c")]
+
+[node name="MonsterBody" parent="PresentationRoot/VisualRoot" parent_id_path=PackedInt32Array(1579220540) index="0" unique_id=1973935004]
+color = Color(0.8553518, 0.0001732707, 0.73660785, 1)

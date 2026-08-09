@@ -21,7 +21,7 @@ public partial class HeroActorController : Node2D
 		ReturningToFormation,
 		Incapacitated
 	}
-	
+
 	private Vector2 _visualRestPosition;
 	private double _animationTime;
 	private bool _movedThisFrame;
@@ -29,9 +29,17 @@ public partial class HeroActorController : Node2D
 	private double _attackCooldownRemaining;
 	private double _attackTimeRemaining;
 	private bool _attackReleaseEmitted;
+    private ActorHealthBarController _healthBar = null!;
 
 	public HeroCombatProfile CombatProfile { get; } = new();
+	public float CombatPresentationScale { get; private set; } = 1.0f;
 	public bool IsIncapacitated => _state == HeroState.Incapacitated;
+
+	public void SetCombatPresentationScale(float scale)
+	{
+		CombatPresentationScale =
+			Mathf.Max(scale, 0.01f);
+	}
 
 	[ExportCategory("Combat Identity")]
 	[Export(PropertyHint.Flags, "Melee,Ranged,Caster,Healer,Tank,Summoner,Armored")]
@@ -45,6 +53,35 @@ public partial class HeroActorController : Node2D
 	{
 		return tag != HeroCombatTag.None
 			&& (CombatTags & tag) != 0;
+	}
+
+	public HeroDefinition? Definition
+	{
+		get;
+		private set;
+	}
+
+	public void Configure(HeroDefinition definition)
+	{
+		if (!GodotObject.IsInstanceValid(definition))
+		{
+			throw new System.ArgumentNullException(
+				nameof(definition));
+		}
+
+		Definition = definition;
+		CombatTagMask = definition.CombatTagMask;
+		TemporaryMaximumHealth = definition.MaximumHealth;
+		TemporaryAttackDamage = definition.AttackDamage;
+		TemporaryAttackRange = definition.AttackRange;
+		TemporaryAttackInterval = definition.AttackInterval;
+		TemporaryAttackDuration = definition.AttackDuration;
+		TemporaryAttackReleasePoint =
+			definition.AttackReleasePoint;
+		TemporaryAttackLungeDistance =
+			definition.AttackLungeDistance;
+		TemporaryAttackDelivery = definition.AttackDelivery;
+		CombatMoveSpeed = definition.CombatMoveSpeed;
 	}
 
 
@@ -62,6 +99,9 @@ public partial class HeroActorController : Node2D
 	[ExportCategory("Visuals")]
 	[Export]
 	public Node2D VisualRoot { get; set; } = null!;
+
+	[Export]
+	public BodyBounds2D BodyBounds { get; set; } = null!;
 	
 	[Export]
 	public Marker2D ProjectileOrigin { get; set; } = null!;
@@ -86,7 +126,7 @@ public partial class HeroActorController : Node2D
 	[Export(PropertyHint.Range, "0,100000,1")]
 	public float TemporaryAttackDamage { get; set; } = 20.0f;
 
-	[ExportCategory("Temporary Combat Movement")]
+    [ExportCategory("Temporary Combat Movement")]
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float CombatMoveSpeed { get; set; } = 140.0f;
 
@@ -205,7 +245,8 @@ public partial class HeroActorController : Node2D
 		_visualRestPosition = VisualRoot.Position;
 
 		JourneyState.StateChanged += OnJourneyStateChanged;
-		ApplyJourneyState(JourneyState.CurrentState);
+        _healthBar.Bind(Health);
+        ApplyJourneyState(JourneyState.CurrentState);
 		SnapToFormation();
 
 		DebugLog.Print(
@@ -331,49 +372,80 @@ public partial class HeroActorController : Node2D
 
 	private bool _initialAttackPending;
 
-	private Vector2 CalculateApproachPosition(MonsterActorController target)
+	private float GetBodyClearanceDistance(
+		MonsterActorController target)
 	{
-		float horizontalDifference =
-			target.GlobalPosition.X
-			- GlobalPosition.X;
-
-		float directionToTarget =
-			Mathf.Sign(horizontalDifference);
-
-		float destinationX =
-			target.GlobalPosition.X
-			- directionToTarget
-			* CombatProfile.AttackRange;
-
-		return new Vector2(
-			destinationX,
-			target.GlobalPosition.Y);
+		return CombatSpacing.GetBodyClearanceDistance(
+			CombatProfile.CombatRadius,
+			target.CombatProfile.CombatRadius,
+			CombatProfile.AttackLungeDistance,
+			target.CombatProfile.AttackLungeDistance,
+			CombatPresentationScale,
+			target.CombatPresentationScale);
 	}
+
+	private float GetRequiredAttackDistance(MonsterActorController target)
+	{
+		return CombatSpacing.GetRequiredCenterDistance(
+			CombatProfile.AttackRange,
+			CombatProfile.CombatRadius,
+			target.CombatProfile.CombatRadius,
+			CombatProfile.AttackLungeDistance,
+			target.CombatProfile.AttackLungeDistance,
+			CombatPresentationScale,
+			target.CombatPresentationScale);
+	}
+
+    private Vector2 CalculateApproachPosition(MonsterActorController target)
+    {
+        float requiredCenterDistance = GetRequiredAttackDistance(target);
+
+        float horizontalDifference = target.GlobalPosition.X - GlobalPosition.X;
+
+        float directionToTarget = Mathf.Sign(horizontalDifference);
+
+        float destinationX = target.GlobalPosition.X - directionToTarget * requiredCenterDistance;
+
+        return new Vector2( destinationX, target.GlobalPosition.Y);
+    }
 
 	private void InitializeCombatProfile()
 	{
 		CombatProfile.AttackRange = TemporaryAttackRange;
-		CombatProfile.AttackInterval = TemporaryAttackInterval;
+		CombatProfile.CombatRadius =
+			BodyBounds.GetHorizontalRadiusInParentSpace()
+			* Mathf.Abs(VisualRoot.Scale.X);
+        CombatProfile.AttackInterval = TemporaryAttackInterval;
 		CombatProfile.MoveSpeed = CombatMoveSpeed;
 		CombatProfile.AttackDelivery = TemporaryAttackDelivery;
 		CombatProfile.MaximumHealth = TemporaryMaximumHealth;
 		CombatProfile.AttackDamage = TemporaryAttackDamage;
 		CombatProfile.AttackDuration = TemporaryAttackDuration;
-	}
+        CombatProfile.AttackLungeDistance = TemporaryAttackLungeDistance;
+    }
 
 	private bool IsTargetWithinAttackRange(MonsterActorController target)
 	{
+		float minimumCenterDistance =
+			GetBodyClearanceDistance(target);
+
+		float requiredCenterDistance =
+			GetRequiredAttackDistance(target);
+
 		float horizontalDistance =
-			Mathf.Abs(
-				GlobalPosition.X
-				- target.GlobalPosition.X);
+			Mathf.Abs( GlobalPosition.X - target.GlobalPosition.X);
+
+		float scaledTolerance =
+			AttackRangeTolerance
+			* CombatPresentationScale;
 
 		return horizontalDistance
-			<= CombatProfile.AttackRange
-			+ AttackRangeTolerance;
+			>= minimumCenterDistance - scaledTolerance
+			&& horizontalDistance
+			<= requiredCenterDistance + scaledTolerance;
 	}
 
-	private void UpdateFacingTowardTarget()
+    private void UpdateFacingTowardTarget()
 	{
 		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
 			return;
@@ -546,7 +618,8 @@ public partial class HeroActorController : Node2D
 		VisualRoot.Position =
 			_visualRestPosition
 			+ attackDirection
-			* TemporaryAttackLungeDistance
+			* CombatProfile.AttackLungeDistance
+			* CombatPresentationScale
 			* lungeCurve;
 
 		if (_attackTimeRemaining > 0.0)
@@ -667,8 +740,7 @@ public partial class HeroActorController : Node2D
 			$"{FormationPosition}.");
 	}
 
-	private void ApplyJourneyState(
-	JourneyStateService.JourneyState state)
+	private void ApplyJourneyState(JourneyStateService.JourneyState state)
 	{
 		if (IsIncapacitated)
 		{
@@ -720,10 +792,23 @@ public partial class HeroActorController : Node2D
 		valid &= Require(FormationAnchor, nameof(FormationAnchor));
 		valid &= Require(JourneyState, nameof(JourneyState));
 		valid &= Require(VisualRoot, nameof(VisualRoot));
+		valid &= Require(BodyBounds, nameof(BodyBounds));
 		valid &= Require(Targeting, nameof(Targeting));
 		valid &= Require(ProjectileOrigin, nameof(ProjectileOrigin));
 
-		return valid;
+        if (GodotObject.IsInstanceValid(VisualRoot))
+        {
+            _healthBar =
+                VisualRoot.GetNodeOrNull
+                    <ActorHealthBarController>(
+                        "ActorHealthBar")!;
+
+            valid &= Require(
+                _healthBar,
+                "VisualRoot/ActorHealthBar");
+        }
+
+        return valid;
 	}
 	
 	public void SnapToFormation()

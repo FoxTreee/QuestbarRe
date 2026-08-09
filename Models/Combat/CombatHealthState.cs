@@ -2,6 +2,8 @@ using System;
 
 public sealed class CombatHealthState
 {
+    public event Action<float, float>? HealthChanged;
+
     public float MaximumHealth { get; private set; }
 
     public float CurrentHealth { get; private set; }
@@ -21,6 +23,8 @@ public sealed class CombatHealthState
         CurrentHealth =  MaximumHealth;
 
         IsInitialized = true;
+
+        NotifyHealthChanged();
     }
 
     public void RestoreToMaximum()
@@ -30,6 +34,8 @@ public sealed class CombatHealthState
 
         CurrentHealth =
             MaximumHealth;
+
+        NotifyHealthChanged();
     }
 
     public DamageResult ApplyDamage(float requestedDamage)
@@ -46,23 +52,34 @@ public sealed class CombatHealthState
                 false);
         }
 
-        float healthBeforeDamage = CurrentHealth;
+        float healthBeforeDamage =
+            CurrentHealth;
 
         CurrentHealth =
             MathF.Max(
                 CurrentHealth - validDamage,
                 0.0f);
 
-        float appliedDamage = healthBeforeDamage - CurrentHealth;
+        float appliedDamage =
+            healthBeforeDamage - CurrentHealth;
 
         bool wasLethal =
             healthBeforeDamage > 0.0f
             && CurrentHealth <= 0.0f;
+
+        NotifyHealthChanged();
 
         return new DamageResult(
             requestedDamage,
             appliedDamage,
             CurrentHealth,
             wasLethal);
+    }
+
+    private void NotifyHealthChanged()
+    {
+        HealthChanged?.Invoke(
+            CurrentHealth,
+            MaximumHealth);
     }
 }

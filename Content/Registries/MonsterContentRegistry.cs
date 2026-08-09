@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 public partial class MonsterContentRegistry : Node
 {
+    [ExportCategory("Dependencies")]
+
+    [Export]
+    public AbilityContentRegistry AbilityRegistry
+    { get; set; } = null!;
+
     [ExportCategory("Monster Content")]
     [Export]
     public Godot.Collections.Array<MonsterDefinition>
@@ -21,11 +27,40 @@ public partial class MonsterContentRegistry : Node
 
     public override void _Ready()
     {
+        if (!GodotObject.IsInstanceValid(AbilityRegistry))
+        {
+            GD.PushError(
+                "MonsterContentRegistry is missing its " +
+                "AbilityRegistry Inspector reference.");
+
+            DebugLog.Print(
+                "MonsterContentRegistry could not rebuild: " +
+                "AbilityRegistry reference is missing.");
+
+            return;
+        }
+
+        // Ability content may appear later in sibling scene order.
+        // Rebuild explicitly so monster loadouts can validate now.
+        AbilityRegistry.Rebuild();
         Rebuild();
 
         DebugLog.Print(
             $"MonsterContentRegistry initialized with " +
             $"{Count} definition(s).");
+
+        foreach (MonsterDefinition definition
+            in _definitionsById.Values)
+        {
+            if (definition.AbilityContentIds.Count == 0)
+                continue;
+
+            DebugLog.Print(
+                $"Monster ability loadout: " +
+                $"{definition.ContentId} " +
+                $"('{definition.DisplayName}') -> " +
+                $"{string.Join(", ", definition.AbilityContentIds)}");
+        }
     }
 
     public void Rebuild()
@@ -85,14 +120,32 @@ public partial class MonsterContentRegistry : Node
             return;
         }
 
-        IReadOnlyList<string> errors =
-            definition.GetValidationErrors();
+        List<string> errors =
+            new(definition.GetValidationErrors());
+
+        foreach (string abilityContentId
+            in definition.AbilityContentIds)
+        {
+            if (!global::ContentId.IsValid(abilityContentId))
+                continue;
+
+            if (!AbilityRegistry.TryGet(
+                abilityContentId,
+                out _))
+            {
+                errors.Add(
+                    $"{definition.ContentId}: unknown ability " +
+                    $"Content ID '{abilityContentId}'.");
+            }
+        }
 
         if (errors.Count > 0)
         {
             foreach (string error in errors)
             {
                 GD.PushError(error);
+                DebugLog.Print(
+                    $"Monster content error: {error}");
             }
 
             return;

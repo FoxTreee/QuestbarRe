@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://cjnbbo06cblp8"]
+
+[ext_resource type="PackedScene" uid="uid://dqmvuh3bftuex" path="res://Scenes/Actors/Hero/HeroActor.tscn" id="1_6tb1n"]
+
+[node name="WarriorActor" unique_id=162660220 instance=ExtResource("1_6tb1n")]
+BobHeight = 6.0
+BobSpeed = 5.1
+
+[node name="HeroBody" parent="VisualRoot" parent_id_path=PackedInt32Array(18405630) index="1" unique_id=1886110105]
+color = Color(0.94630533, 0.72838026, 0.39041266, 1)

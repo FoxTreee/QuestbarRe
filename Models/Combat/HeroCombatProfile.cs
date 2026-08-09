@@ -4,9 +4,13 @@ public sealed class HeroCombatProfile
 
     public float AttackRange { get; set; }
 
+    public float CombatRadius { get; set; }
+
     public float AttackInterval { get; set; }
 
     public float AttackDuration { get; set; }
+
+    public float AttackLungeDistance { get; set; }
 
     public float MoveSpeed { get; set; }
 

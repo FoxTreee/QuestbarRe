@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://dnhk2ilfhej8d"]
+
+[ext_resource type="PackedScene" uid="uid://dqmvuh3bftuex" path="res://Scenes/Actors/Hero/HeroActor.tscn" id="1_n6qy6"]
+
+[node name="Chet" unique_id=162660220 instance=ExtResource("1_n6qy6")]
+
+[node name="HeroBody" parent="VisualRoot" parent_id_path=PackedInt32Array(18405630) index="1" unique_id=1886110105]
+color = Color(0.30564508, 0.64646804, 0.9648345, 1)

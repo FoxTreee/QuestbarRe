@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="MonsterDefinition" format=3 uid="uid://dk2o50nyo823k"]
 
-[ext_resource type="PackedScene" uid="uid://bxp73ohtqn7ga" path="res://Scenes/Actors/Monster/MonsterActor.tscn" id="1_3m56n"]
+[ext_resource type="PackedScene" uid="uid://bac0fx5pa4fgs" path="res://Scenes/Actors/Monster/TrainingMonsterActor.tscn" id="1_3m56n"]
 [ext_resource type="Script" uid="uid://bwnluygsef150" path="res://Scripts/Content/Definitions/MonsterDefinition.cs" id="1_ooqr6"]
 
 [resource]
@@ -11,6 +11,6 @@ ActorScene = ExtResource("1_3m56n")
 MaximumHealth = 75.0
 AttackDamage = 5.0
 AttackInterval = 1.0
-PreferredTargetTagMask = 2
-TargetingStyle = 3
+PreferredTargetTagMask = 1
+TargetingStyle = 0
 metadata/_custom_type_script = "uid://bwnluygsef150"

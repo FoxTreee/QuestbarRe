@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 
 public partial class MonsterFactory : Node
 {
@@ -61,7 +62,22 @@ public partial class MonsterFactory : Node
             definition.ActorScene.Instantiate
                 <MonsterActorController>();
 
-        monster.Configure(definition);
+        List<AbilityDefinition> abilities = new();
+
+        foreach (string abilityContentId
+            in definition.AbilityContentIds)
+        {
+            if (Registry.AbilityRegistry.TryGet(
+                abilityContentId,
+                out AbilityDefinition ability))
+            {
+                abilities.Add(ability);
+            }
+        }
+
+        monster.Configure(
+            definition,
+            abilities);
 
         return true;
     }

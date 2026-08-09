@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://cm2gu3cdamwh4"]
+
+[ext_resource type="PackedScene" uid="uid://bxp73ohtqn7ga" path="res://Scenes/Actors/Monster/MonsterActor.tscn" id="1_meub8"]
+[ext_resource type="Texture2D" uid="uid://dos0anx0asdqa" path="res://Assets/TrainingMonster/Trainer.png" id="2_aeu7f"]
+
+[node name="MonsterActor" unique_id=1953699697 instance=ExtResource("1_meub8")]
+rotation = 0.0
+
+[node name="VisualRoot" parent="PresentationRoot" parent_id_path=PackedInt32Array(2029984864) index="0" unique_id=1579220540]
+modulate = Color(0.77254903, 0.3254902, 0.35686275, 1)
+scale = Vector2(3, 3)
+
+[node name="MonsterBody" parent="PresentationRoot/VisualRoot" index="0" unique_id=1973935004]
+visible = false
+
+[node name="HealthBarAnchor" parent="PresentationRoot/VisualRoot" index="3" unique_id=156696154]
+position = Vector2(0.07255981, -31.999916)
+
+[node name="Trainer" type="Sprite2D" parent="PresentationRoot/VisualRoot" index="4" unique_id=1730652212]
+position = Vector2(7.371106, -16.649994)
+scale = Vector2(2.113635, 2.2967055)
+texture = ExtResource("2_aeu7f")
+
+[node name="ActorHealthBar" parent="PresentationRoot" parent_id_path=PackedInt32Array(2029984864) index="1" unique_id=1290293826]
+position = Vector2(-0.73923564, -115.00197)

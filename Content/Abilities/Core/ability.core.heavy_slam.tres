@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://bji8hwhd3vyhj"]
+
+[ext_resource type="Script" uid="uid://bus4x5fmyodi8" path="res://Scripts/Content/Definitions/AbilityDefinition.cs" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+ContentId = "ability.core.heavy_slam"
+DisplayName = "Heavy Slam"
+Description = "A slow, heavy strike against the  current target."
+CastTimeSeconds = 1.6
+BaseDamage = 45.0
+DesignerNotes = "Foundation test ability. Keep this direct-damage only until the ability execution path is proven."

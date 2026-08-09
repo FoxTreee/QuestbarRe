@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="HeroClassDefinition" format=3 uid="uid://cydcgqt05pir5"]
+
+[ext_resource type="Script" uid="uid://djb803f4i720b" path="res://Scripts/Content/Definitions/HeroClassDefinition.cs" id="1_1q8nu"]
+
+[resource]
+script = ExtResource("1_1q8nu")
+ContentId = "class.core.hunter"
+DisplayName = "Hunter"
+metadata/_custom_type_script = "uid://djb803f4i720b"

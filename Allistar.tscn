@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cwql7jun21h0v"]
+
+[ext_resource type="PackedScene" uid="uid://dqmvuh3bftuex" path="res://Scenes/Actors/Hero/HeroActor.tscn" id="1_4qcja"]
+
+[node name="Allistar" unique_id=162660220 instance=ExtResource("1_4qcja")]
+
+[node name="HeroBody" parent="VisualRoot" parent_id_path=PackedInt32Array(18405630) index="1" unique_id=1886110105]
+color = Color(0.9967814, 0.995845, 0.9999046, 1)

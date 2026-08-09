@@ -139,9 +139,34 @@ public partial class ActorScalePresentationController : Node
             return;
         }
 
+        float presentationScale =
+            GetCurrentPresentationScale();
+
         visualRoot.Scale =
             authoredScale
-            * GetCurrentPresentationScale();
+            * presentationScale;
+
+        SetCombatPresentationScale(
+            actor,
+            presentationScale);
+    }
+
+    private static void SetCombatPresentationScale(
+        Node actor,
+        float presentationScale)
+    {
+        switch (actor)
+        {
+            case HeroActorController hero:
+                hero.SetCombatPresentationScale(
+                    presentationScale);
+                break;
+
+            case MonsterActorController monster:
+                monster.SetCombatPresentationScale(
+                    presentationScale);
+                break;
+        }
     }
 
     private float GetCurrentPresentationScale()
@@ -163,7 +188,7 @@ public partial class ActorScalePresentationController : Node
                 hero.VisualRoot,
 
             MonsterActorController monster =>
-                monster.VisualRoot,
+                monster.PresentationRoot,
 
             _ => null
         };

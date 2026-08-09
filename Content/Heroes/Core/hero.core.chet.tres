@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="HeroDefinition" format=3 uid="uid://b4bj78ei20u0o"]
+
+[ext_resource type="PackedScene" uid="uid://dnhk2ilfhej8d" path="res://Chet.tscn" id="1_ulyqf"]
+[ext_resource type="Resource" uid="uid://f3tcqv05b0de" path="res://Content/HeroClasses/Core/class.core.mage.tres" id="2_6okj3"]
+[ext_resource type="Script" uid="uid://b38xxk3rax5nx" path="res://Scripts/Content/Definitions/HeroDefinition.cs" id="3_5xo3b"]
+
+[resource]
+script = ExtResource("3_5xo3b")
+ContentId = "hero.core.chet"
+DisplayName = "Chet"
+ClassDefinition = ExtResource("2_6okj3")
+ActorScene = ExtResource("1_ulyqf")
+CombatTagMask = 4
+MaximumHealth = 13573.0
+AttackRange = 220.0
+AttackInterval = 1.7000000000000002
+AttackDuration = 0.25
+AttackReleasePoint = 0.2
+AttackLungeDistance = 5.0
+AttackDelivery = 1
+CombatMoveSpeed = 101.0
+metadata/_custom_type_script = "uid://b38xxk3rax5nx"

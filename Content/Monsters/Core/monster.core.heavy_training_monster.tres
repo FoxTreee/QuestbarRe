@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="MonsterDefinition" format=3 uid="uid://bnb4dy32spiuv"]
 
-[ext_resource type="PackedScene" uid="uid://bxp73ohtqn7ga" path="res://Scenes/Actors/Monster/MonsterActor.tscn" id="1_rb0hp"]
+[ext_resource type="PackedScene" uid="uid://cm2gu3cdamwh4" path="res://Scenes/Actors/Monster/HeavyTrainingMonsterActor.tscn" id="1_rb0hp"]
 [ext_resource type="Script" uid="uid://bwnluygsef150" path="res://Scripts/Content/Definitions/MonsterDefinition.cs" id="2_l6wml"]
 
 [resource]
@@ -18,4 +18,5 @@ EntrySpeed = 40.0
 CombatMoveSpeed = 50.0
 PreferredTargetTagMask = 1
 TargetingStyle = 0
+AbilityContentIds = Array[String](["ability.core.heavy_slam"])
 metadata/_custom_type_script = "uid://bwnluygsef150"

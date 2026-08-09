@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="HeroDefinition" format=3 uid="uid://cnylohmad3s8r"]
+
+[ext_resource type="PackedScene" uid="uid://dd6n02j6gj4j" path="res://Huntard.tscn" id="1_t8uvc"]
+[ext_resource type="Resource" uid="uid://cydcgqt05pir5" path="res://Content/HeroClasses/Core/class.core.hunter.tres" id="2_i20q3"]
+[ext_resource type="Script" uid="uid://b38xxk3rax5nx" path="res://Scripts/Content/Definitions/HeroDefinition.cs" id="3_khlun"]
+
+[resource]
+script = ExtResource("3_khlun")
+ContentId = "hero.core.huntard"
+DisplayName = "Huntard"
+ClassDefinition = ExtResource("2_i20q3")
+ActorScene = ExtResource("1_t8uvc")
+CombatTagMask = 2
+MaximumHealth = 13573.0
+AttackDamage = 2.0
+AttackRange = 180.0
+AttackLungeDistance = 1.5
+AttackDelivery = 1
+CombatMoveSpeed = 120.0
+metadata/_custom_type_script = "uid://b38xxk3rax5nx"

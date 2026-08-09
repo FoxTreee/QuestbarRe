@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://b8j8ii2jqo33s"]
 
+[ext_resource type="Script" uid="uid://cdk4uw16b6hr4" path="res://Controllers/Actors/ActorHealthBarController.cs" id="1_7ep3e"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d6g1g"]
 bg_color = Color(0.032967977, 0.032968, 0.03296794, 1)
 corner_radius_top_left = 4
@@ -16,9 +18,14 @@ corner_radius_bottom_left = 3
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n50nr"]
 bg_color = Color(0.44363627, 0.93973815, 0.48811263, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [node name="ActorHealthBar" type="Node2D" unique_id=1290293826]
 z_index = 5
+script = ExtResource("1_7ep3e")
 
 [node name="Outline" type="Panel" parent="." unique_id=1260669656]
 offset_left = -19.0
@@ -38,4 +45,5 @@ mouse_filter = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_crbv8")
 theme_override_styles/fill = SubResource("StyleBoxFlat_n50nr")
 step = 0.1
+value = 100.0
 show_percentage = false

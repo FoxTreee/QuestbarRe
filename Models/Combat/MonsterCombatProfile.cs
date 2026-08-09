@@ -6,6 +6,8 @@ public sealed class MonsterCombatProfile
 
     public float AttackRange { get; set; }
 
+    public float CombatRadius { get; set; }
+
     public float AttackInterval { get; set; }
 
     public float AttackDuration { get; set; }
