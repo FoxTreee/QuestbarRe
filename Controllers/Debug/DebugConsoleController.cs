@@ -1,9 +1,21 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 public partial class DebugConsoleController : Window
 {
+	private const int MaxOutputHistoryEntries = 20_000;
+	private const int RetainedOutputHistoryEntries = 5_000;
+	private static readonly ConsoleFilter[] CountedFilters =
+	{
+		ConsoleFilter.Threat,
+		ConsoleFilter.Damage,
+		ConsoleFilter.Ability,
+		ConsoleFilter.Encounter,
+		ConsoleFilter.Error
+	};
+
 	[ExportCategory("Dependencies")]
 	[Export]
 	public DebugCommandService Commands { get; set; } = null!;
@@ -37,15 +49,33 @@ public partial class DebugConsoleController : Window
 	public Button ClearButton { get; set; } = null!;
 
 	private readonly List<string> _commandHistory = new();
-	private readonly List<ConsoleEntry> _outputHistory = new();
+	private readonly Queue<ConsoleEntry> _outputHistory = new();
+	private readonly Dictionary<ConsoleFilter, int> _unreadCounts = new()
+	{
+		[ConsoleFilter.Threat] = 0,
+		[ConsoleFilter.Damage] = 0,
+		[ConsoleFilter.Ability] = 0,
+		[ConsoleFilter.Encounter] = 0,
+		[ConsoleFilter.Error] = 0
+	};
+	private readonly Dictionary<ConsoleFilter, long> _lastReadSequences = new()
+	{
+		[ConsoleFilter.Threat] = 0,
+		[ConsoleFilter.Damage] = 0,
+		[ConsoleFilter.Ability] = 0,
+		[ConsoleFilter.Encounter] = 0,
+		[ConsoleFilter.Error] = 0
+	};
 	private int _historyIndex;
 	private int _pausedHistoryCount;
+	private long _latestEntrySequence;
 	private bool _isDisplayPaused;
 	private bool _isAutoScrollEnabled = true;
 	private ConsoleFilter _activeFilter = ConsoleFilter.All;
 	private string _searchText = string.Empty;
 
 	private readonly record struct ConsoleEntry(
+		long Sequence,
 		DebugLogCategory Category,
 		string Message);
 
@@ -70,6 +100,8 @@ public partial class DebugConsoleController : Window
 
 		_activeFilter =
 			GetFilterForTab(FilterTabs.CurrentTab);
+
+		ResetUnreadCounts();
 
 		_searchText =
 			SearchInput.Text.Trim();
@@ -173,6 +205,7 @@ public partial class DebugConsoleController : Window
 		}
 
 		Show();
+		MarkFilterRead(_activeFilter);
 		GrabFocus();
 		CommandInput.GrabFocus();
 	}
@@ -275,15 +308,78 @@ public partial class DebugConsoleController : Window
 		string message,
 		DebugLogCategory category = DebugLogCategory.General)
 	{
-		_outputHistory.Add(
-			new ConsoleEntry(category, message));
+		ConsoleEntry entry = new(
+			++_latestEntrySequence,
+			category,
+			message);
 
-		if (!_isDisplayPaused
+		_outputHistory.Enqueue(entry);
+		TrackUnreadEntry(entry);
+
+		bool historyWasTrimmed =
+			TrimOutputHistory();
+
+		if (!historyWasTrimmed
+			&& !_isDisplayPaused
 			&& ShouldDisplay(category, message))
 		{
 			DebugOutput.AppendText(
 				message + "\n");
 		}
+	}
+
+	private bool TrimOutputHistory()
+	{
+		if (_outputHistory.Count
+			<= MaxOutputHistoryEntries)
+		{
+			return false;
+		}
+
+		int entriesToRemove =
+			_outputHistory.Count
+			- RetainedOutputHistoryEntries;
+
+		HashSet<ConsoleFilter> changedUnreadFilters =
+			new();
+
+		for (int i = 0; i < entriesToRemove; i++)
+		{
+			ConsoleEntry expiredEntry =
+				_outputHistory.Dequeue();
+
+			if (RemoveExpiredUnreadEntry(expiredEntry))
+			{
+				ConsoleFilter? filter =
+					GetFilterForCategory(
+						expiredEntry.Category);
+
+				if (filter.HasValue)
+				{
+					changedUnreadFilters.Add(
+						filter.Value);
+				}
+			}
+		}
+
+		if (_isDisplayPaused)
+		{
+			_pausedHistoryCount =
+				Math.Max(
+					_pausedHistoryCount
+					- entriesToRemove,
+					0);
+		}
+
+		foreach (ConsoleFilter filter
+			in changedUnreadFilters)
+		{
+			UpdateUnreadTabTitle(filter);
+		}
+
+		RebuildVisibleOutput();
+
+		return true;
 	}
 
 	private bool ValidateReferences()
@@ -493,7 +589,7 @@ public partial class DebugConsoleController : Window
 		string message)
 	{
 		AppendOutput(
-			$"[{timestamp:HH:mm:ss}] " +
+			$"[{timestamp:HH:mm:ss.fff}] " +
 			$"{GetCategoryLabel(category)}  {message}",
 			category);
 	}
@@ -503,7 +599,7 @@ public partial class DebugConsoleController : Window
 		DebugLogCategory category)
 	{
 		string timestamp =
-			DateTime.Now.ToString("HH:mm:ss");
+			DateTime.Now.ToString("HH:mm:ss.fff");
 
 		AppendOutput(
 			$"[{timestamp}] {message}",
@@ -514,6 +610,8 @@ public partial class DebugConsoleController : Window
 	{
 		_activeFilter =
 			GetFilterForTab((int)tabIndex);
+
+		MarkFilterRead(_activeFilter);
 
 		RebuildVisibleOutput();
 	}
@@ -590,17 +688,159 @@ public partial class DebugConsoleController : Window
 	private ConsoleFilter GetFilterForTab(int tabIndex)
 	{
 		string title =
-			FilterTabs.GetTabTitle(tabIndex);
+			FilterTabs.GetTabTitle(tabIndex)
+				.Trim();
 
-		return title.Trim().ToUpperInvariant() switch
+		foreach (ConsoleFilter filter in CountedFilters)
 		{
-			"THREAT" => ConsoleFilter.Threat,
-			"DAMAGE" => ConsoleFilter.Damage,
-			"ABILITY" => ConsoleFilter.Ability,
-			"ENCOUNTER" => ConsoleFilter.Encounter,
-			"ERROR" => ConsoleFilter.Error,
+			string baseTitle =
+				GetFilterTitle(filter);
+
+			if (title.Equals(
+					baseTitle,
+					StringComparison.OrdinalIgnoreCase)
+				|| title.StartsWith(
+					baseTitle + " (",
+					StringComparison.OrdinalIgnoreCase))
+			{
+				return filter;
+			}
+		}
+
+		return title.ToUpperInvariant() switch
+		{
 			"IDS" => ConsoleFilter.Ids,
 			_ => ConsoleFilter.All
+		};
+	}
+
+	private void TrackUnreadEntry(ConsoleEntry entry)
+	{
+		ConsoleFilter? filter =
+			GetFilterForCategory(entry.Category);
+
+		if (!filter.HasValue)
+			return;
+
+		bool isBeingViewed =
+			Visible
+			&& _activeFilter == filter.Value;
+
+		if (isBeingViewed)
+		{
+			_lastReadSequences[filter.Value] =
+				entry.Sequence;
+
+			return;
+		}
+
+		_unreadCounts[filter.Value]++;
+		UpdateUnreadTabTitle(filter.Value);
+	}
+
+	private bool RemoveExpiredUnreadEntry(ConsoleEntry entry)
+	{
+		ConsoleFilter? filter =
+			GetFilterForCategory(entry.Category);
+
+		if (!filter.HasValue
+			|| entry.Sequence
+				<= _lastReadSequences[filter.Value]
+			|| _unreadCounts[filter.Value] == 0)
+		{
+			return false;
+		}
+
+		_unreadCounts[filter.Value]--;
+
+		return true;
+	}
+
+	private void MarkFilterRead(ConsoleFilter filter)
+	{
+		if (!_unreadCounts.ContainsKey(filter))
+			return;
+
+		_lastReadSequences[filter] =
+			_latestEntrySequence;
+
+		if (_unreadCounts[filter] == 0)
+			return;
+
+		_unreadCounts[filter] = 0;
+		UpdateUnreadTabTitle(filter);
+	}
+
+	private void ResetUnreadCounts()
+	{
+		foreach (ConsoleFilter filter in CountedFilters)
+		{
+			_unreadCounts[filter] = 0;
+			_lastReadSequences[filter] =
+				_latestEntrySequence;
+
+			UpdateUnreadTabTitle(filter);
+		}
+	}
+
+	private void UpdateUnreadTabTitle(ConsoleFilter filter)
+	{
+		int tabIndex = FindTabIndex(filter);
+
+		if (tabIndex < 0)
+			return;
+
+		string baseTitle =
+			GetFilterTitle(filter);
+
+		int unreadCount =
+			_unreadCounts[filter];
+
+		FilterTabs.SetTabTitle(
+			tabIndex,
+			unreadCount > 0
+				? $"{baseTitle} ({unreadCount})"
+				: baseTitle);
+	}
+
+	private int FindTabIndex(ConsoleFilter filter)
+	{
+		for (int tabIndex = 0;
+			tabIndex < FilterTabs.TabCount;
+			tabIndex++)
+		{
+			if (GetFilterForTab(tabIndex) == filter)
+				return tabIndex;
+		}
+
+		return -1;
+	}
+
+	private static ConsoleFilter? GetFilterForCategory(
+		DebugLogCategory category)
+	{
+		return category switch
+		{
+			DebugLogCategory.Threat => ConsoleFilter.Threat,
+			DebugLogCategory.Damage => ConsoleFilter.Damage,
+			DebugLogCategory.Ability => ConsoleFilter.Ability,
+			DebugLogCategory.Encounter => ConsoleFilter.Encounter,
+			DebugLogCategory.Error => ConsoleFilter.Error,
+			_ => null
+		};
+	}
+
+	private static string GetFilterTitle(ConsoleFilter filter)
+	{
+		return filter switch
+		{
+			ConsoleFilter.Threat => "Threat",
+			ConsoleFilter.Damage => "Damage",
+			ConsoleFilter.Ability => "Ability",
+			ConsoleFilter.Encounter => "Encounter",
+			ConsoleFilter.Error => "Error",
+			ConsoleFilter.Ids => "IDs",
+			_ => "All"
 		};
 	}
 
@@ -621,10 +861,17 @@ public partial class DebugConsoleController : Window
 					_outputHistory.Count)
 				: _outputHistory.Count;
 
-		for (int i = 0; i < visibleEntryCount; i++)
+		int historyIndex = 0;
+		StringBuilder visibleOutput = new();
+
+		foreach (ConsoleEntry entry in _outputHistory)
 		{
-			ConsoleEntry entry =
-				_outputHistory[i];
+			if (historyIndex >= visibleEntryCount)
+			{
+				break;
+			}
+
+			historyIndex++;
 
 			if (!ShouldDisplay(
 				entry.Category,
@@ -633,8 +880,15 @@ public partial class DebugConsoleController : Window
 				continue;
 			}
 
+			visibleOutput
+				.Append(entry.Message)
+				.Append('\n');
+		}
+
+		if (visibleOutput.Length > 0)
+		{
 			DebugOutput.AppendText(
-				entry.Message + "\n");
+				visibleOutput.ToString());
 		}
 	}
 
@@ -668,6 +922,7 @@ public partial class DebugConsoleController : Window
 	{
 		_outputHistory.Clear();
 		_pausedHistoryCount = 0;
+		ResetUnreadCounts();
 		RebuildVisibleOutput();
 	}
 
