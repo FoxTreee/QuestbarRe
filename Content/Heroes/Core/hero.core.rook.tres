@@ -15,6 +15,5 @@ AttackDamage = 25.0
 AttackInterval = 0.5
 AttackDuration = 0.1
 AttackReleasePoint = 0.1
-AttackLungeDistance = 0.5
 CombatMoveSpeed = 110.0
 metadata/_custom_type_script = "uid://b38xxk3rax5nx"

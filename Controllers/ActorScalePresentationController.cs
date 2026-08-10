@@ -5,7 +5,7 @@ public partial class ActorScalePresentationController : Node
 {
     [ExportCategory("Dependencies")]
     [Export]
-    public Node ActorLayer { get; set; } = null!;
+    public Node2D ActorLayer { get; set; } = null!;
 
     [Export]
     public DesktopWindowHostController WindowHost
@@ -25,6 +25,8 @@ public partial class ActorScalePresentationController : Node
     {
         if (!ValidateReferences())
             return;
+
+        ActorLayer.YSortEnabled = true;
 
         ActorLayer.ChildEnteredTree +=
             OnActorEnteredTree;

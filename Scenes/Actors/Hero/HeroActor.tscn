@@ -32,6 +32,7 @@ VisualRoot = NodePath("VisualRoot")
 BodyBounds = NodePath("VisualRoot/BodyBounds")
 ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 AbilityCooldownIndicator = NodePath("VisualRoot/HeroAbilityCooldownIndicator")
+MeleeSlotVerticalSpacingMultiplier = 0.6
 
 [node name="VisualRoot" type="Node2D" parent="." unique_id=18405630]
 

@@ -37,6 +37,8 @@ public partial class HeroActorController : Node2D
 	public HeroCombatProfile CombatProfile { get; } = new();
 	public float CombatPresentationScale { get; private set; } = 1.0f;
 	public bool IsIncapacitated => _state == HeroState.Incapacitated;
+	private bool UsesMeleeEngagementSlots =>
+		HasCombatTag(HeroCombatTag.Melee);
 
 	public void SetCombatPresentationScale(float scale)
 	{
@@ -193,7 +195,7 @@ public partial class HeroActorController : Node2D
 	[Export(PropertyHint.Range, "0,100000,1")]
 	public float TemporaryAttackDamage { get; set; } = 20.0f;
 
-    [ExportCategory("Temporary Combat Movement")]
+	[ExportCategory("Temporary Combat Movement")]
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float CombatMoveSpeed { get; set; } = 140.0f;
 
@@ -208,6 +210,15 @@ public partial class HeroActorController : Node2D
 	
 	[Export(PropertyHint.Range, "0,10,0.1")]
 	public float FacingDeadZone { get; set; } = 1.0f;
+
+	[ExportCategory("Melee Engagement Slots")]
+	[Export(PropertyHint.Range, "0.5,2,0.05")]
+	public float MeleeSlotHorizontalSpacingMultiplier
+	{ get; set; } = 1.0f;
+
+	[Export(PropertyHint.Range, "0.25,2,0.05")]
+	public float MeleeSlotVerticalSpacingMultiplier
+	{ get; set; } = 0.75f;
 
 	[ExportCategory("Temporary Attack Cycle")]
 	[Export(PropertyHint.Range, "0.1,10,0.1")]
@@ -235,10 +246,15 @@ public partial class HeroActorController : Node2D
 
 	public CombatHealthState Health { get; } = new();
 
+	public MeleeEngagementSlotSet MeleeEngagementSlots { get; } =
+		new();
+
 	// Incapacitation Reset -- DEBUG ONLY
 	public void DebugResetFromIncapacitation()
 	{
+		ReleaseMeleeEngagementSlot(CurrentTarget);
 		Health.RestoreToMaximum();
+		MeleeEngagementSlots.Clear();
 
 		CurrentTarget = null;
 
@@ -313,9 +329,9 @@ public partial class HeroActorController : Node2D
 		_visualRestPosition = VisualRoot.Position;
 
 		JourneyState.StateChanged += OnJourneyStateChanged;
-        _healthBar.Bind(Health);
+		_healthBar.Bind(Health);
 		AbilityCooldownIndicator.Bind(this);
-        ApplyJourneyState(JourneyState.CurrentState);
+		ApplyJourneyState(JourneyState.CurrentState);
 		SnapToFormation();
 
 		DebugLog.Print(
@@ -332,6 +348,9 @@ public partial class HeroActorController : Node2D
 
 	public override void _ExitTree()
 	{
+		ReleaseMeleeEngagementSlot(CurrentTarget);
+		MeleeEngagementSlots.Clear();
+
 		if (GodotObject.IsInstanceValid(JourneyState))
 		{
 			JourneyState.StateChanged -=
@@ -442,6 +461,153 @@ public partial class HeroActorController : Node2D
 
 	private bool _initialAttackPending;
 
+	private float GetMeleeSlotHorizontalDistance(
+		MonsterActorController target)
+	{
+		float bodyClearanceDistance =
+			GetBodyClearanceDistance(target);
+
+		float adjustedDistance =
+			GetRequiredAttackDistance(target)
+			* Mathf.Max(
+				MeleeSlotHorizontalSpacingMultiplier,
+				0.0f);
+
+		return Mathf.Max(
+			bodyClearanceDistance,
+			adjustedDistance);
+	}
+
+	private float GetMeleeSlotVerticalDistance(
+		MonsterActorController target)
+	{
+		float scaledHeroRadius =
+			Mathf.Max(0.0f, CombatProfile.CombatRadius)
+			* CombatPresentationScale;
+
+		float scaledTargetRadius =
+			Mathf.Max(0.0f, target.CombatProfile.CombatRadius)
+			* target.CombatPresentationScale;
+
+		return Mathf.Max(
+			CombatArrivalDistance * CombatPresentationScale,
+			(scaledHeroRadius + scaledTargetRadius)
+				* Mathf.Max(
+					MeleeSlotVerticalSpacingMultiplier,
+					0.0f));
+	}
+
+	private bool TryGetMeleeEngagementPosition(
+		MonsterActorController target,
+		out Vector2 engagementPosition)
+	{
+		engagementPosition = Vector2.Zero;
+
+		if (!UsesMeleeEngagementSlots)
+			return false;
+
+		float horizontalDistance =
+			GetMeleeSlotHorizontalDistance(target);
+
+		float verticalDistance =
+			GetMeleeSlotVerticalDistance(target);
+
+		bool alreadyReserved =
+			target.MeleeEngagementSlots.TryGetReservation(
+				this,
+				out MeleeEngagementSlot slot);
+
+		if (!alreadyReserved
+			&& !target.MeleeEngagementSlots.TryReserveClosest(
+				this,
+				target.GlobalPosition,
+				horizontalDistance,
+				verticalDistance,
+				out slot))
+		{
+			return false;
+		}
+
+		engagementPosition =
+			MeleeEngagementSlotSet.GetWorldPosition(
+				slot,
+				target.GlobalPosition,
+				horizontalDistance,
+				verticalDistance);
+
+		if (!alreadyReserved)
+		{
+			DebugLog.Print(
+				$"{Name} reserved {slot} melee slot on " +
+				$"{target.Name}.");
+		}
+
+		return true;
+	}
+
+	private bool HasMeleeEngagementReservation(
+		MonsterActorController target)
+	{
+		return UsesMeleeEngagementSlots
+			&& target.MeleeEngagementSlots.TryGetReservation(
+				this,
+				out _);
+	}
+
+	private bool IsTargetWithinMeleeEngagementRange(
+		MonsterActorController target)
+	{
+		float horizontalDistance =
+			GetMeleeSlotHorizontalDistance(target);
+
+		float verticalDistance =
+			GetMeleeSlotVerticalDistance(target);
+
+		float maximumDistance =
+			new Vector2(
+				horizontalDistance,
+				verticalDistance).Length();
+
+		float scaledTolerance =
+			AttackRangeTolerance
+			* CombatPresentationScale;
+
+		return GlobalPosition.DistanceTo(target.GlobalPosition)
+			<= maximumDistance + scaledTolerance;
+	}
+
+	private bool HasReachedMeleeEngagementPosition(
+		MonsterActorController target,
+		Vector2 engagementPosition)
+	{
+		if (GlobalPosition.DistanceTo(engagementPosition)
+			<= CombatArrivalDistance)
+		{
+			return true;
+		}
+
+		// A slot can extend beyond the top or bottom of the legal ground
+		// area. If the ground constraint stops the vertical movement, the
+		// hero may still engage after reaching the reserved slot's side.
+		return Mathf.Abs(
+			GlobalPosition.X
+			- engagementPosition.X)
+			<= CombatArrivalDistance
+			&& IsTargetWithinMeleeEngagementRange(target);
+	}
+
+	private void ReleaseMeleeEngagementSlot(
+		MonsterActorController? target)
+	{
+		if (target is null
+			|| !GodotObject.IsInstanceValid(target))
+		{
+			return;
+		}
+
+		target.MeleeEngagementSlots.Release(this);
+	}
+
 	private float GetBodyClearanceDistance(
 		MonsterActorController target)
 	{
@@ -466,18 +632,18 @@ public partial class HeroActorController : Node2D
 			target.CombatPresentationScale);
 	}
 
-    private Vector2 CalculateApproachPosition(MonsterActorController target)
-    {
-        float requiredCenterDistance = GetRequiredAttackDistance(target);
+	private Vector2 CalculateApproachPosition(MonsterActorController target)
+	{
+		float requiredCenterDistance = GetRequiredAttackDistance(target);
 
-        float horizontalDifference = target.GlobalPosition.X - GlobalPosition.X;
+		float horizontalDifference = target.GlobalPosition.X - GlobalPosition.X;
 
-        float directionToTarget = Mathf.Sign(horizontalDifference);
+		float directionToTarget = Mathf.Sign(horizontalDifference);
 
-        float destinationX = target.GlobalPosition.X - directionToTarget * requiredCenterDistance;
+		float destinationX = target.GlobalPosition.X - directionToTarget * requiredCenterDistance;
 
-        return new Vector2( destinationX, target.GlobalPosition.Y);
-    }
+		return new Vector2( destinationX, target.GlobalPosition.Y);
+	}
 
 	private void InitializeCombatProfile()
 	{
@@ -485,14 +651,14 @@ public partial class HeroActorController : Node2D
 		CombatProfile.CombatRadius =
 			BodyBounds.GetHorizontalRadiusInParentSpace()
 			* Mathf.Abs(VisualRoot.Scale.X);
-        CombatProfile.AttackInterval = TemporaryAttackInterval;
+		CombatProfile.AttackInterval = TemporaryAttackInterval;
 		CombatProfile.MoveSpeed = CombatMoveSpeed;
 		CombatProfile.AttackDelivery = TemporaryAttackDelivery;
 		CombatProfile.MaximumHealth = TemporaryMaximumHealth;
 		CombatProfile.AttackDamage = TemporaryAttackDamage;
 		CombatProfile.AttackDuration = TemporaryAttackDuration;
-        CombatProfile.AttackLungeDistance = TemporaryAttackLungeDistance;
-    }
+		CombatProfile.AttackLungeDistance = TemporaryAttackLungeDistance;
+	}
 
 	private bool IsTargetWithinAttackRange(MonsterActorController target)
 	{
@@ -515,7 +681,7 @@ public partial class HeroActorController : Node2D
 			<= requiredCenterDistance + scaledTolerance;
 	}
 
-    private void UpdateFacingTowardTarget()
+	private void UpdateFacingTowardTarget()
 	{
 		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
 			return;
@@ -567,6 +733,42 @@ public partial class HeroActorController : Node2D
 		MonsterActorController target =
 			CurrentTarget!;
 
+		if (TryGetMeleeEngagementPosition(
+			target,
+			out Vector2 meleeEngagementPosition))
+		{
+			if (HasReachedMeleeEngagementPosition(
+				target,
+				meleeEngagementPosition))
+			{
+				PrepareToAttack();
+				return;
+			}
+
+			Vector2 previousMeleePosition = GlobalPosition;
+
+			float meleeMovementDistance =
+				CombatProfile.MoveSpeed * (float)delta;
+
+			GlobalPosition = GlobalPosition.MoveToward(
+				meleeEngagementPosition,
+				meleeMovementDistance);
+
+			_movedThisFrame =
+				!GlobalPosition.IsEqualApprox(
+					previousMeleePosition);
+
+			if (!HasReachedMeleeEngagementPosition(
+				target,
+				meleeEngagementPosition))
+			{
+				return;
+			}
+
+			PrepareToAttack();
+			return;
+		}
+
 		bool targetWithinRange =
 			IsTargetWithinAttackRange(target);
 
@@ -608,9 +810,22 @@ public partial class HeroActorController : Node2D
 		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
 			return;
 
-		bool targetMovedOutOfRange = !IsTargetWithinAttackRange(CurrentTarget!);
+		MonsterActorController target = CurrentTarget!;
 
-		bool targetMovedToAnotherY = Mathf.Abs(GlobalPosition.Y - CurrentTarget!.GlobalPosition.Y) > AttackRangeTolerance;
+		bool hasMeleeReservation =
+			HasMeleeEngagementReservation(target);
+
+		bool targetMovedOutOfRange =
+			hasMeleeReservation
+				? !IsTargetWithinMeleeEngagementRange(target)
+				: !IsTargetWithinAttackRange(target);
+
+		bool targetMovedToAnotherY =
+			!hasMeleeReservation
+			&& Mathf.Abs(
+				GlobalPosition.Y
+				- target.GlobalPosition.Y)
+				> AttackRangeTolerance;
 
 		if (targetMovedOutOfRange
 			|| targetMovedToAnotherY)
@@ -713,13 +928,22 @@ public partial class HeroActorController : Node2D
 			return;
 		}
 
-		bool targetStillInRange = IsTargetWithinAttackRange(CurrentTarget!);
+		MonsterActorController target = CurrentTarget!;
+
+		bool hasMeleeReservation =
+			HasMeleeEngagementReservation(target);
+
+		bool targetStillInRange =
+			hasMeleeReservation
+				? IsTargetWithinMeleeEngagementRange(target)
+				: IsTargetWithinAttackRange(target);
 
 		bool targetStillAligned =
-			Mathf.Abs(
+			hasMeleeReservation
+			|| Mathf.Abs(
 				GlobalPosition.Y
-				- CurrentTarget!.GlobalPosition.Y)
-			<= AttackRangeTolerance;
+				- target.GlobalPosition.Y)
+				<= AttackRangeTolerance;
 
 		_state =
 			targetStillInRange
@@ -734,6 +958,8 @@ public partial class HeroActorController : Node2D
 			return;
 
 		_state = HeroState.Incapacitated;
+		ReleaseMeleeEngagementSlot(CurrentTarget);
+		MeleeEngagementSlots.Clear();
 		CurrentTarget = null;
 
 		_attackCooldownRemaining = 0.0;
@@ -812,6 +1038,12 @@ public partial class HeroActorController : Node2D
 
 	private void ApplyJourneyState(JourneyStateService.JourneyState state)
 	{
+		if (state
+			!= JourneyStateService.JourneyState.Encounter)
+		{
+			ReleaseMeleeEngagementSlot(CurrentTarget);
+		}
+
 		if (IsIncapacitated)
 		{
 			StopMovementAnimation();
@@ -869,19 +1101,19 @@ public partial class HeroActorController : Node2D
 			AbilityCooldownIndicator,
 			nameof(AbilityCooldownIndicator));
 
-        if (GodotObject.IsInstanceValid(VisualRoot))
-        {
-            _healthBar =
-                VisualRoot.GetNodeOrNull
-                    <ActorHealthBarController>(
-                        "ActorHealthBar")!;
+		if (GodotObject.IsInstanceValid(VisualRoot))
+		{
+			_healthBar =
+				VisualRoot.GetNodeOrNull
+					<ActorHealthBarController>(
+						"ActorHealthBar")!;
 
-            valid &= Require(
-                _healthBar,
-                "VisualRoot/ActorHealthBar");
-        }
+			valid &= Require(
+				_healthBar,
+				"VisualRoot/ActorHealthBar");
+		}
 
-        return valid;
+		return valid;
 	}
 	
 	public void SnapToFormation()
@@ -909,6 +1141,8 @@ public partial class HeroActorController : Node2D
 		if (CurrentTarget == previousTarget)
 			return;
 
+		ReleaseMeleeEngagementSlot(previousTarget);
+
 		if (CurrentTarget is null)
 		{
 			DebugLog.Print(
@@ -918,6 +1152,9 @@ public partial class HeroActorController : Node2D
 		}
 
 		_initialAttackPending = true;
+		TryGetMeleeEngagementPosition(
+			CurrentTarget!,
+			out _);
 		
 		DebugLog.Print(
 			$"{Name} targeted {CurrentTarget.Name} " +
@@ -945,6 +1182,7 @@ public partial class HeroActorController : Node2D
 		if (CurrentTarget is null)
 			return;
 
+		ReleaseMeleeEngagementSlot(CurrentTarget);
 		CurrentTarget = null;
 		_initialAttackPending = false;
 
