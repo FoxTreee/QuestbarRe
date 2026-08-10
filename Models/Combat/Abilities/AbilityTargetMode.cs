@@ -1,5 +1,6 @@
 public enum AbilityTargetMode
 {
     CurrentTarget = 0,
-    Self = 1
+    Self = 1,
+    LowestHealthAlly = 2
 }

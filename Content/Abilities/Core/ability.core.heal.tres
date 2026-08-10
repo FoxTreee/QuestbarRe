@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://c3kbgs46muogb"]
+
+[ext_resource type="Script" uid="uid://bus4x5fmyodi8" path="res://Scripts/Content/Definitions/AbilityDefinition.cs" id="1_heal"]
+
+[resource]
+script = ExtResource("1_heal")
+ContentId = "ability.core.heal"
+DisplayName = "Heal"
+Description = "Restore health to the living party member with the lowest health percentage below the automatic-use threshold."
+CooldownSeconds = 8.0
+CastTimeSeconds = 1.5
+TargetMode = 2
+Range = 0.0
+EffectType = 2
+BaseHealing = 30.0
+AutoCastHealthThresholdPercent = 75.0
+DesignerNotes = "Spell healing is intentionally separate from passive out-of-combat recovery so future Spirit scaling applies only to priest healing."

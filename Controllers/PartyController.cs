@@ -121,6 +121,11 @@ public partial class PartyController : Node
                 $"{formationAnchor.GlobalPosition}.");
         }
 
+		foreach (HeroActorController hero in _spawnedHeroes)
+		{
+			hero.SetPartyMembers(_spawnedHeroes);
+		}
+
         EmitSignal(
             SignalName.PartySpawned,
             SpawnedHeroCount);

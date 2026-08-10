@@ -14,4 +14,4 @@ Range = 0.0
 EffectType = 1
 EffectRadius = 140.0
 EffectDurationSeconds = 4.0
-DesignerNotes = "Core Taunt behavior and cooldown enforcement are implemented. Indicator and presentation are intentionally deferred."
+DesignerNotes = "Automatically used after the warrior loses aggro on a monster, or after holding zero monster aggro for the configured auto-cast delay while a monster is within range."

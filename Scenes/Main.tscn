@@ -43,6 +43,7 @@
 [ext_resource type="Resource" uid="uid://bji8hwhd3vyhj" path="res://Content/Abilities/Core/ability.core.heavy_slam.tres" id="27_vs04g"]
 [ext_resource type="Resource" uid="uid://ca677bt8r4l5a" path="res://Content/Abilities/Core/ability.core.taunt.tres" id="29_d8m2u"]
 [ext_resource type="Script" uid="uid://yaghcenkkidu" path="res://Scripts/Services/CombatDamageResolver.cs" id="30_4yxf6"]
+[ext_resource type="Resource" uid="uid://c3kbgs46muogb" path="res://Content/Abilities/Core/ability.core.heal.tres" id="30_5psol"]
 [ext_resource type="Script" uid="uid://bgv0cmtivgfi7" path="res://Controllers/PartyController.cs" id="40_6ehlx"]
 
 [sub_resource type="Theme" id="Theme_d8m2u"]
@@ -202,6 +203,7 @@ HorizontalAdjustmentSlider = NodePath("../MarginContainer/SettingsRows/Horizonta
 HorizontalAdjustmentValue = NodePath("../MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowValue")
 
 [node name="DebugConsoleWindow" parent="PopupWindows" unique_id=1708193217 node_paths=PackedStringArray("Commands", "Combat", "JourneyState", "Encounter", "DebugOutput", "CommandInput", "FilterTabs", "SearchInput", "PauseButton", "AutoScrollButton", "ClearButton") instance=ExtResource("5_erwvk")]
+visible = false
 theme = SubResource("Theme_d8m2u")
 Commands = NodePath("../../Services/DebugCommandService")
 Combat = NodePath("../../Controllers/CombatController")
@@ -269,7 +271,7 @@ Registry = NodePath("../MonsterContentRegistry")
 
 [node name="AbilityContentRegistry" type="Node" parent="Services" unique_id=801032179]
 script = ExtResource("25_vvnwx")
-Definitions = Array[ExtResource("26_btbly")]([ExtResource("27_vs04g"), ExtResource("29_d8m2u")])
+Definitions = Array[ExtResource("26_btbly")]([ExtResource("27_vs04g"), ExtResource("29_d8m2u"), ExtResource("30_5psol")])
 
 [node name="EncounterPoolContentRegistry" type="Node" parent="Services" unique_id=297296029 node_paths=PackedStringArray("EncounterRegistry")]
 script = ExtResource("21_u7mjy")

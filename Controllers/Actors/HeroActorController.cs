@@ -9,6 +9,12 @@ public partial class HeroActorController : Node2D
 	MonsterActorController target);
 
 	[Signal]
+	public delegate void AbilityReleasedEventHandler(
+	HeroActorController caster,
+	HeroActorController target,
+	AbilityDefinition ability);
+
+	[Signal]
 	public delegate void IncapacitatedEventHandler(
 	HeroActorController hero);
 
@@ -18,6 +24,7 @@ public partial class HeroActorController : Node2D
 		ApproachingTarget,
 		WaitingToAttack,
 		Attacking,
+		UsingAbility,
 		ReturningToFormation,
 		Incapacitated
 	}
@@ -33,6 +40,11 @@ public partial class HeroActorController : Node2D
 	private readonly List<AbilityDefinition> _abilities = new();
 	private readonly HeroAbilityCooldownState
 		_abilityCooldowns = new();
+	private AbilityDefinition? _activeAbility;
+	private HeroActorController? _activeAbilityTarget;
+	private double _abilityCastTimeRemaining;
+	private IReadOnlyList<HeroActorController> _partyMembers =
+		System.Array.Empty<HeroActorController>();
 
 	public HeroCombatProfile CombatProfile { get; } = new();
 	public float CombatPresentationScale { get; private set; } = 1.0f;
@@ -86,6 +98,45 @@ public partial class HeroActorController : Node2D
 		AbilityDefinition ability)
 	{
 		return _abilityCooldowns.TryStart(ability);
+	}
+
+	public bool IsUsingAbility =>
+		_activeAbility is not null;
+
+	public bool TryBeginAbility(
+		AbilityDefinition ability,
+		HeroActorController target)
+	{
+		if (!GodotObject.IsInstanceValid(ability)
+			|| !GodotObject.IsInstanceValid(target)
+			|| IsIncapacitated
+			|| !Health.IsAlive
+			|| IsUsingAbility
+			|| !TryGetAbility(ability.ContentId, out _)
+			|| !IsAbilityReady(ability.ContentId)
+			|| !IsValidAbilityTarget(ability, target))
+		{
+			return false;
+		}
+
+		_activeAbility = ability;
+		_activeAbilityTarget = target;
+		_abilityCastTimeRemaining =
+			Mathf.Max(ability.CastTimeSeconds, 0.0f);
+
+		_attackTimeRemaining = 0.0;
+		_attackReleaseEmitted = false;
+		_initialAttackPending = false;
+		_state = HeroState.UsingAbility;
+
+		StopMovementAnimation();
+
+		DebugLog.Print(
+			$"{Name} began using ability " +
+			$"'{ability.DisplayName}' on {target.Name}. " +
+			$"Cast={ability.CastTimeSeconds:0.##}s.");
+
+		return true;
 	}
 
 	public void Configure(
@@ -146,6 +197,42 @@ public partial class HeroActorController : Node2D
 		}
 
 		ability = null!;
+		return false;
+	}
+
+	private bool IsValidAbilityTarget(
+		AbilityDefinition ability,
+		HeroActorController target)
+	{
+		return ability.EffectType switch
+		{
+			AbilityEffectType.DirectHealing =>
+				IsLivingPartyMember(target),
+
+			AbilityEffectType.AreaTaunt =>
+				target == this,
+
+			_ => false
+		};
+	}
+
+	private bool IsLivingPartyMember(
+		HeroActorController target)
+	{
+		if (!GodotObject.IsInstanceValid(target)
+			|| target.IsIncapacitated
+			|| !target.Health.IsAlive)
+		{
+			return false;
+		}
+
+		foreach (HeroActorController partyMember
+			in _partyMembers)
+		{
+			if (partyMember == target)
+				return true;
+		}
+
 		return false;
 	}
 
@@ -220,6 +307,19 @@ public partial class HeroActorController : Node2D
 	public float MeleeSlotVerticalSpacingMultiplier
 	{ get; set; } = 0.75f;
 
+	[ExportCategory("Hero Separation")]
+	[Export(PropertyHint.Range, "0,3,0.05")]
+	public float HeroSeparationHorizontalRangeMultiplier
+	{ get; set; } = 1.0f;
+
+	[Export(PropertyHint.Range, "0,3,0.05")]
+	public float HeroSeparationVerticalSpacingMultiplier
+	{ get; set; } = 0.75f;
+
+	[Export(PropertyHint.Range, "0,100,1")]
+	public float HeroSeparationSpeed
+	{ get; set; } = 24.0f;
+
 	[ExportCategory("Temporary Attack Cycle")]
 	[Export(PropertyHint.Range, "0.1,10,0.1")]
 	public float TemporaryAttackInterval { get; set; } = 1.5f;
@@ -237,6 +337,11 @@ public partial class HeroActorController : Node2D
 	public AttackDeliveryMode TemporaryAttackDelivery { get; set; }
 	= AttackDeliveryMode.ImmediateImpact;
 
+	[ExportCategory("Passive Recovery")]
+	[Export(PropertyHint.Range, "0,10,0.1")]
+	public float TravelingRecoveryPercentPerSecond
+	{ get; set; } = 2.5f;
+
 	[Export]
 	public TargetingService Targeting { get; set; } = null!;
 
@@ -248,6 +353,13 @@ public partial class HeroActorController : Node2D
 
 	public MeleeEngagementSlotSet MeleeEngagementSlots { get; } =
 		new();
+
+	public void SetPartyMembers(
+		IReadOnlyList<HeroActorController> partyMembers)
+	{
+		_partyMembers = partyMembers
+			?? System.Array.Empty<HeroActorController>();
+	}
 
 	// Incapacitation Reset -- DEBUG ONLY
 	public void DebugResetFromIncapacitation()
@@ -264,6 +376,7 @@ public partial class HeroActorController : Node2D
 		_initialAttackPending = false;
 		_movementAnimationGraceRemaining = 0.0;
 		_abilityCooldowns.Reset();
+		ClearAbilityCast();
 
 		StopMovementAnimation();
 
@@ -348,6 +461,7 @@ public partial class HeroActorController : Node2D
 
 	public override void _ExitTree()
 	{
+		ClearAbilityCast();
 		ReleaseMeleeEngagementSlot(CurrentTarget);
 		MeleeEngagementSlots.Clear();
 
@@ -361,6 +475,7 @@ public partial class HeroActorController : Node2D
 	public override void _Process(double delta)
 	{
 		_abilityCooldowns.Update(delta);
+		UpdatePassiveRecovery(delta);
 		_movedThisFrame = false;
 		UpdateFacingTowardTarget();
 
@@ -395,6 +510,12 @@ public partial class HeroActorController : Node2D
 
 				break;
 
+			case HeroState.UsingAbility:
+
+				UpdateAbility(delta);
+
+				break;
+
 			case HeroState.ReturningToFormation:
 
 				UpdateReturnToFormation(delta);
@@ -408,6 +529,31 @@ public partial class HeroActorController : Node2D
 
 				break;
 		}
+
+		ApplyHeroSeparation(delta);
+	}
+
+	private void UpdatePassiveRecovery(double delta)
+	{
+		if (JourneyState.CurrentState
+				!= JourneyStateService.JourneyState.Traveling
+			|| !Health.IsAlive
+			|| Health.CurrentHealth >= Health.MaximumHealth)
+		{
+			return;
+		}
+
+		float recoveryPercent = Mathf.Max(
+			TravelingRecoveryPercentPerSecond,
+			0.0f);
+
+		float requestedRecovery =
+			Health.MaximumHealth
+			* recoveryPercent
+			/ 100.0f
+			* (float)delta;
+
+		Health.ApplyPassiveRecovery(requestedRecovery);
 	}
 
 	private double _movementAnimationGraceRemaining;
@@ -637,6 +783,18 @@ public partial class HeroActorController : Node2D
 		float requiredCenterDistance = GetRequiredAttackDistance(target);
 
 		float horizontalDifference = target.GlobalPosition.X - GlobalPosition.X;
+		float horizontalDistance = Mathf.Abs(horizontalDifference);
+		float scaledTolerance =
+			AttackRangeTolerance
+			* CombatPresentationScale;
+
+		if (horizontalDistance
+			<= requiredCenterDistance + scaledTolerance)
+		{
+			return new Vector2(
+				GlobalPosition.X,
+				target.GlobalPosition.Y);
+		}
 
 		float directionToTarget = Mathf.Sign(horizontalDifference);
 
@@ -662,9 +820,6 @@ public partial class HeroActorController : Node2D
 
 	private bool IsTargetWithinAttackRange(MonsterActorController target)
 	{
-		float minimumCenterDistance =
-			GetBodyClearanceDistance(target);
-
 		float requiredCenterDistance =
 			GetRequiredAttackDistance(target);
 
@@ -676,9 +831,228 @@ public partial class HeroActorController : Node2D
 			* CombatPresentationScale;
 
 		return horizontalDistance
-			>= minimumCenterDistance - scaledTolerance
-			&& horizontalDistance
 			<= requiredCenterDistance + scaledTolerance;
+	}
+
+	private float GetScaledCombatRadius()
+	{
+		return Mathf.Max(
+			0.0f,
+			CombatProfile.CombatRadius)
+			* CombatPresentationScale;
+	}
+
+	private float GetHeroSeparationVerticalLeash()
+	{
+		float verticalMultiplier = Mathf.Max(
+			HeroSeparationVerticalSpacingMultiplier,
+			0.0f);
+
+		if (verticalMultiplier <= 0.0f)
+			return 0.0f;
+
+		float ownRadius = GetScaledCombatRadius();
+		float maximumSpacing = 0.0f;
+
+		foreach (HeroActorController partyMember
+			in _partyMembers)
+		{
+			if (!IsValidSeparationPeer(partyMember))
+				continue;
+
+			float combinedRadius =
+				ownRadius
+				+ partyMember.GetScaledCombatRadius();
+
+			maximumSpacing = Mathf.Max(
+				maximumSpacing,
+				combinedRadius * verticalMultiplier);
+		}
+
+		return maximumSpacing;
+	}
+
+	private float GetNonMeleeVerticalAlignmentTolerance()
+	{
+		return AttackRangeTolerance
+			+ GetHeroSeparationVerticalLeash();
+	}
+
+	private float GetCombatSeparationAnchorY(
+		MonsterActorController target)
+	{
+		if (UsesMeleeEngagementSlots
+			&& target.MeleeEngagementSlots.TryGetReservation(
+				this,
+				out MeleeEngagementSlot slot))
+		{
+			return MeleeEngagementSlotSet.GetWorldPosition(
+				slot,
+				target.GlobalPosition,
+				GetMeleeSlotHorizontalDistance(target),
+				GetMeleeSlotVerticalDistance(target)).Y;
+		}
+
+		return target.GlobalPosition.Y;
+	}
+
+	private bool IsValidSeparationPeer(
+		HeroActorController? partyMember)
+	{
+		return partyMember is not null
+			&& partyMember != this
+			&& GodotObject.IsInstanceValid(partyMember)
+			&& partyMember.IsInsideTree()
+			&& !partyMember.IsIncapacitated;
+	}
+
+	private void ApplyHeroSeparation(double delta)
+	{
+		if (JourneyState.CurrentState
+				!= JourneyStateService.JourneyState.Encounter
+			|| IsIncapacitated
+			|| !Targeting.IsValidMonsterTarget(CurrentTarget))
+		{
+			return;
+		}
+
+		float horizontalMultiplier = Mathf.Max(
+			HeroSeparationHorizontalRangeMultiplier,
+			0.0f);
+
+		float verticalMultiplier = Mathf.Max(
+			HeroSeparationVerticalSpacingMultiplier,
+			0.0f);
+
+		float separationSpeed = Mathf.Max(
+			HeroSeparationSpeed,
+			0.0f)
+			* CombatPresentationScale;
+
+		if (horizontalMultiplier <= 0.0f
+			|| verticalMultiplier <= 0.0f
+			|| separationSpeed <= 0.0f)
+		{
+			return;
+		}
+
+		float ownRadius = GetScaledCombatRadius();
+		float verticalPush = 0.0f;
+
+		foreach (HeroActorController partyMember
+			in _partyMembers)
+		{
+			if (!IsValidSeparationPeer(partyMember))
+				continue;
+
+			float combinedRadius =
+				ownRadius
+				+ partyMember.GetScaledCombatRadius();
+
+			float horizontalRange =
+				combinedRadius * horizontalMultiplier;
+
+			float desiredVerticalSpacing =
+				combinedRadius * verticalMultiplier;
+
+			if (horizontalRange <= 0.0f
+				|| desiredVerticalSpacing <= 0.0f)
+			{
+				continue;
+			}
+
+			float horizontalDistance = Mathf.Abs(
+				GlobalPosition.X
+				- partyMember.GlobalPosition.X);
+
+			if (horizontalDistance >= horizontalRange)
+				continue;
+
+			float verticalDifference =
+				GlobalPosition.Y
+				- partyMember.GlobalPosition.Y;
+
+			float verticalDistance = Mathf.Abs(
+				verticalDifference);
+
+			if (verticalDistance >= desiredVerticalSpacing)
+				continue;
+
+			float direction;
+
+			if (!Mathf.IsZeroApprox(verticalDifference))
+			{
+				direction = Mathf.Sign(verticalDifference);
+			}
+			else
+			{
+				direction = GetInstanceId()
+					< partyMember.GetInstanceId()
+						? -1.0f
+						: 1.0f;
+			}
+
+			float horizontalWeight =
+				1.0f
+				- horizontalDistance / horizontalRange;
+
+			float verticalWeight =
+				1.0f
+				- verticalDistance
+					/ desiredVerticalSpacing;
+
+			verticalPush +=
+				direction
+				* horizontalWeight
+				* verticalWeight;
+		}
+
+		verticalPush = Mathf.Clamp(
+			verticalPush,
+			-1.0f,
+			1.0f);
+
+		if (Mathf.IsZeroApprox(verticalPush))
+			return;
+
+		float verticalLeash =
+			GetHeroSeparationVerticalLeash();
+
+		if (verticalLeash <= 0.0f)
+			return;
+
+		float anchorY = GetCombatSeparationAnchorY(
+			CurrentTarget!);
+
+		float minimumY = anchorY - verticalLeash;
+		float maximumY = anchorY + verticalLeash;
+
+		if ((GlobalPosition.Y <= minimumY
+				&& verticalPush < 0.0f)
+			|| (GlobalPosition.Y >= maximumY
+				&& verticalPush > 0.0f))
+		{
+			return;
+		}
+
+		float nextY =
+			GlobalPosition.Y
+			+ verticalPush
+				* separationSpeed
+				* (float)delta;
+
+		if (GlobalPosition.Y >= minimumY
+			&& GlobalPosition.Y <= maximumY)
+		{
+			nextY = Mathf.Clamp(
+				nextY,
+				minimumY,
+				maximumY);
+		}
+
+		GlobalPosition = new Vector2(
+			GlobalPosition.X,
+			nextY);
 	}
 
 	private void UpdateFacingTowardTarget()
@@ -825,7 +1199,7 @@ public partial class HeroActorController : Node2D
 			&& Mathf.Abs(
 				GlobalPosition.Y
 				- target.GlobalPosition.Y)
-				> AttackRangeTolerance;
+				> GetNonMeleeVerticalAlignmentTolerance();
 
 		if (targetMovedOutOfRange
 			|| targetMovedToAnotherY)
@@ -856,6 +1230,100 @@ public partial class HeroActorController : Node2D
 
 		DebugLog.Print(
 			$"{Name} began attacking {CurrentTarget!.Name}.");
+	}
+
+	private void UpdateAbility(double delta)
+	{
+		if (_activeAbility is null
+			|| !GodotObject.IsInstanceValid(_activeAbility)
+			|| _activeAbilityTarget is null
+			|| !GodotObject.IsInstanceValid(_activeAbilityTarget)
+			|| !IsValidAbilityTarget(
+				_activeAbility,
+				_activeAbilityTarget))
+		{
+			ClearAbilityCast();
+			ResumeAfterAbility();
+			return;
+		}
+
+		AbilityDefinition ability = _activeAbility;
+		HeroActorController target = _activeAbilityTarget;
+
+		_abilityCastTimeRemaining -= delta;
+
+		if (_abilityCastTimeRemaining > 0.0)
+			return;
+
+		if (!TryStartAbilityCooldown(ability))
+		{
+			ClearAbilityCast();
+			ResumeAfterAbility();
+			return;
+		}
+
+		DebugLog.Print(
+			$"{Name} released ability " +
+			$"'{ability.DisplayName}' on {target.Name}.");
+
+		EmitSignal(
+			SignalName.AbilityReleased,
+			this,
+			target,
+			ability);
+
+		if (_state != HeroState.UsingAbility)
+		{
+			ClearAbilityCast();
+			return;
+		}
+
+		ClearAbilityCast();
+		ResumeAfterAbility();
+	}
+
+	private void ResumeAfterAbility()
+	{
+		if (IsIncapacitated)
+			return;
+
+		_attackCooldownRemaining = 0.0;
+
+		if (JourneyState.CurrentState
+			== JourneyStateService.JourneyState.Encounter
+			&& Targeting.IsValidMonsterTarget(CurrentTarget))
+		{
+			MonsterActorController target = CurrentTarget!;
+
+			bool hasMeleeReservation =
+				HasMeleeEngagementReservation(target);
+
+			bool targetInRange =
+				hasMeleeReservation
+					? IsTargetWithinMeleeEngagementRange(target)
+					: IsTargetWithinAttackRange(target);
+
+			_state = targetInRange
+				? HeroState.WaitingToAttack
+				: HeroState.ApproachingTarget;
+
+			return;
+		}
+
+		bool isAtFormation =
+			GlobalPosition.DistanceTo(FormationPosition)
+			<= CombatArrivalDistance;
+
+		_state = isAtFormation
+			? HeroState.InFormation
+			: HeroState.ReturningToFormation;
+	}
+
+	private void ClearAbilityCast()
+	{
+		_activeAbility = null;
+		_activeAbilityTarget = null;
+		_abilityCastTimeRemaining = 0.0;
 	}
 
 	private void UpdateAttack(double delta)
@@ -943,7 +1411,7 @@ public partial class HeroActorController : Node2D
 			|| Mathf.Abs(
 				GlobalPosition.Y
 				- target.GlobalPosition.Y)
-				<= AttackRangeTolerance;
+				<= GetNonMeleeVerticalAlignmentTolerance();
 
 		_state =
 			targetStillInRange
@@ -967,6 +1435,7 @@ public partial class HeroActorController : Node2D
 		_attackReleaseEmitted = false;
 		_initialAttackPending = false;
 		_movementAnimationGraceRemaining = 0.0;
+		ClearAbilityCast();
 
 		StopMovementAnimation();
 
@@ -1058,6 +1527,9 @@ public partial class HeroActorController : Node2D
 		_movementAnimationGraceRemaining = 0.0;
 
 		VisualRoot.Position = _visualRestPosition;
+
+		if (IsUsingAbility)
+			return;
 
 		if (state
 			== JourneyStateService.JourneyState.Encounter)
@@ -1160,7 +1632,8 @@ public partial class HeroActorController : Node2D
 			$"{Name} targeted {CurrentTarget.Name} " +
 			$"at X={CurrentTarget.GlobalPosition.X}.");
 
-		if (JourneyState.CurrentState == JourneyStateService.JourneyState.Encounter)
+		if (_state != HeroState.UsingAbility
+			&& JourneyState.CurrentState == JourneyStateService.JourneyState.Encounter)
 		{
 			_state = HeroState.ApproachingTarget;
 		}

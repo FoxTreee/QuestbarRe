@@ -76,6 +76,42 @@ public sealed class CombatHealthState
             wasLethal);
     }
 
+    public float ApplySpellHealing(float requestedHealing)
+    {
+        return ApplyRecovery(requestedHealing);
+    }
+
+    public float ApplyPassiveRecovery(float requestedRecovery)
+    {
+        return ApplyRecovery(requestedRecovery);
+    }
+
+    private float ApplyRecovery(float requestedRecovery)
+    {
+        float validRecovery =
+            MathF.Max(requestedRecovery, 0.0f);
+
+        if (!IsAlive
+            || validRecovery <= 0.0f
+            || CurrentHealth >= MaximumHealth)
+        {
+            return 0.0f;
+        }
+
+        float healthBeforeRecovery = CurrentHealth;
+
+        CurrentHealth = MathF.Min(
+            CurrentHealth + validRecovery,
+            MaximumHealth);
+
+        float appliedRecovery =
+            CurrentHealth - healthBeforeRecovery;
+
+        NotifyHealthChanged();
+
+        return appliedRecovery;
+    }
+
     private void NotifyHealthChanged()
     {
         HealthChanged?.Invoke(

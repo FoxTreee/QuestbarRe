@@ -48,6 +48,10 @@ public partial class AbilityDefinition : Resource
     public float BaseDamage { get; set; } =
         0.0f;
 
+    [Export(PropertyHint.Range, "0,1000000,1")]
+    public float BaseHealing { get; set; } =
+        0.0f;
+
     [Export(PropertyHint.Range, "0,1000,1")]
     public float EffectRadius { get; set; } =
         0.0f;
@@ -55,6 +59,16 @@ public partial class AbilityDefinition : Resource
     [Export(PropertyHint.Range, "0,60,0.1")]
     public float EffectDurationSeconds { get; set; } =
         0.0f;
+
+    [ExportCategory("Automatic Use")]
+
+    [Export(PropertyHint.Range, "0,30,0.1")]
+    public float AutoCastDelaySeconds { get; set; } =
+        0.0f;
+
+    [Export(PropertyHint.Range, "1,100,1")]
+    public float AutoCastHealthThresholdPercent { get; set; } =
+        50.0f;
 
     [ExportCategory("Authoring")]
 
@@ -106,6 +120,12 @@ public partial class AbilityDefinition : Resource
                 $"{ContentId}: BaseDamage cannot be negative.");
         }
 
+        if (BaseHealing < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: BaseHealing cannot be negative.");
+        }
+
         if (EffectRadius < 0.0f)
         {
             errors.Add(
@@ -117,6 +137,21 @@ public partial class AbilityDefinition : Resource
             errors.Add(
                 $"{ContentId}: EffectDurationSeconds cannot be " +
                 "negative.");
+        }
+
+        if (AutoCastDelaySeconds < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: AutoCastDelaySeconds cannot be " +
+                "negative.");
+        }
+
+        if (AutoCastHealthThresholdPercent <= 0.0f
+            || AutoCastHealthThresholdPercent > 100.0f)
+        {
+            errors.Add(
+                $"{ContentId}: AutoCastHealthThresholdPercent " +
+                "must be greater than zero and no more than 100.");
         }
 
         if (EffectType == AbilityEffectType.AreaTaunt)
@@ -140,6 +175,23 @@ public partial class AbilityDefinition : Resource
                 errors.Add(
                     $"{ContentId}: AreaTaunt abilities require an " +
                     "EffectDurationSeconds value greater than zero.");
+            }
+        }
+
+        if (EffectType == AbilityEffectType.DirectHealing)
+        {
+            if (TargetMode != AbilityTargetMode.LowestHealthAlly)
+            {
+                errors.Add(
+                    $"{ContentId}: DirectHealing abilities must " +
+                    "use the LowestHealthAlly target mode.");
+            }
+
+            if (BaseHealing <= 0.0f)
+            {
+                errors.Add(
+                    $"{ContentId}: DirectHealing abilities require " +
+                    "BaseHealing greater than zero.");
             }
         }
 

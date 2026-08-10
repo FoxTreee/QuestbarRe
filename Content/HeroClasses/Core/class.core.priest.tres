@@ -6,4 +6,5 @@
 script = ExtResource("1_hg2ve")
 ContentId = "class.core.priest"
 DisplayName = "Priest"
+AbilityContentIds = Array[String](["ability.core.heal"])
 metadata/_custom_type_script = "uid://djb803f4i720b"

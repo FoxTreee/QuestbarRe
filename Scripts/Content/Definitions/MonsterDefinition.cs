@@ -51,6 +51,16 @@ public partial class MonsterDefinition : Resource
         set;
     } = AttackDeliveryMode.ImmediateImpact;
 
+    [ExportCategory("Melee Engagement Slots")]
+
+    [Export(PropertyHint.Range, "0.5,2,0.05")]
+    public float MeleeSlotHorizontalSpacingMultiplier
+    { get; set; } = 1.0f;
+
+    [Export(PropertyHint.Range, "0.25,2,0.05")]
+    public float MeleeSlotVerticalSpacingMultiplier
+    { get; set; } = 0.75f;
+
     [ExportCategory("Movement")]
 
     [Export(PropertyHint.Range, "0,1000,1")]
@@ -147,6 +157,22 @@ public partial class MonsterDefinition : Resource
             errors.Add(
                 $"{ContentId}: AttackLungeDistance cannot " +
                 "be negative.");
+        }
+        if (!float.IsFinite(
+                MeleeSlotHorizontalSpacingMultiplier)
+            || MeleeSlotHorizontalSpacingMultiplier < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: melee slot horizontal spacing " +
+                "must be a finite non-negative number.");
+        }
+        if (!float.IsFinite(
+                MeleeSlotVerticalSpacingMultiplier)
+            || MeleeSlotVerticalSpacingMultiplier < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: melee slot vertical spacing " +
+                "must be a finite non-negative number.");
         }
         if (EntrySpeed < 0.0f)
         {

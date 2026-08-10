@@ -3,12 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\jafox\\github\\Questbar\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\content\\registries\\abilitycontentregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:content\\registries\\abilitycontentregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\actorscalepresentationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\actorscalepresentationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\actors\\monsteractorcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\actors\\monsteractorcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,7 +14,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -26,28 +22,15 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "ActorScalePresentationController.cs",
-              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\ActorScalePresentationController.cs",
-              "RelativeDocumentMoniker": "Controllers\\ActorScalePresentationController.cs",
-              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\ActorScalePresentationController.cs",
-              "RelativeToolTip": "Controllers\\ActorScalePresentationController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAxwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-10T16:51:55.57Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "AbilityContentRegistry.cs",
-              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Content\\Registries\\AbilityContentRegistry.cs",
-              "RelativeDocumentMoniker": "Content\\Registries\\AbilityContentRegistry.cs",
-              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Content\\Registries\\AbilityContentRegistry.cs",
-              "RelativeToolTip": "Content\\Registries\\AbilityContentRegistry.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAFAAAAAAAAAA==",
+              "Title": "MonsterActorController.cs",
+              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\MonsterActorController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Actors\\MonsterActorController.cs",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\MonsterActorController.cs",
+              "RelativeToolTip": "Controllers\\Actors\\MonsterActorController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-10T04:46:35.653Z",
+              "WhenOpened": "2026-08-10T19:22:42.541Z",
               "EditorCaption": ""
             }
           ]
