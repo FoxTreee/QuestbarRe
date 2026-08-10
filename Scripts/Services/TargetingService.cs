@@ -22,8 +22,20 @@ public partial class TargetingService : Node
     public MonsterActorController? SelectPriorityMonster(
         IReadOnlyList<MonsterActorController> candidates)
     {
+        return SelectPriorityMonster(
+            candidates,
+            out _);
+    }
+
+
+    public MonsterActorController? SelectPriorityMonster(
+        IReadOnlyList<MonsterActorController> candidates,
+        out HeroTargetDecision decision)
+    {
         MonsterActorController? selectedTarget =
             null;
+
+        int validCandidateCount = 0;
 
         foreach (
             MonsterActorController candidate
@@ -31,6 +43,8 @@ public partial class TargetingService : Node
         {
             if (!IsValidMonsterTarget(candidate))
                 continue;
+
+            validCandidateCount++;
 
             if (selectedTarget is null
                 || candidate.GlobalPosition.X
@@ -41,7 +55,327 @@ public partial class TargetingService : Node
             }
         }
 
+        decision = new HeroTargetDecision
+        {
+            SelectedTarget = selectedTarget,
+            ValidCandidateCount = validCandidateCount,
+            SelectionRule = "LegacyRightmost",
+            SelectedRuleValue =
+                selectedTarget?.GlobalPosition.X ?? 0.0f
+        };
+
         return selectedTarget;
+    }
+
+
+    public MonsterActorController? SelectPriorityMonster(
+        HeroActorController hero,
+        IReadOnlyList<MonsterActorController> candidates,
+        IReadOnlyList<HeroActorController> partyMembers,
+        out HeroTargetDecision decision)
+    {
+        HeroCombatStanceProfile stanceProfile =
+            hero.ActiveStanceProfile;
+
+        float highestCurrentHealth =
+            GetHighestCurrentMonsterHealth(candidates);
+
+        float highestDangerRating =
+            GetHighestMonsterDangerRating(candidates);
+
+        HeroTargetScore? selectedScore = null;
+        HeroTargetScore? currentTargetScore = null;
+        int validCandidateCount = 0;
+
+        foreach (MonsterActorController candidate
+            in candidates)
+        {
+            if (!IsValidMonsterTarget(candidate))
+                continue;
+
+            validCandidateCount++;
+
+            HeroTargetScore score = ScoreMonsterForHero(
+                hero,
+                candidate,
+                partyMembers,
+                stanceProfile,
+                highestCurrentHealth,
+                highestDangerRating);
+
+            if (candidate == hero.CurrentTarget)
+                currentTargetScore = score;
+
+            if (selectedScore is null
+                || IsBetterHeroTargetScore(
+                    hero,
+                    score,
+                    selectedScore))
+            {
+                selectedScore = score;
+            }
+        }
+
+        decision = new HeroTargetDecision
+        {
+            SelectedTarget = selectedScore?.Target,
+            ValidCandidateCount = validCandidateCount,
+            SelectionRule = $"{hero.CombatStance}StanceScore",
+            SelectedRuleValue = selectedScore?.TotalScore ?? 0.0f,
+            SelectedScore = selectedScore,
+            CurrentTargetScore = currentTargetScore
+        };
+
+        return selectedScore?.Target;
+    }
+
+
+    private HeroTargetScore ScoreMonsterForHero(
+        HeroActorController hero,
+        MonsterActorController monster,
+        IReadOnlyList<HeroActorController> partyMembers,
+        HeroCombatStanceProfile stanceProfile,
+        float highestCurrentHealth,
+        float highestDangerRating)
+    {
+        float healthFactor = highestCurrentHealth > 0.0f
+            ? monster.Health.CurrentHealth / highestCurrentHealth
+            : 0.0f;
+
+        healthFactor = Mathf.Clamp(
+            healthFactor,
+            0.0f,
+            1.0f);
+
+        float dangerFactor = highestDangerRating > 0.0f
+            ? monster.Definition.DangerRating / highestDangerRating
+            : 0.0f;
+
+        dangerFactor = Mathf.Clamp(
+            dangerFactor,
+            0.0f,
+            1.0f);
+
+        int otherHeroAttackerCount =
+            CountOtherHeroAttackers(
+                hero,
+                monster,
+                partyMembers);
+
+        int preferredHeroAttackerCount =
+            System.Math.Max(
+                monster.Definition.PreferredHeroAttackerCount,
+                1);
+
+        int saturationLevel = System.Math.Max(
+            otherHeroAttackerCount
+                - preferredHeroAttackerCount
+                + 1,
+            0);
+
+        float lowestHealthScore =
+            (1.0f - healthFactor)
+            * stanceProfile.LowestCurrentHealthWeight;
+
+        float highestHealthScore =
+            healthFactor
+            * stanceProfile.HighestCurrentHealthWeight;
+
+        float dangerScore =
+            dangerFactor
+            * stanceProfile.MonsterDangerWeight;
+
+        float coverageScore = otherHeroAttackerCount
+            < preferredHeroAttackerCount
+            ? stanceProfile.UntargetedCoverageBonus
+            : 0.0f;
+
+        float healthyAllySupportScore =
+            ShouldSupportHealthyAlly(
+                hero,
+                monster,
+                stanceProfile)
+                ? stanceProfile.HealthyAllySupportBonus
+                : 0.0f;
+
+        float saturationPenalty =
+            saturationLevel
+            * stanceProfile.SaturationPenaltyPerHero;
+
+        float aggroScore = GetAggroScore(
+            hero,
+            monster,
+            stanceProfile);
+
+        float currentTargetScore = monster == hero.CurrentTarget
+            ? stanceProfile.CurrentTargetBonus
+            : 0.0f;
+
+        float totalScore =
+            lowestHealthScore
+            + highestHealthScore
+            + dangerScore
+            + coverageScore
+            + healthyAllySupportScore
+            - saturationPenalty
+            + aggroScore
+            + currentTargetScore;
+
+        return new HeroTargetScore
+        {
+            Target = monster,
+            LowestHealthScore = lowestHealthScore,
+            HighestHealthScore = highestHealthScore,
+            DangerScore = dangerScore,
+            CoverageScore = coverageScore,
+            HealthyAllySupportScore = healthyAllySupportScore,
+            SaturationPenalty = saturationPenalty,
+            AggroScore = aggroScore,
+            CurrentTargetScore = currentTargetScore,
+            TotalScore = totalScore,
+            OtherHeroAttackerCount = otherHeroAttackerCount,
+            PreferredHeroAttackerCount =
+                preferredHeroAttackerCount
+        };
+    }
+
+
+    private static bool IsBetterHeroTargetScore(
+        HeroActorController hero,
+        HeroTargetScore candidate,
+        HeroTargetScore selected)
+    {
+        if (candidate.TotalScore > selected.TotalScore
+            && !Mathf.IsEqualApprox(
+                candidate.TotalScore,
+                selected.TotalScore))
+        {
+            return true;
+        }
+
+        if (!Mathf.IsEqualApprox(
+            candidate.TotalScore,
+            selected.TotalScore))
+        {
+            return false;
+        }
+
+        if (candidate.Target == hero.CurrentTarget
+            && selected.Target != hero.CurrentTarget)
+        {
+            return true;
+        }
+
+        if (selected.Target == hero.CurrentTarget)
+            return false;
+
+        return candidate.Target.GlobalPosition.X
+            > selected.Target.GlobalPosition.X;
+    }
+
+
+    private int CountOtherHeroAttackers(
+        HeroActorController hero,
+        MonsterActorController monster,
+        IReadOnlyList<HeroActorController> partyMembers)
+    {
+        int attackerCount = 0;
+
+        foreach (HeroActorController partyMember
+            in partyMembers)
+        {
+            if (partyMember == hero
+                || !IsValidHeroTarget(partyMember)
+                || partyMember.CurrentTarget != monster)
+            {
+                continue;
+            }
+
+            attackerCount++;
+        }
+
+        return attackerCount;
+    }
+
+
+    private static bool ShouldSupportHealthyAlly(
+        HeroActorController hero,
+        MonsterActorController monster,
+        HeroCombatStanceProfile stanceProfile)
+    {
+        HeroActorController? target = monster.CurrentTarget;
+
+        if (target == hero
+            || !IsValidHeroTarget(target)
+            || target!.Health.MaximumHealth <= 0.0f)
+        {
+            return false;
+        }
+
+        float healthPercent =
+            target.Health.CurrentHealth
+            / target.Health.MaximumHealth
+            * 100.0f;
+
+        return healthPercent
+            >= stanceProfile.HealthyAllyMinimumHealthPercent;
+    }
+
+
+    private static float GetAggroScore(
+        HeroActorController hero,
+        MonsterActorController monster,
+        HeroCombatStanceProfile stanceProfile)
+    {
+        HeroActorController? target = monster.CurrentTarget;
+
+        if (!IsValidHeroTarget(target))
+            return 0.0f;
+
+        if (target == hero)
+            return -stanceProfile.AvoidAggroPenalty;
+
+        return stanceProfile.SeekAggroBonus;
+    }
+
+
+    private float GetHighestCurrentMonsterHealth(
+        IReadOnlyList<MonsterActorController> candidates)
+    {
+        float highestCurrentHealth = 0.0f;
+
+        foreach (MonsterActorController candidate
+            in candidates)
+        {
+            if (!IsValidMonsterTarget(candidate))
+                continue;
+
+            highestCurrentHealth = Mathf.Max(
+                highestCurrentHealth,
+                candidate.Health.CurrentHealth);
+        }
+
+        return highestCurrentHealth;
+    }
+
+
+    private float GetHighestMonsterDangerRating(
+        IReadOnlyList<MonsterActorController> candidates)
+    {
+        float highestDangerRating = 0.0f;
+
+        foreach (MonsterActorController candidate
+            in candidates)
+        {
+            if (!IsValidMonsterTarget(candidate))
+                continue;
+
+            highestDangerRating = Mathf.Max(
+                highestDangerRating,
+                candidate.Definition.DangerRating);
+        }
+
+        return highestDangerRating;
     }
 
 

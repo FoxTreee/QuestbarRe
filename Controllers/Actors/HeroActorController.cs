@@ -43,14 +43,27 @@ public partial class HeroActorController : Node2D
 	private AbilityDefinition? _activeAbility;
 	private HeroActorController? _activeAbilityTarget;
 	private double _abilityCastTimeRemaining;
+	private double _targetCommitmentRemainingSeconds;
+	private double _targetReassessmentRemainingSeconds;
 	private IReadOnlyList<HeroActorController> _partyMembers =
 		System.Array.Empty<HeroActorController>();
 
 	public HeroCombatProfile CombatProfile { get; } = new();
 	public float CombatPresentationScale { get; private set; } = 1.0f;
 	public bool IsIncapacitated => _state == HeroState.Incapacitated;
+	public HeroCombatStance CombatStance =>
+		CombatProfile.CombatStance;
+	public double TargetCommitmentRemainingSeconds =>
+		_targetCommitmentRemainingSeconds;
+	public double TargetReassessmentRemainingSeconds =>
+		_targetReassessmentRemainingSeconds;
 	private bool UsesMeleeEngagementSlots =>
 		HasCombatTag(HeroCombatTag.Melee);
+
+	public HeroCombatStanceProfile ActiveStanceProfile =>
+		Definition?.GetStanceProfile(CombatStance)
+		?? throw new System.InvalidOperationException(
+			$"{Name} has no configured HeroDefinition.");
 
 	public void SetCombatPresentationScale(float scale)
 	{
@@ -151,6 +164,16 @@ public partial class HeroActorController : Node2D
 
 		Definition = definition;
 		CombatTagMask = definition.CombatTagMask;
+		CombatProfile.CombatStance =
+			definition.StartingCombatStance;
+		CombatProfile.MinimumTargetCommitmentSeconds =
+			definition.MinimumTargetCommitmentSeconds;
+		CombatProfile.TargetReassessmentIntervalSeconds =
+			definition.TargetReassessmentIntervalSeconds;
+		CombatProfile.RequiredSwitchAdvantagePercent =
+			definition.RequiredSwitchAdvantagePercent;
+		CombatProfile.LogTargetingDecisions =
+			definition.LogTargetingDecisions;
 		TemporaryMaximumHealth = definition.MaximumHealth;
 		TemporaryAttackDamage = definition.AttackDamage;
 		TemporaryAttackRange = definition.AttackRange;
@@ -177,6 +200,32 @@ public partial class HeroActorController : Node2D
 		}
 
 		_abilityCooldowns.Configure(_abilities);
+	}
+
+	public void SetCombatStance(HeroCombatStance stance)
+	{
+		if (!System.Enum.IsDefined(
+			typeof(HeroCombatStance),
+			stance))
+		{
+			throw new System.ArgumentOutOfRangeException(
+				nameof(stance),
+				stance,
+				"Unknown hero combat stance.");
+		}
+
+		if (CombatStance == stance)
+			return;
+
+		CombatProfile.CombatStance = stance;
+		ResetTargetDecisionTimers();
+
+		if (CombatProfile.LogTargetingDecisions)
+		{
+			DebugLog.Print(
+				$"{Name} changed combat stance to " +
+				$"{CombatStance}.");
+		}
 	}
 
 	public bool TryGetAbility(
@@ -369,6 +418,7 @@ public partial class HeroActorController : Node2D
 		MeleeEngagementSlots.Clear();
 
 		CurrentTarget = null;
+		ResetTargetDecisionTimers();
 
 		_attackCooldownRemaining = 0.0;
 		_attackTimeRemaining = 0.0;
@@ -453,7 +503,8 @@ public partial class HeroActorController : Node2D
 			$"{Name} initialized with " +
 			$"{Health.CurrentHealth}/" +
 			$"{Health.MaximumHealth} health. " +
-			$"Combat tags={CombatTags}.");
+			$"Combat tags={CombatTags}. " +
+			$"Stance={CombatStance}.");
 	}
 	
 	public FacingDirection Facing { get; private set; }
@@ -476,6 +527,7 @@ public partial class HeroActorController : Node2D
 	{
 		_abilityCooldowns.Update(delta);
 		UpdatePassiveRecovery(delta);
+		UpdateTargetDecisionTimers(delta);
 		_movedThisFrame = false;
 		UpdateFacingTowardTarget();
 
@@ -554,6 +606,53 @@ public partial class HeroActorController : Node2D
 			* (float)delta;
 
 		Health.ApplyPassiveRecovery(requestedRecovery);
+	}
+
+	private void UpdateTargetDecisionTimers(double delta)
+	{
+		if (JourneyState.CurrentState
+				!= JourneyStateService.JourneyState.Encounter
+			|| !Targeting.IsValidMonsterTarget(CurrentTarget))
+		{
+			return;
+		}
+
+		_targetCommitmentRemainingSeconds =
+			Mathf.Max(
+				0.0,
+				_targetCommitmentRemainingSeconds - delta);
+
+		_targetReassessmentRemainingSeconds =
+			Mathf.Max(
+				0.0,
+				_targetReassessmentRemainingSeconds - delta);
+	}
+
+	private void BeginTargetCommitment()
+	{
+		_targetCommitmentRemainingSeconds =
+			Mathf.Max(
+				CombatProfile.MinimumTargetCommitmentSeconds,
+				0.0f);
+
+		_targetReassessmentRemainingSeconds =
+			Mathf.Max(
+				CombatProfile.TargetReassessmentIntervalSeconds,
+				0.0f);
+	}
+
+	private void RestartTargetReassessmentTimer()
+	{
+		_targetReassessmentRemainingSeconds =
+			Mathf.Max(
+				CombatProfile.TargetReassessmentIntervalSeconds,
+				0.0f);
+	}
+
+	private void ResetTargetDecisionTimers()
+	{
+		_targetCommitmentRemainingSeconds = 0.0;
+		_targetReassessmentRemainingSeconds = 0.0;
 	}
 
 	private double _movementAnimationGraceRemaining;
@@ -1429,6 +1528,7 @@ public partial class HeroActorController : Node2D
 		ReleaseMeleeEngagementSlot(CurrentTarget);
 		MeleeEngagementSlots.Clear();
 		CurrentTarget = null;
+		ResetTargetDecisionTimers();
 
 		_attackCooldownRemaining = 0.0;
 		_attackTimeRemaining = 0.0;
@@ -1511,6 +1611,7 @@ public partial class HeroActorController : Node2D
 			!= JourneyStateService.JourneyState.Encounter)
 		{
 			ReleaseMeleeEngagementSlot(CurrentTarget);
+			ResetTargetDecisionTimers();
 		}
 
 		if (IsIncapacitated)
@@ -1597,10 +1698,17 @@ public partial class HeroActorController : Node2D
 	{
 		if (IsIncapacitated)
 			return;
-		
-		if (CurrentTarget is not null
+
+		bool hasValidCurrentTarget =
+			CurrentTarget is not null
 			&& Targeting.IsValidMonsterTarget(CurrentTarget)
-			&& ContainsTarget(candidates, CurrentTarget))
+			&& ContainsTarget(candidates, CurrentTarget);
+
+		if (hasValidCurrentTarget
+			&& (_state == HeroState.Attacking
+				|| _state == HeroState.UsingAbility
+				|| _targetCommitmentRemainingSeconds > 0.0
+				|| _targetReassessmentRemainingSeconds > 0.0))
 		{
 			return;
 		}
@@ -1608,15 +1716,39 @@ public partial class HeroActorController : Node2D
 		MonsterActorController? previousTarget =
 			CurrentTarget;
 
-		CurrentTarget = Targeting.SelectPriorityMonster(candidates);
+		MonsterActorController? proposedTarget =
+			Targeting.SelectPriorityMonster(
+				this,
+				candidates,
+				_partyMembers,
+				out HeroTargetDecision decision);
 
-		if (CurrentTarget == previousTarget)
+		float requiredSwitchScore = 0.0f;
+
+		if (hasValidCurrentTarget
+			&& proposedTarget != previousTarget
+			&& !DoesTargetSwitchMeetAdvantage(
+				decision,
+				out requiredSwitchScore))
+		{
+			RestartTargetReassessmentTimer();
 			return;
+		}
+
+		if (proposedTarget == previousTarget)
+		{
+			RestartTargetReassessmentTimer();
+			return;
+		}
+
+		CurrentTarget = proposedTarget;
 
 		ReleaseMeleeEngagementSlot(previousTarget);
 
 		if (CurrentTarget is null)
 		{
+			ResetTargetDecisionTimers();
+
 			DebugLog.Print(
 				$"{Name} has no valid monster target.");
 
@@ -1624,9 +1756,18 @@ public partial class HeroActorController : Node2D
 		}
 
 		_initialAttackPending = true;
+		BeginTargetCommitment();
 		TryGetMeleeEngagementPosition(
 			CurrentTarget!,
 			out _);
+
+		if (CombatProfile.LogTargetingDecisions)
+		{
+			PrintTargetDecision(
+				decision,
+				previousTarget,
+				requiredSwitchScore);
+		}
 		
 		DebugLog.Print(
 			$"{Name} targeted {CurrentTarget.Name} " +
@@ -1637,6 +1778,78 @@ public partial class HeroActorController : Node2D
 		{
 			_state = HeroState.ApproachingTarget;
 		}
+	}
+
+	private bool DoesTargetSwitchMeetAdvantage(
+		HeroTargetDecision decision,
+		out float requiredSwitchScore)
+	{
+		requiredSwitchScore = 0.0f;
+
+		if (decision.SelectedScore is null
+			|| decision.CurrentTargetScore is null)
+		{
+			return false;
+		}
+
+		float currentScore =
+			decision.CurrentTargetScore.TotalScore;
+
+		float requiredAdvantage =
+			Mathf.Max(
+				Mathf.Abs(currentScore),
+				1.0f)
+			* Mathf.Max(
+				CombatProfile.RequiredSwitchAdvantagePercent,
+				0.0f)
+			/ 100.0f;
+
+		requiredSwitchScore =
+			currentScore + requiredAdvantage;
+
+		return decision.SelectedScore.TotalScore
+			> requiredSwitchScore
+			|| Mathf.IsEqualApprox(
+				decision.SelectedScore.TotalScore,
+				requiredSwitchScore);
+	}
+
+	private void PrintTargetDecision(
+		HeroTargetDecision decision,
+		MonsterActorController? previousTarget,
+		float requiredSwitchScore)
+	{
+		if (decision.SelectedScore is not HeroTargetScore score)
+			return;
+
+		string previousTargetText = previousTarget is not null
+			&& GodotObject.IsInstanceValid(previousTarget)
+				? previousTarget.Name.ToString()
+				: "None";
+
+		string switchRequirementText =
+			decision.CurrentTargetScore is null
+				? "Initial"
+				: requiredSwitchScore.ToString("0.##");
+
+		DebugLog.Print(
+			$"{Name} [{CombatStance}] target decision: " +
+			$"Selected={score.Target.Name}; " +
+			$"Previous={previousTargetText}; " +
+			$"Score={score.TotalScore:0.##}; " +
+			$"Health=" +
+			$"{score.LowestHealthScore + score.HighestHealthScore:0.##}; " +
+			$"Danger={score.DangerScore:0.##}; " +
+			$"Coverage={score.CoverageScore:0.##}; " +
+			$"Support={score.HealthyAllySupportScore:0.##}; " +
+			$"Saturation=-{score.SaturationPenalty:0.##}; " +
+			$"Aggro={score.AggroScore:0.##}; " +
+			$"Stickiness={score.CurrentTargetScore:0.##}; " +
+			$"Attackers={score.OtherHeroAttackerCount}/" +
+			$"{score.PreferredHeroAttackerCount}; " +
+			$"SwitchRequired={switchRequirementText}; " +
+			$"Commitment=" +
+			$"{CombatProfile.MinimumTargetCommitmentSeconds:0.##}s.");
 	}
 
 	private static bool ContainsTarget(IReadOnlyList<MonsterActorController> candidates, MonsterActorController target)
@@ -1658,6 +1871,7 @@ public partial class HeroActorController : Node2D
 		ReleaseMeleeEngagementSlot(CurrentTarget);
 		CurrentTarget = null;
 		_initialAttackPending = false;
+		ResetTargetDecisionTimers();
 
 		if (IsIncapacitated)
 			return;

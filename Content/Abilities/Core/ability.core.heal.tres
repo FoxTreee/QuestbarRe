@@ -12,6 +12,6 @@ CastTimeSeconds = 1.5
 TargetMode = 2
 Range = 0.0
 EffectType = 2
-BaseHealing = 30.0
+BaseHealing = 300.0
 AutoCastHealthThresholdPercent = 75.0
 DesignerNotes = "Spell healing is intentionally separate from passive out-of-combat recovery so future Spirit scaling applies only to priest healing."

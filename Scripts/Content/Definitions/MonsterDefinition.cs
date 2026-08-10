@@ -51,16 +51,6 @@ public partial class MonsterDefinition : Resource
         set;
     } = AttackDeliveryMode.ImmediateImpact;
 
-    [ExportCategory("Melee Engagement Slots")]
-
-    [Export(PropertyHint.Range, "0.5,2,0.05")]
-    public float MeleeSlotHorizontalSpacingMultiplier
-    { get; set; } = 1.0f;
-
-    [Export(PropertyHint.Range, "0.25,2,0.05")]
-    public float MeleeSlotVerticalSpacingMultiplier
-    { get; set; } = 0.75f;
-
     [ExportCategory("Movement")]
 
     [Export(PropertyHint.Range, "0,1000,1")]
@@ -83,6 +73,15 @@ public partial class MonsterDefinition : Resource
     [Export]
     public MonsterTargetingStyle TargetingStyle { get; set; } =
         MonsterTargetingStyle.LowestHealthHero;
+
+
+    [ExportCategory("Hero Targeting Response")]
+
+    [Export(PropertyHint.Range, "0,1000,0.1")]
+    public float DangerRating { get; set; } = 1.0f;
+
+    [Export(PropertyHint.Range, "1,20,1")]
+    public int PreferredHeroAttackerCount { get; set; } = 1;
 
 
     [ExportCategory("Abilities")]
@@ -158,22 +157,6 @@ public partial class MonsterDefinition : Resource
                 $"{ContentId}: AttackLungeDistance cannot " +
                 "be negative.");
         }
-        if (!float.IsFinite(
-                MeleeSlotHorizontalSpacingMultiplier)
-            || MeleeSlotHorizontalSpacingMultiplier < 0.0f)
-        {
-            errors.Add(
-                $"{ContentId}: melee slot horizontal spacing " +
-                "must be a finite non-negative number.");
-        }
-        if (!float.IsFinite(
-                MeleeSlotVerticalSpacingMultiplier)
-            || MeleeSlotVerticalSpacingMultiplier < 0.0f)
-        {
-            errors.Add(
-                $"{ContentId}: melee slot vertical spacing " +
-                "must be a finite non-negative number.");
-        }
         if (EntrySpeed < 0.0f)
         {
             errors.Add(
@@ -185,6 +168,17 @@ public partial class MonsterDefinition : Resource
             errors.Add(
                 $"{ContentId}: CombatMoveSpeed cannot be " +
                 "negative.");
+        }
+        if (DangerRating < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: DangerRating cannot be negative.");
+        }
+        if (PreferredHeroAttackerCount < 1)
+        {
+            errors.Add(
+                $"{ContentId}: PreferredHeroAttackerCount " +
+                "must be at least one.");
         }
 
         HashSet<string> seenAbilityIds =

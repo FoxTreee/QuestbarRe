@@ -1,8 +1,42 @@
 [gd_resource type="Resource" script_class="HeroDefinition" format=3 uid="uid://dv2fhelfoodu3"]
 
 [ext_resource type="PackedScene" uid="uid://cudeye6bri0fl" path="res://Rook.tscn" id="1_fciy1"]
+[ext_resource type="Script" uid="uid://cn13kih68tti5" path="res://Scripts/Content/Definitions/HeroCombatStanceProfile.cs" id="2_cs8h8"]
 [ext_resource type="Resource" uid="uid://hvqeum2sq2xp" path="res://Content/HeroClasses/Core/class.core.rogue.tres" id="2_rho48"]
 [ext_resource type="Script" uid="uid://b38xxk3rax5nx" path="res://Scripts/Content/Definitions/HeroDefinition.cs" id="3_cs8h8"]
+
+[sub_resource type="Resource" id="Resource_wiu11"]
+script = ExtResource("2_cs8h8")
+HighestCurrentHealthWeight = 100.0
+MonsterDangerWeight = 15.0
+UntargetedCoverageBonus = 50.0
+SaturationPenaltyPerHero = 10.0
+SeekAggroBonus = 100.0
+CriticalAllyRescueBonus = 150.0
+RescueCriticalAllies = true
+
+[sub_resource type="Resource" id="Resource_rtunn"]
+script = ExtResource("2_cs8h8")
+HighestCurrentHealthWeight = 10.0
+MonsterDangerWeight = 100.0
+UntargetedCoverageBonus = 35.0
+SaturationPenaltyPerHero = 15.0
+SeekAggroBonus = 75.0
+KitingAllyRescueBonus = 150.0
+CriticalAllyRescueBonus = 100.0
+RescueKitingAllies = true
+RescueCriticalAllies = true
+
+[sub_resource type="Resource" id="Resource_nat8a"]
+script = ExtResource("2_cs8h8")
+LowestCurrentHealthWeight = 100.0
+MonsterDangerWeight = 10.0
+HealthyAllySupportBonus = 50.0
+SaturationPenaltyPerHero = 10.0
+AvoidAggroPenalty = 100.0
+CriticalAllyRescueBonus = 80.0
+KiteWhenTargeted = true
+RescueCriticalAllies = true
 
 [resource]
 script = ExtResource("3_cs8h8")
@@ -10,6 +44,7 @@ ContentId = "hero.core.rook"
 DisplayName = "Rook"
 ClassDefinition = ExtResource("2_rho48")
 ActorScene = ExtResource("1_fciy1")
+StartingCombatStance = 2
 MaximumHealth = 150.0
 AttackInterval = 0.7999999999999999
 AttackDuration = 0.25

@@ -898,6 +898,7 @@ public partial class CombatController : Node
 		if (!IsCombatActive)
 			return;
 
+		RefreshHeroTargets();
 		RefreshMonsterTargets();
 	}
 

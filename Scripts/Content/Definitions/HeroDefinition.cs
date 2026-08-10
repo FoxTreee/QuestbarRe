@@ -38,6 +38,53 @@ public partial class HeroDefinition : Resource
         (HeroCombatTag)CombatTagMask;
 
 
+    [ExportCategory("Combat Stance")]
+
+    [Export]
+    public HeroCombatStance StartingCombatStance
+    { get; set; } = HeroCombatStance.Defensive;
+
+    [Export(PropertyHint.Range, "0,10,0.1")]
+    public float MinimumTargetCommitmentSeconds
+    { get; set; } = 2.0f;
+
+    [Export(PropertyHint.Range, "0.05,5,0.05")]
+    public float TargetReassessmentIntervalSeconds
+    { get; set; } = 0.5f;
+
+    [Export(PropertyHint.Range, "0,500,1")]
+    public float RequiredSwitchAdvantagePercent
+    { get; set; } = 25.0f;
+
+    [Export]
+    public bool LogTargetingDecisions
+    { get; set; } = true;
+
+
+    [ExportCategory("Passive Stance Profile")]
+
+    [Export]
+    public HeroCombatStanceProfile PassiveStanceProfile
+    { get; set; } =
+        HeroCombatStanceProfile.CreatePassiveDefaults();
+
+
+    [ExportCategory("Defensive Stance Profile")]
+
+    [Export]
+    public HeroCombatStanceProfile DefensiveStanceProfile
+    { get; set; } =
+        HeroCombatStanceProfile.CreateDefensiveDefaults();
+
+
+    [ExportCategory("Aggressive Stance Profile")]
+
+    [Export]
+    public HeroCombatStanceProfile AggressiveStanceProfile
+    { get; set; } =
+        HeroCombatStanceProfile.CreateAggressiveDefaults();
+
+
     [ExportCategory("Health")]
 
     [Export(PropertyHint.Range, "1,1000000,1")]
@@ -88,6 +135,23 @@ public partial class HeroDefinition : Resource
     [Export]
     public Godot.Collections.Array<string> AbilityContentIds
     { get; set; } = new();
+
+
+    public HeroCombatStanceProfile GetStanceProfile(
+        HeroCombatStance stance)
+    {
+        return stance switch
+        {
+            HeroCombatStance.Passive =>
+                PassiveStanceProfile,
+
+            HeroCombatStance.Aggressive =>
+                AggressiveStanceProfile,
+
+            _ =>
+                DefensiveStanceProfile
+        };
+    }
 
 
     public IReadOnlyList<string> GetValidationErrors()
@@ -187,6 +251,50 @@ public partial class HeroDefinition : Resource
                 "negative.");
         }
 
+        if (!System.Enum.IsDefined(
+            typeof(HeroCombatStance),
+            StartingCombatStance))
+        {
+            errors.Add(
+                $"{ContentId}: StartingCombatStance is invalid.");
+        }
+
+        if (MinimumTargetCommitmentSeconds < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: MinimumTargetCommitmentSeconds " +
+                "cannot be negative.");
+        }
+
+        if (TargetReassessmentIntervalSeconds <= 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: TargetReassessmentIntervalSeconds " +
+                "must be greater than zero.");
+        }
+
+        if (RequiredSwitchAdvantagePercent < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: RequiredSwitchAdvantagePercent " +
+                "cannot be negative.");
+        }
+
+        AppendStanceProfileErrors(
+            errors,
+            PassiveStanceProfile,
+            "PassiveStanceProfile");
+
+        AppendStanceProfileErrors(
+            errors,
+            DefensiveStanceProfile,
+            "DefensiveStanceProfile");
+
+        AppendStanceProfileErrors(
+            errors,
+            AggressiveStanceProfile,
+            "AggressiveStanceProfile");
+
         HashSet<string> seenAbilityIds =
             new(System.StringComparer.OrdinalIgnoreCase);
 
@@ -210,5 +318,27 @@ public partial class HeroDefinition : Resource
         }
 
         return errors;
+    }
+
+
+    private void AppendStanceProfileErrors(
+        ICollection<string> errors,
+        HeroCombatStanceProfile profile,
+        string profileName)
+    {
+        if (!GodotObject.IsInstanceValid(profile))
+        {
+            errors.Add(
+                $"{ContentId}: {profileName} is required.");
+
+            return;
+        }
+
+        foreach (string profileError
+            in profile.GetValidationErrors(profileName))
+        {
+            errors.Add(
+                $"{ContentId}: {profileError}");
+        }
     }
 }
