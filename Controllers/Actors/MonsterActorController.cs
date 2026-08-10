@@ -75,6 +75,15 @@ public partial class MonsterActorController : Node2D
 	[Export(PropertyHint.Range, "0,10,0.1")]
 	public float FacingDeadZone { get; set; } = 1.0f;
 
+	[ExportCategory("Melee Engagement Slots")]
+	[Export(PropertyHint.Range, "0.5,2,0.05")]
+	public float MeleeSlotHorizontalSpacingMultiplier
+	{ get; set; } = 1.0f;
+
+	[Export(PropertyHint.Range, "0.25,2,0.05")]
+	public float MeleeSlotVerticalSpacingMultiplier
+	{ get; set; } = 0.75f;
+
 	public float AttackDamage { get; set; }
 
 	public MonsterDefinition Definition
@@ -145,6 +154,7 @@ public partial class MonsterActorController : Node2D
 		Definition = definition;
 
 		Threat.Clear();
+		SetCurrentTarget(null);
 		MeleeEngagementSlots.Clear();
 		_forcedTarget = null;
 		_forcedTargetTimeRemaining = 0.0;
@@ -179,7 +189,7 @@ public partial class MonsterActorController : Node2D
 
 		_forcedTarget = target;
 		_forcedTargetTimeRemaining = durationSeconds;
-		CurrentTarget = target;
+		SetCurrentTarget(target);
 
 		_attackCooldownRemaining = 0.0;
 		_attackTimeRemaining = 0.0;
@@ -211,7 +221,7 @@ public partial class MonsterActorController : Node2D
 		if (IsValidHeroTarget(CurrentTarget))
 			return;
 
-		CurrentTarget = null;
+		SetCurrentTarget(null);
 
 		_attackCooldownRemaining = 0.0;
 		_attackTimeRemaining = 0.0;
@@ -234,7 +244,7 @@ public partial class MonsterActorController : Node2D
 
 		_state = MonsterState.Dead;
 		MeleeEngagementSlots.Clear();
-		CurrentTarget = null;
+		SetCurrentTarget(null);
 		_forcedTarget = null;
 		_forcedTargetTimeRemaining = 0.0;
 
@@ -410,6 +420,186 @@ public partial class MonsterActorController : Node2D
 			&& !hero.IsIncapacitated;
 	}
 
+	private bool UsesMeleeEngagementSlots(
+		HeroActorController target)
+	{
+		float scaledAttackRange =
+			Mathf.Max(0.0f, CombatProfile.AttackRange)
+			* CombatPresentationScale;
+
+		float scaledArrivalDistance =
+			CombatArrivalDistance
+			* CombatPresentationScale;
+
+		return scaledAttackRange
+			<= GetBodyClearanceDistance(target)
+			+ scaledArrivalDistance;
+	}
+
+	private float GetMeleeSlotHorizontalDistance(
+		HeroActorController target)
+	{
+		float bodyClearanceDistance =
+			GetBodyClearanceDistance(target);
+
+		float adjustedDistance =
+			GetRequiredAttackDistance(target)
+			* Mathf.Max(
+				MeleeSlotHorizontalSpacingMultiplier,
+				0.0f);
+
+		return Mathf.Max(
+			bodyClearanceDistance,
+			adjustedDistance);
+	}
+
+	private float GetMeleeSlotVerticalDistance(
+		HeroActorController target)
+	{
+		float scaledMonsterRadius =
+			Mathf.Max(0.0f, CombatProfile.CombatRadius)
+			* CombatPresentationScale;
+
+		float scaledTargetRadius =
+			Mathf.Max(0.0f, target.CombatProfile.CombatRadius)
+			* target.CombatPresentationScale;
+
+		return Mathf.Max(
+			CombatArrivalDistance * CombatPresentationScale,
+			(scaledMonsterRadius + scaledTargetRadius)
+				* Mathf.Max(
+					MeleeSlotVerticalSpacingMultiplier,
+					0.0f));
+	}
+
+	private bool TryGetMeleeEngagementPosition(
+		HeroActorController target,
+		out Vector2 engagementPosition)
+	{
+		engagementPosition = Vector2.Zero;
+
+		if (!UsesMeleeEngagementSlots(target))
+			return false;
+
+		float horizontalDistance =
+			GetMeleeSlotHorizontalDistance(target);
+
+		float verticalDistance =
+			GetMeleeSlotVerticalDistance(target);
+
+		bool alreadyReserved =
+			target.MeleeEngagementSlots.TryGetReservation(
+				this,
+				out MeleeEngagementSlot slot);
+
+		if (!alreadyReserved
+			&& !target.MeleeEngagementSlots.TryReserveClosest(
+				this,
+				target.GlobalPosition,
+				horizontalDistance,
+				verticalDistance,
+				out slot))
+		{
+			return false;
+		}
+
+		engagementPosition =
+			MeleeEngagementSlotSet.GetWorldPosition(
+				slot,
+				target.GlobalPosition,
+				horizontalDistance,
+				verticalDistance);
+
+		if (!alreadyReserved)
+		{
+			DebugLog.Print(
+				$"{Name} reserved {slot} melee slot on " +
+				$"{target.Name}.");
+		}
+
+		return true;
+	}
+
+	private bool HasMeleeEngagementReservation(
+		HeroActorController target)
+	{
+		return UsesMeleeEngagementSlots(target)
+			&& target.MeleeEngagementSlots.TryGetReservation(
+				this,
+				out _);
+	}
+
+	private bool IsTargetWithinMeleeEngagementRange(
+		HeroActorController target)
+	{
+		float horizontalDistance =
+			GetMeleeSlotHorizontalDistance(target);
+
+		float verticalDistance =
+			GetMeleeSlotVerticalDistance(target);
+
+		float maximumDistance =
+			new Vector2(
+				horizontalDistance,
+				verticalDistance).Length();
+
+		float scaledTolerance =
+			CombatArrivalDistance
+			* CombatPresentationScale;
+
+		return GlobalPosition.DistanceTo(target.GlobalPosition)
+			<= maximumDistance + scaledTolerance;
+	}
+
+	private bool HasReachedMeleeEngagementPosition(
+		HeroActorController target,
+		Vector2 engagementPosition)
+	{
+		if (GlobalPosition.DistanceTo(engagementPosition)
+			<= CombatArrivalDistance)
+		{
+			return true;
+		}
+
+		// A slot can extend beyond the top or bottom of the legal ground
+		// area. If the ground constraint stops vertical movement, the
+		// monster may still engage after reaching the reserved side.
+		return Mathf.Abs(
+			GlobalPosition.X
+			- engagementPosition.X)
+			<= CombatArrivalDistance
+			&& IsTargetWithinMeleeEngagementRange(target);
+	}
+
+	private void ReleaseMeleeEngagementSlot(
+		HeroActorController? target)
+	{
+		if (target is null
+			|| !GodotObject.IsInstanceValid(target))
+		{
+			return;
+		}
+
+		target.MeleeEngagementSlots.Release(this);
+	}
+
+	private void SetCurrentTarget(
+		HeroActorController? target)
+	{
+		if (CurrentTarget == target)
+			return;
+
+		ReleaseMeleeEngagementSlot(CurrentTarget);
+		CurrentTarget = target;
+
+		if (IsValidHeroTarget(target))
+		{
+			TryGetMeleeEngagementPosition(
+				target!,
+				out _);
+		}
+	}
+
 	private float GetBodyClearanceDistance(
 		HeroActorController target)
 	{
@@ -460,6 +650,14 @@ public partial class MonsterActorController : Node2D
 			GlobalPosition.Y
 			- target.GlobalPosition.Y)
 			<= CombatArrivalDistance;
+	}
+
+	private bool IsAlignedForCurrentEngagement(
+		HeroActorController target)
+	{
+		return HasMeleeEngagementReservation(target)
+			? IsTargetWithinMeleeEngagementRange(target)
+			: IsVerticallyAligned(target);
 	}
 
 	private bool IsTargetWithinAbilityRange(
@@ -523,7 +721,7 @@ public partial class MonsterActorController : Node2D
 				continue;
 			}
 
-			if (!IsVerticallyAligned(target))
+			if (!IsAlignedForCurrentEngagement(target))
 				continue;
 
 			return ability;
@@ -586,13 +784,50 @@ public partial class MonsterActorController : Node2D
 	{
 		if (!IsValidHeroTarget(CurrentTarget))
 		{
-			CurrentTarget = null;
+			SetCurrentTarget(null);
 			_state = MonsterState.WaitingForTarget;
 			return;
 		}
 
 		HeroActorController target =
 			CurrentTarget!;
+
+		if (TryGetMeleeEngagementPosition(
+			target,
+			out Vector2 meleeEngagementPosition))
+		{
+			if (HasReachedMeleeEngagementPosition(
+				target,
+				meleeEngagementPosition))
+			{
+				_attackCooldownRemaining = 0.0;
+				_state = MonsterState.WaitingToAttack;
+				return;
+			}
+
+			float meleeMovementDistance =
+				CombatProfile.MoveSpeed * (float)delta;
+
+			GlobalPosition = GlobalPosition.MoveToward(
+				meleeEngagementPosition,
+				meleeMovementDistance);
+
+			if (!HasReachedMeleeEngagementPosition(
+				target,
+				meleeEngagementPosition))
+			{
+				return;
+			}
+
+			_attackCooldownRemaining = 0.0;
+			_state = MonsterState.WaitingToAttack;
+
+			DebugLog.Print(
+				$"{Name} entered its melee slot for " +
+				$"{target.Name}.");
+
+			return;
+		}
 
 		if (IsTargetWithinAttackRange(target)
 			&& IsVerticallyAligned(target))
@@ -632,14 +867,21 @@ public partial class MonsterActorController : Node2D
 
 		if (!IsValidHeroTarget(CurrentTarget))
 		{
-			CurrentTarget = null;
+			SetCurrentTarget(null);
 			_state = MonsterState.WaitingForTarget;
 			return;
 		}
 
+		HeroActorController target = CurrentTarget!;
+
+		bool hasMeleeReservation =
+			HasMeleeEngagementReservation(target);
+
 		bool targetMovedOutOfRange =
-			!IsTargetWithinAttackRange(CurrentTarget!)
-			|| !IsVerticallyAligned(CurrentTarget!);
+			hasMeleeReservation
+				? !IsTargetWithinMeleeEngagementRange(target)
+				: !IsTargetWithinAttackRange(target)
+					|| !IsVerticallyAligned(target);
 
 		if (targetMovedOutOfRange)
 		{
@@ -681,7 +923,7 @@ public partial class MonsterActorController : Node2D
 		if (HasValidTarget)
 			return false;
 
-		CurrentTarget = target;
+		SetCurrentTarget(target);
 		_state = MonsterState.ApproachingTarget;
 
 		DebugLog.Print(
@@ -700,7 +942,7 @@ public partial class MonsterActorController : Node2D
 			return false;
 		}
 
-		CurrentTarget = target;
+		SetCurrentTarget(target);
 
 		_attackCooldownRemaining = 0.0;
 		_attackTimeRemaining = 0.0;
@@ -740,7 +982,7 @@ public partial class MonsterActorController : Node2D
 	{
 		_forcedTarget = null;
 		_forcedTargetTimeRemaining = 0.0;
-		CurrentTarget = null;
+		SetCurrentTarget(null);
 
 		_attackCooldownRemaining = 0.0;
 		_attackTimeRemaining = 0.0;
@@ -807,7 +1049,7 @@ public partial class MonsterActorController : Node2D
 		if (!IsValidHeroTarget(CurrentTarget))
 		{
 			ClearAbilityCast();
-			CurrentTarget = null;
+			SetCurrentTarget(null);
 			_state = MonsterState.WaitingForTarget;
 			return;
 		}
@@ -815,7 +1057,7 @@ public partial class MonsterActorController : Node2D
 		HeroActorController target = CurrentTarget!;
 
 		if (!IsTargetWithinAbilityRange(target, ability)
-			|| !IsVerticallyAligned(target))
+			|| !IsAlignedForCurrentEngagement(target))
 		{
 			DebugLog.Print(
 				$"{Name} canceled '{ability.DisplayName}' " +
@@ -862,14 +1104,21 @@ public partial class MonsterActorController : Node2D
 
 		if (!IsValidHeroTarget(CurrentTarget))
 		{
-			CurrentTarget = null;
+			SetCurrentTarget(null);
 			_state = MonsterState.WaitingForTarget;
 			return;
 		}
 
+		HeroActorController target = CurrentTarget!;
+
+		bool hasMeleeReservation =
+			HasMeleeEngagementReservation(target);
+
 		bool targetStillInRange =
-			IsTargetWithinAttackRange(CurrentTarget!)
-			&& IsVerticallyAligned(CurrentTarget!);
+			hasMeleeReservation
+				? IsTargetWithinMeleeEngagementRange(target)
+				: IsTargetWithinAttackRange(target)
+					&& IsVerticallyAligned(target);
 
 		_state =
 			targetStillInRange
@@ -997,14 +1246,21 @@ public partial class MonsterActorController : Node2D
 
 		if (!IsValidHeroTarget(CurrentTarget))
 		{
-			CurrentTarget = null;
+			SetCurrentTarget(null);
 			_state = MonsterState.WaitingForTarget;
 			return;
 		}
 
+		HeroActorController target = CurrentTarget!;
+
+		bool hasMeleeReservation =
+			HasMeleeEngagementReservation(target);
+
 		bool targetStillInRange =
-			IsTargetWithinAttackRange(CurrentTarget!)
-			&& IsVerticallyAligned(CurrentTarget!);
+			hasMeleeReservation
+				? IsTargetWithinMeleeEngagementRange(target)
+				: IsTargetWithinAttackRange(target)
+					&& IsVerticallyAligned(target);
 
 		_state =
 			targetStillInRange
@@ -1019,6 +1275,7 @@ public partial class MonsterActorController : Node2D
 
 	public override void _ExitTree()
 	{
+		SetCurrentTarget(null);
 		MeleeEngagementSlots.Clear();
 	}
 }
