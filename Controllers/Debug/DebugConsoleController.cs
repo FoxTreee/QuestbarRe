@@ -49,6 +49,7 @@ public partial class DebugConsoleController : Window
 	public Button ClearButton { get; set; } = null!;
 
 	private readonly List<string> _commandHistory = new();
+	private readonly List<string> _completionCandidates = new();
 	private readonly Queue<ConsoleEntry> _outputHistory = new();
 	private readonly Dictionary<ConsoleFilter, int> _unreadCounts = new()
 	{
@@ -67,8 +68,13 @@ public partial class DebugConsoleController : Window
 		[ConsoleFilter.Error] = 0
 	};
 	private int _historyIndex;
+	private int _completionIndex;
+	private int _completionCaretColumn;
 	private int _pausedHistoryCount;
 	private long _latestEntrySequence;
+	private string _completionTextBeforeToken = string.Empty;
+	private string _completionTextAfterToken = string.Empty;
+	private string _completionAppliedText = string.Empty;
 	private bool _isDisplayPaused;
 	private bool _isAutoScrollEnabled = true;
 	private ConsoleFilter _activeFilter = ConsoleFilter.All;
@@ -236,6 +242,8 @@ public partial class DebugConsoleController : Window
 
 	private void OnCommandSubmitted(string commandText)
 	{
+		ResetCompletionCycle();
+
 		string trimmedCommand =
 			commandText.Trim();
 
@@ -500,6 +508,8 @@ public partial class DebugConsoleController : Window
 
 	private void ShowNextCommand()
 	{
+		ResetCompletionCycle();
+
 		if (_commandHistory.Count == 0)
 			return;
 
@@ -520,6 +530,8 @@ public partial class DebugConsoleController : Window
 
 	private void ShowPreviousCommand()
 	{
+		ResetCompletionCycle();
+
 		if (_commandHistory.Count == 0)
 			return;
 
@@ -552,11 +564,114 @@ public partial class DebugConsoleController : Window
 				ShowNextCommand();
 				break;
 
+			case Key.Tab:
+				ApplyCommandCompletion(
+					keyEvent.ShiftPressed);
+				break;
+
+			case Key.Backtab:
+				ApplyCommandCompletion(true);
+				break;
+
 			default:
 				return;
 		}
 
 		CommandInput.AcceptEvent();
+	}
+
+	private void ApplyCommandCompletion(bool reverse)
+	{
+		bool canContinueExistingCycle =
+			_completionCandidates.Count > 1
+			&& CommandInput.Text.Equals(
+				_completionAppliedText,
+				StringComparison.Ordinal)
+			&& CommandInput.CaretColumn
+				== _completionCaretColumn;
+
+		if (canContinueExistingCycle)
+		{
+			_completionIndex = reverse
+				? (_completionIndex - 1
+					+ _completionCandidates.Count)
+					% _completionCandidates.Count
+				: (_completionIndex + 1)
+					% _completionCandidates.Count;
+		}
+		else
+		{
+			StartCompletionCycle(reverse);
+		}
+
+		if (_completionCandidates.Count == 0)
+			return;
+
+		string completion =
+			_completionCandidates[_completionIndex];
+
+		string completedText =
+			_completionTextBeforeToken
+			+ completion
+			+ _completionTextAfterToken;
+
+		int completedCaretColumn =
+			_completionTextBeforeToken.Length
+			+ completion.Length;
+
+		CommandInput.Text = completedText;
+		CommandInput.CaretColumn =
+			completedCaretColumn;
+
+		_completionAppliedText = completedText;
+		_completionCaretColumn =
+			completedCaretColumn;
+
+		if (_completionCandidates.Count == 1)
+		{
+			_completionCandidates.Clear();
+		}
+	}
+
+	private void StartCompletionCycle(bool reverse)
+	{
+		ResetCompletionCycle();
+
+		IReadOnlyList<string> candidates =
+			Commands.GetCommandCompletions(
+				CommandInput.Text,
+				CommandInput.CaretColumn,
+				out int replacementStart,
+				out int replacementLength);
+
+		if (candidates.Count == 0)
+			return;
+
+		_completionCandidates.AddRange(candidates);
+
+		_completionTextBeforeToken =
+			CommandInput.Text.Substring(
+				0,
+				replacementStart);
+
+		_completionTextAfterToken =
+			CommandInput.Text.Substring(
+				replacementStart
+				+ replacementLength);
+
+		_completionIndex = reverse
+			? _completionCandidates.Count - 1
+			: 0;
+	}
+
+	private void ResetCompletionCycle()
+	{
+		_completionCandidates.Clear();
+		_completionIndex = 0;
+		_completionCaretColumn = -1;
+		_completionTextBeforeToken = string.Empty;
+		_completionTextAfterToken = string.Empty;
+		_completionAppliedText = string.Empty;
 	}
 
 	private static string BuildDamageMessage(CombatEvent combatEvent)

@@ -6,6 +6,24 @@ using System.Text;
 
 public partial class DebugCommandService : Node
 {
+    private static readonly string[] CanonicalCommandSyntax =
+    {
+        ".help",
+        ".status",
+        ".clear",
+        ".revive <hero_id>",
+        ".reviveAll",
+        ".kill <hero_id>",
+        ".kill partySlot <1-5>",
+        ".useAbility <hero_id> <ability_id>",
+        ".spawnMonster <monster_id> [count]",
+        ".addMonsters <count>",
+        ".setMonsterCount <count>",
+        ".startEncounter <encounter_id>",
+        ".startEncounterPool <pool_id>",
+        ".endEncounter"
+    };
+
     [ExportCategory("Dependencies")]
     [Export]
     public EncounterController Encounter { get; set; } = null!;
@@ -324,33 +342,389 @@ public partial class DebugCommandService : Node
         return output.ToString().TrimEnd();
     }
 
+    public IReadOnlyList<string> GetCommandCompletions(
+        string commandText,
+        int caretColumn,
+        out int replacementStart,
+        out int replacementLength)
+    {
+        commandText ??= string.Empty;
+
+        caretColumn = Math.Clamp(
+            caretColumn,
+            0,
+            commandText.Length);
+
+        int commandStart = FindCurrentCommandStart(
+            commandText,
+            caretColumn);
+
+        replacementStart = FindTokenStart(
+            commandText,
+            commandStart,
+            caretColumn);
+
+        int replacementEnd = FindTokenEnd(
+            commandText,
+            caretColumn);
+
+        replacementLength =
+            replacementEnd - replacementStart;
+
+        string tokenPrefix = commandText.Substring(
+            replacementStart,
+            caretColumn - replacementStart);
+
+        string textBeforeToken = commandText.Substring(
+            commandStart,
+            replacementStart - commandStart);
+
+        string[] completedTokens =
+            textBeforeToken.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+        if (completedTokens.Length == 0)
+        {
+            return GetCommandNameCompletions(
+                tokenPrefix);
+        }
+
+        string command =
+            completedTokens[0].ToLowerInvariant();
+
+        int argumentIndex =
+            completedTokens.Length - 1;
+
+        return GetArgumentCompletions(
+            command,
+            completedTokens,
+            argumentIndex,
+            tokenPrefix);
+    }
+
+    private static int FindCurrentCommandStart(
+        string commandText,
+        int caretColumn)
+    {
+        string textBeforeCaret =
+            commandText.Substring(0, caretColumn);
+
+        int chainSeparatorIndex =
+            textBeforeCaret.LastIndexOf(
+                "&&",
+                StringComparison.Ordinal);
+
+        return chainSeparatorIndex < 0
+            ? 0
+            : chainSeparatorIndex + 2;
+    }
+
+    private static int FindTokenStart(
+        string commandText,
+        int commandStart,
+        int caretColumn)
+    {
+        int tokenStart = caretColumn;
+
+        while (tokenStart > commandStart
+            && !char.IsWhiteSpace(
+                commandText[tokenStart - 1])
+            && commandText[tokenStart - 1] != '&')
+        {
+            tokenStart--;
+        }
+
+        return tokenStart;
+    }
+
+    private static int FindTokenEnd(
+        string commandText,
+        int caretColumn)
+    {
+        int tokenEnd = caretColumn;
+
+        while (tokenEnd < commandText.Length
+            && !char.IsWhiteSpace(commandText[tokenEnd])
+            && commandText[tokenEnd] != '&')
+        {
+            tokenEnd++;
+        }
+
+        return tokenEnd;
+    }
+
+    private static IReadOnlyList<string>
+        GetCommandNameCompletions(string tokenPrefix)
+    {
+        List<string> commandNames = new();
+
+        foreach (string syntax in CanonicalCommandSyntax)
+        {
+            int firstSpaceIndex = syntax.IndexOf(' ');
+
+            string commandName =
+                firstSpaceIndex < 0
+                    ? syntax
+                    : syntax.Substring(0, firstSpaceIndex);
+
+            if (FindExactMatch(
+                commandNames,
+                commandName) is null)
+            {
+                commandNames.Add(commandName);
+            }
+        }
+
+        List<string> matches = GetPrefixMatches(
+            commandNames,
+            tokenPrefix);
+
+        string? exactMatch = FindExactMatch(
+            matches,
+            tokenPrefix);
+
+        if (exactMatch is not null)
+        {
+            return new[]
+            {
+                AddArgumentSpaceIfNeeded(exactMatch)
+            };
+        }
+
+        if (matches.Count == 1)
+        {
+            matches[0] =
+                AddArgumentSpaceIfNeeded(matches[0]);
+        }
+
+        return matches;
+    }
+
+    private IReadOnlyList<string> GetArgumentCompletions(
+        string command,
+        string[] completedTokens,
+        int argumentIndex,
+        string tokenPrefix)
+    {
+        IEnumerable<string>? completionSource =
+            command switch
+            {
+                ".revive" when argumentIndex == 0 =>
+                    GetCurrentHeroSelectors(),
+
+                ".kill" when argumentIndex == 0 =>
+                    GetCurrentHeroSelectors(),
+
+                ".kill" when argumentIndex == 1
+                    && completedTokens.Length > 1
+                    && completedTokens[1].Equals(
+                        "partySlot",
+                        StringComparison.OrdinalIgnoreCase) =>
+                    GetPartySlotNumbers(),
+
+                ".useability" when argumentIndex == 0 =>
+                    GetCurrentHeroSelectors(),
+
+                ".useability" when argumentIndex == 1
+                    && completedTokens.Length > 1 =>
+                    GetHeroAbilityIds(completedTokens[1]),
+
+                ".spawnmonster" when argumentIndex == 0 =>
+                    Encounter.MonsterFactory.Registry
+                        .GetRegisteredIds(),
+
+                ".startencounter" when argumentIndex == 0 =>
+                    Encounter.EncounterRegistry
+                        .GetRegisteredIds(),
+
+                ".startencounterpool" when argumentIndex == 0 =>
+                    Encounter.EncounterPoolRegistry
+                        .GetRegisteredIds(),
+
+                _ => null
+            };
+
+        if (completionSource is null)
+            return Array.Empty<string>();
+
+        List<string> matches = GetPrefixMatches(
+            completionSource,
+            tokenPrefix);
+
+        bool shouldAdvanceToNextArgument =
+            command == ".useability"
+            && argumentIndex == 0;
+
+        if (shouldAdvanceToNextArgument)
+        {
+            string? exactMatch = FindExactMatch(
+                matches,
+                tokenPrefix);
+
+            if (exactMatch is not null)
+            {
+                return new[] { exactMatch + " " };
+            }
+
+            if (matches.Count == 1)
+            {
+                matches[0] += " ";
+            }
+        }
+
+        return matches;
+    }
+
+    private List<string> GetCurrentHeroSelectors()
+    {
+        HashSet<string> selectors = new(
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (HeroActorController hero
+            in Party.SpawnedHeroes)
+        {
+            if (!GodotObject.IsInstanceValid(hero))
+                continue;
+
+            selectors.Add(hero.Name.ToString());
+            selectors.Add(GetHeroContentId(hero));
+        }
+
+        return new List<string>(selectors);
+    }
+
+    private IEnumerable<string> GetHeroAbilityIds(
+        string heroSelector)
+    {
+        HashSet<string> abilityIds = new(
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (HeroActorController hero
+            in Party.SpawnedHeroes)
+        {
+            if (!GodotObject.IsInstanceValid(hero))
+                continue;
+
+            bool selectorMatches =
+                hero.Name.ToString().Equals(
+                    heroSelector,
+                    StringComparison.OrdinalIgnoreCase)
+                || GetHeroContentId(hero).Equals(
+                    heroSelector,
+                    StringComparison.OrdinalIgnoreCase);
+
+            if (!selectorMatches)
+                continue;
+
+            foreach (AbilityDefinition ability
+                in hero.Abilities)
+            {
+                if (GodotObject.IsInstanceValid(ability))
+                {
+                    abilityIds.Add(ability.ContentId);
+                }
+            }
+        }
+
+        return abilityIds;
+    }
+
+    private static IEnumerable<string>
+        GetPartySlotNumbers()
+    {
+        List<string> slotNumbers = new();
+
+        for (int slotNumber = 1;
+            slotNumber <= PartyController.MaximumPartySize;
+            slotNumber++)
+        {
+            slotNumbers.Add(
+                slotNumber.ToString(
+                    CultureInfo.InvariantCulture));
+        }
+
+        return slotNumbers;
+    }
+
+    private static List<string> GetPrefixMatches(
+        IEnumerable<string> values,
+        string prefix)
+    {
+        HashSet<string> uniqueMatches = new(
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (string value in values)
+        {
+            if (!string.IsNullOrWhiteSpace(value)
+                && value.StartsWith(
+                    prefix,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                uniqueMatches.Add(value);
+            }
+        }
+
+        List<string> matches =
+            new(uniqueMatches);
+
+        matches.Sort(
+            StringComparer.OrdinalIgnoreCase);
+
+        return matches;
+    }
+
+    private static string? FindExactMatch(
+        IEnumerable<string> values,
+        string requestedValue)
+    {
+        foreach (string value in values)
+        {
+            if (value.Equals(
+                requestedValue,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
+    private static string AddArgumentSpaceIfNeeded(
+        string commandName)
+    {
+        foreach (string syntax in CanonicalCommandSyntax)
+        {
+            if (syntax.StartsWith(
+                    commandName + " ",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return commandName + " ";
+            }
+        }
+
+        return commandName;
+    }
+
     private static void AppendCommandReference(
         StringBuilder output)
     {
         output.AppendLine("COMMANDS");
         output.AppendLine("--------");
-        output.AppendLine(".help");
-        output.AppendLine(".status");
-        output.AppendLine(".clear");
-        output.AppendLine(".revive <hero_id>");
-        output.AppendLine(".reviveAll");
-        output.AppendLine(".kill <hero_id>");
-        output.AppendLine(".kill partySlot <1-5>");
-        output.AppendLine(
-            ".useAbility <hero_id> <ability_id>");
-        output.AppendLine(
-            ".spawnMonster <monster_id> [count]");
-        output.AppendLine(".addMonsters <count>");
-        output.AppendLine(".setMonsterCount <count>");
-        output.AppendLine(
-            ".startEncounter <encounter_id>");
-        output.AppendLine(
-            ".startEncounterPool <pool_id>");
-        output.AppendLine(".endEncounter");
+
+        foreach (string syntax in CanonicalCommandSyntax)
+        {
+            output.AppendLine(syntax);
+        }
+
         output.AppendLine();
         output.AppendLine(
             "Use .help for descriptions, examples, chains, " +
             "and keyboard shortcuts.");
+        output.AppendLine(
+            "Press Tab / Shift+Tab to cycle command and ID " +
+            "completions.");
     }
 
     private static void AppendMonsterReference(
@@ -780,6 +1154,8 @@ public partial class DebugCommandService : Node
 
             "KEYBOARD SHORTCUTS\n" +
             "------------------\n" +
+            "    Tab           Next command/ID completion\n" +
+            "    Shift+Tab     Previous command/ID completion\n" +
             "    Ctrl+Shift+D  Toggle debug console\n" +
             "    Ctrl+Shift+R  Revive/reset all heroes\n" +
             "    Ctrl+Shift+1  Add 1 default monster\n" +
