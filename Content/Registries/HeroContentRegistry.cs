@@ -53,14 +53,25 @@ public partial class HeroContentRegistry : Node
         foreach (HeroDefinition definition
             in _definitionsById.Values)
         {
-            if (definition.AbilityContentIds.Count == 0)
-                continue;
+            if (GodotObject.IsInstanceValid(
+                definition.ClassDefinition)
+                && definition.ClassDefinition.AbilityContentIds.Count > 0)
+            {
+                DebugLog.Print(
+                    $"Class ability loadout: " +
+                    $"{definition.ClassDefinition.ContentId} " +
+                    $"('{definition.ClassDefinition.DisplayName}') -> " +
+                    $"{string.Join(", ", definition.ClassDefinition.AbilityContentIds)}");
+            }
 
-            DebugLog.Print(
-                $"Hero ability loadout: " +
-                $"{definition.ContentId} " +
-                $"('{definition.DisplayName}') -> " +
-                $"{string.Join(", ", definition.AbilityContentIds)}");
+            if (definition.AbilityContentIds.Count > 0)
+            {
+                DebugLog.Print(
+                    $"Hero-specific ability loadout: " +
+                    $"{definition.ContentId} " +
+                    $"('{definition.DisplayName}') -> " +
+                    $"{string.Join(", ", definition.AbilityContentIds)}");
+            }
         }
     }
 
@@ -136,6 +147,27 @@ public partial class HeroContentRegistry : Node
                 errors.Add(
                     $"{definition.ContentId}: unknown ability " +
                     $"Content ID '{abilityContentId}'.");
+            }
+        }
+
+        if (GodotObject.IsInstanceValid(
+            definition.ClassDefinition))
+        {
+            foreach (string abilityContentId
+                in definition.ClassDefinition.AbilityContentIds)
+            {
+                if (!global::ContentId.IsValid(abilityContentId))
+                    continue;
+
+                if (!AbilityRegistry.TryGet(
+                    abilityContentId,
+                    out _))
+                {
+                    errors.Add(
+                        $"{definition.ClassDefinition.ContentId}: " +
+                        $"unknown ability Content ID " +
+                        $"'{abilityContentId}'.");
+                }
             }
         }
 

@@ -12,6 +12,6 @@ ClassDefinition = ExtResource("2_4qlw8")
 ActorScene = ExtResource("1_2g8sy")
 CombatTagMask = 81
 MaximumHealth = 13573.0
-AttackDamage = 2.0
+AttackDamage = 50.0
 CombatMoveSpeed = 120.0
 metadata/_custom_type_script = "uid://b38xxk3rax5nx"

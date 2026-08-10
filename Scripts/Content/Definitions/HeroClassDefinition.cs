@@ -16,6 +16,13 @@ public partial class HeroClassDefinition : Resource
         "Unnamed Class";
 
 
+    [ExportCategory("Abilities")]
+
+    [Export]
+    public Godot.Collections.Array<string> AbilityContentIds
+    { get; set; } = new();
+
+
     public IReadOnlyList<string> GetValidationErrors()
     {
         List<string> errors = new();
@@ -35,6 +42,28 @@ public partial class HeroClassDefinition : Resource
         {
             errors.Add(
                 $"{ContentId}: DisplayName is required.");
+        }
+
+        HashSet<string> seenAbilityIds =
+            new(StringComparer.OrdinalIgnoreCase);
+
+        foreach (string abilityContentId in AbilityContentIds)
+        {
+            if (!global::ContentId.IsValid(abilityContentId))
+            {
+                errors.Add(
+                    $"{ContentId}: invalid ability Content ID " +
+                    $"'{abilityContentId}'.");
+
+                continue;
+            }
+
+            if (!seenAbilityIds.Add(abilityContentId.Trim()))
+            {
+                errors.Add(
+                    $"{ContentId}: duplicate ability Content ID " +
+                    $"'{abilityContentId}'.");
+            }
         }
 
         return errors;

@@ -3,20 +3,36 @@
   "WorkspaceRootPath": "C:\\Users\\jafox\\github\\Questbar\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\actors\\actorhealthbarcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\actors\\actorhealthbarcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\encountercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\encountercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\content\\registries\\herocontentregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:content\\registries\\herocontentregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\scripts\\services\\debugcommandservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:scripts\\services\\debugcommandservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\content\\registries\\encounterpoolcontentregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:content\\registries\\encounterpoolcontentregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\combatcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\combatcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\content\\registries\\abilitycontentregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:content\\registries\\abilitycontentregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\models\\combat\\monstercombatprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:models\\combat\\monstercombatprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\actors\\actorhealthbarcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:controllers\\actors\\actorhealthbarcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\scripts\\services\\debugcommandservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:scripts\\services\\debugcommandservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\controllers\\actors\\heroactorcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -43,10 +59,6 @@
       "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:models\\combat\\herocombatprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\models\\combat\\monstercombatprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:models\\combat\\monstercombatprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|c:\\users\\jafox\\github\\questbar\\models\\combat\\combathealthstate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F513366-7CA5-49C4-8400-8079305F13C5}|Questbar.csproj|solutionrelative:models\\combat\\combathealthstate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -70,7 +82,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 11,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -78,7 +90,45 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "EncounterController.cs",
+              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\EncounterController.cs",
+              "RelativeDocumentMoniker": "Controllers\\EncounterController.cs",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\EncounterController.cs",
+              "RelativeToolTip": "Controllers\\EncounterController.cs",
+              "ViewState": "AgIAAPUCAAAAAAAAAAAewAUDAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-10T03:14:08.392Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "EncounterPoolContentRegistry.cs",
+              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Content\\Registries\\EncounterPoolContentRegistry.cs",
+              "RelativeDocumentMoniker": "Content\\Registries\\EncounterPoolContentRegistry.cs",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Content\\Registries\\EncounterPoolContentRegistry.cs",
+              "RelativeToolTip": "Content\\Registries\\EncounterPoolContentRegistry.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAxwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-10T02:03:32.118Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "AbilityContentRegistry.cs",
+              "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Content\\Registries\\AbilityContentRegistry.cs",
+              "RelativeDocumentMoniker": "Content\\Registries\\AbilityContentRegistry.cs",
+              "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Content\\Registries\\AbilityContentRegistry.cs",
+              "RelativeToolTip": "Content\\Registries\\AbilityContentRegistry.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAxwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-10T00:05:51.072Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
               "Title": "DebugCommandService.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Scripts\\Services\\DebugCommandService.cs",
               "RelativeDocumentMoniker": "Scripts\\Services\\DebugCommandService.cs",
@@ -96,7 +146,7 @@
               "RelativeDocumentMoniker": "Controllers\\CombatController.cs",
               "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\CombatController.cs",
               "RelativeToolTip": "Controllers\\CombatController.cs",
-              "ViewState": "AgIAACYDAAAAAAAAAAAAwFMDAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAgDAAAAAAAAAAAAACUDAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-08-09T12:55:19.62Z"
             },
@@ -108,14 +158,14 @@
               "RelativeDocumentMoniker": "Content\\Registries\\HeroContentRegistry.cs",
               "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Content\\Registries\\HeroContentRegistry.cs",
               "RelativeToolTip": "Content\\Registries\\HeroContentRegistry.cs",
-              "ViewState": "AgIAAHEAAAAAAAAAAAAjwJIAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAALgAAAAAAAAAAAAUwMgAAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-08-08T18:56:42.354Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 17,
               "Title": "HeroDefinition.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Scripts\\Content\\Definitions\\HeroDefinition.cs",
               "RelativeDocumentMoniker": "Scripts\\Content\\Definitions\\HeroDefinition.cs",
@@ -127,7 +177,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 16,
               "Title": "BodyBounds2D.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\BodyBounds2D.cs",
               "RelativeDocumentMoniker": "Controllers\\Actors\\BodyBounds2D.cs",
@@ -139,7 +189,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 9,
               "Title": "MonsterDefinition.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Scripts\\Content\\Definitions\\MonsterDefinition.cs",
               "RelativeDocumentMoniker": "Scripts\\Content\\Definitions\\MonsterDefinition.cs",
@@ -151,19 +201,19 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 5,
               "Title": "MonsterCombatProfile.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Models\\Combat\\MonsterCombatProfile.cs",
               "RelativeDocumentMoniker": "Models\\Combat\\MonsterCombatProfile.cs",
               "ToolTip": "C:\\Users\\jafox\\github\\Questbar\\Models\\Combat\\MonsterCombatProfile.cs",
               "RelativeToolTip": "Models\\Combat\\MonsterCombatProfile.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAkAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAA+wBkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-08-08T15:11:47.453Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 11,
               "Title": "CombatSpacing.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Models\\Combat\\CombatSpacing.cs",
               "RelativeDocumentMoniker": "Models\\Combat\\CombatSpacing.cs",
@@ -175,7 +225,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 8,
               "Title": "HeroActorController.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\HeroActorController.cs",
               "RelativeDocumentMoniker": "Controllers\\Actors\\HeroActorController.cs",
@@ -187,7 +237,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 10,
               "Title": "MonsterActorController.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\MonsterActorController.cs",
               "RelativeDocumentMoniker": "Controllers\\Actors\\MonsterActorController.cs",
@@ -199,7 +249,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 6,
               "Title": "ActorHealthBarController.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\Actors\\ActorHealthBarController.cs",
               "RelativeDocumentMoniker": "Controllers\\Actors\\ActorHealthBarController.cs",
@@ -207,12 +257,11 @@
               "RelativeToolTip": "Controllers\\Actors\\ActorHealthBarController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-08T12:36:46.568Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-08T12:36:46.568Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 14,
               "Title": "CombatHealthState.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Models\\Combat\\CombatHealthState.cs",
               "RelativeDocumentMoniker": "Models\\Combat\\CombatHealthState.cs",
@@ -224,7 +273,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 15,
               "Title": "EncounterContentRegistry.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Content\\Registries\\EncounterContentRegistry.cs",
               "RelativeDocumentMoniker": "Content\\Registries\\EncounterContentRegistry.cs",
@@ -236,7 +285,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 12,
               "Title": "ActorScalePresentationController.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Controllers\\ActorScalePresentationController.cs",
               "RelativeDocumentMoniker": "Controllers\\ActorScalePresentationController.cs",
@@ -248,7 +297,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 13,
               "Title": "HeroCombatProfile.cs",
               "DocumentMoniker": "C:\\Users\\jafox\\github\\Questbar\\Models\\Combat\\HeroCombatProfile.cs",
               "RelativeDocumentMoniker": "Models\\Combat\\HeroCombatProfile.cs",

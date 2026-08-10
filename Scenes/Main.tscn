@@ -21,7 +21,7 @@
 [ext_resource type="Resource" uid="uid://dsa7conbkowyl" path="res://Content/Heroes/Core/hero.core.syzygy.tres" id="11_utia5"]
 [ext_resource type="Script" uid="uid://b8bcqttr8ndmt" path="res://Content/Factories/MonsterFactory.cs" id="12_0sclb"]
 [ext_resource type="Script" uid="uid://dp7rlw8nlcsrg" path="res://Content/Factories/HeroFactory.cs" id="12_f7hdo"]
-[ext_resource type="Script" uid="uid://wv8afqfkrl6i" path="res://Controllers/CombatController.cs" id="12_grg3l"]
+[ext_resource type="Script" uid="uid://cp48djdejbojh" path="res://Controllers/CombatController.cs" id="12_grg3l"]
 [ext_resource type="Resource" uid="uid://dr031a00gvhxg" path="res://Content/Heroes/Core/hero.core.allistar.tres" id="12_utia5"]
 [ext_resource type="Resource" uid="uid://b4bj78ei20u0o" path="res://Content/Heroes/Core/hero.core.chet.tres" id="13_f7hdo"]
 [ext_resource type="PackedScene" uid="uid://bnrollfc0yukf" path="res://Scenes/Combat/ProjectileActor.tscn" id="14_1p5hy"]
@@ -41,6 +41,7 @@
 [ext_resource type="Script" uid="uid://bxrc14riktty6" path="res://Content/Registries/AbilityContentRegistry.cs" id="25_vvnwx"]
 [ext_resource type="Script" uid="uid://bus4x5fmyodi8" path="res://Scripts/Content/Definitions/AbilityDefinition.cs" id="26_btbly"]
 [ext_resource type="Resource" uid="uid://bji8hwhd3vyhj" path="res://Content/Abilities/Core/ability.core.heavy_slam.tres" id="27_vs04g"]
+[ext_resource type="Resource" uid="uid://ca677bt8r4l5a" path="res://Content/Abilities/Core/ability.core.taunt.tres" id="29_d8m2u"]
 [ext_resource type="Script" uid="uid://yaghcenkkidu" path="res://Scripts/Services/CombatDamageResolver.cs" id="30_4yxf6"]
 [ext_resource type="Script" uid="uid://bgv0cmtivgfi7" path="res://Controllers/PartyController.cs" id="40_6ehlx"]
 
@@ -198,7 +199,7 @@ ExpandedHeightValue = NodePath("../MarginContainer/SettingsRows/ExpandedHeightRo
 HorizontalAdjustmentSlider = NodePath("../MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowSlider")
 HorizontalAdjustmentValue = NodePath("../MarginContainer/SettingsRows/HorizontalAdjustmentRow/HorizontalAdjustmentRowValue")
 
-[node name="DebugConsoleWindow" parent="PopupWindows" unique_id=1708193217 node_paths=PackedStringArray("Commands", "Combat", "JourneyState", "Encounter", "DebugOutput", "CommandInput") instance=ExtResource("5_erwvk")]
+[node name="DebugConsoleWindow" parent="PopupWindows" unique_id=1708193217 node_paths=PackedStringArray("Commands", "Combat", "JourneyState", "Encounter", "DebugOutput", "CommandInput", "FilterTabs", "SearchInput") instance=ExtResource("5_erwvk")]
 visible = false
 Commands = NodePath("../../Services/DebugCommandService")
 Combat = NodePath("../../Controllers/CombatController")
@@ -206,6 +207,8 @@ JourneyState = NodePath("../../Services/JourneyStateService")
 Encounter = NodePath("../../Controllers/EncounterController")
 DebugOutput = NodePath("MarginContainer/VBoxContainer/DebugOutput")
 CommandInput = NodePath("MarginContainer/VBoxContainer/Commandrow/CommandInput")
+FilterTabs = NodePath("MarginContainer/VBoxContainer/FilterTabs")
+SearchInput = NodePath("MarginContainer/VBoxContainer/SearchRow/SearchInput")
 
 [node name="CommandInput" parent="PopupWindows/DebugConsoleWindow/MarginContainer/VBoxContainer/Commandrow" parent_id_path=PackedInt32Array(1708193217, 169440476) index="1" unique_id=1619736136]
 text = ""
@@ -245,7 +248,7 @@ Registry = NodePath("../MonsterContentRegistry")
 
 [node name="AbilityContentRegistry" type="Node" parent="Services" unique_id=801032179]
 script = ExtResource("25_vvnwx")
-Definitions = Array[ExtResource("26_btbly")]([ExtResource("27_vs04g")])
+Definitions = Array[ExtResource("26_btbly")]([ExtResource("27_vs04g"), ExtResource("29_d8m2u")])
 
 [node name="EncounterPoolContentRegistry" type="Node" parent="Services" unique_id=297296029 node_paths=PackedStringArray("EncounterRegistry")]
 script = ExtResource("21_u7mjy")

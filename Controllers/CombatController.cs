@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 public partial class CombatController : Node
 {
+    private const float DirectDamageThreatMultiplier = 1.15f;
+    private const float IndirectDamageThreatMultiplier = 1.0f;
+
     [Signal]
     public delegate void ParticipantsChangedEventHandler(
         int heroCount,
@@ -94,6 +97,210 @@ public partial class CombatController : Node
             $"Debug-respawned heroes into current combat. " +
             $"Active heroes={_heroParticipants.Count}, " +
             $"existing monsters={_monsterParticipants.Count}");
+    }
+
+    public bool DebugIncapacitateHero(
+        HeroActorController hero)
+    {
+        if (!GodotObject.IsInstanceValid(hero)
+            || hero.IsIncapacitated
+            || !hero.Health.IsAlive)
+        {
+            return false;
+        }
+
+        DamageResult result = DamageResolver.Resolve(
+            new DamageRequest(
+                this,
+                hero,
+                hero.Health.CurrentHealth),
+            hero.Health);
+
+        RaiseCombatEvent(
+            new CombatEvent
+            {
+                Type = CombatEventType.DamageApplied,
+                Attacker = this,
+                Target = hero,
+                Damage = result
+            });
+
+        if (!result.WasLethal)
+            return false;
+
+        hero.EnterIncapacitatedState();
+
+        RaiseCombatEvent(
+            new CombatEvent
+            {
+                Type = CombatEventType.ActorIncapacitated,
+                Attacker = this,
+                Target = hero,
+                Damage = result
+            });
+
+        return true;
+    }
+
+    public bool TryUseHeroAbility(
+        HeroActorController hero,
+        string abilityContentId,
+        out string result)
+    {
+        result = string.Empty;
+
+        if (!GodotObject.IsInstanceValid(hero))
+        {
+            result = "The requested hero is invalid.";
+            return false;
+        }
+
+        if (!IsCombatActive
+            || !_heroParticipants.Contains(hero)
+            || hero.IsIncapacitated
+            || !hero.Health.IsAlive)
+        {
+            result =
+                $"{hero.Name} cannot use an ability outside " +
+                "active combat.";
+
+            return false;
+        }
+
+        if (!hero.TryGetAbility(
+            abilityContentId,
+            out AbilityDefinition ability))
+        {
+            result =
+                $"{hero.Name} does not have ability " +
+                $"'{abilityContentId}'.";
+
+            return false;
+        }
+
+        double cooldownRemaining =
+            hero.GetAbilityCooldownRemaining(
+                ability.ContentId);
+
+        if (cooldownRemaining > 0.0)
+        {
+            result =
+                $"{hero.Name}'s {ability.DisplayName} is on " +
+                $"cooldown for {cooldownRemaining:0.0} more " +
+                "seconds.";
+
+            return false;
+        }
+
+        bool abilityApplied = ability.EffectType switch
+        {
+            AbilityEffectType.AreaTaunt =>
+                TryApplyAreaTaunt(
+                    hero,
+                    ability,
+                    out result),
+
+            _ => FailUnsupportedHeroAbility(
+                ability,
+                out result)
+        };
+
+        if (!abilityApplied)
+            return false;
+
+        if (!hero.TryStartAbilityCooldown(ability))
+        {
+            result =
+                $"{hero.Name}'s {ability.DisplayName} could not " +
+                "start its cooldown.";
+
+            return false;
+        }
+
+        if (ability.CooldownSeconds > 0.0f)
+        {
+            result +=
+                $" Cooldown started: " +
+                $"{ability.CooldownSeconds:0.##} seconds.";
+        }
+
+        return true;
+    }
+
+    private bool TryApplyAreaTaunt(
+        HeroActorController caster,
+        AbilityDefinition ability,
+        out string result)
+    {
+        float radiusSquared =
+            ability.EffectRadius
+            * ability.EffectRadius;
+
+        int affectedCount = 0;
+
+        foreach (
+            MonsterActorController monster
+            in _monsterParticipants)
+        {
+            if (!GodotObject.IsInstanceValid(monster)
+                || monster.IsDead)
+            {
+                continue;
+            }
+
+            float distanceSquared =
+                caster.GlobalPosition.DistanceSquaredTo(
+                    monster.GlobalPosition);
+
+            if (distanceSquared > radiusSquared)
+                continue;
+
+            HeroActorController? previousTarget =
+                monster.CurrentTarget;
+
+            if (!monster.TryApplyForcedTarget(
+                caster,
+                ability.EffectDurationSeconds))
+            {
+                continue;
+            }
+
+            affectedCount++;
+
+            if (previousTarget != monster.CurrentTarget)
+            {
+                RaiseTargetChanged(
+                    monster,
+                    previousTarget,
+                    monster.CurrentTarget);
+            }
+        }
+
+        DebugLog.Print(
+            $"{caster.Name} used '{ability.DisplayName}'. " +
+            $"Affected monsters={affectedCount}; " +
+            $"Radius={ability.EffectRadius:0.##}; " +
+            $"Duration={ability.EffectDurationSeconds:0.##}s.");
+
+        result =
+            $"{caster.Name} used {ability.DisplayName}. " +
+            $"Taunted {affectedCount} monster(s) within " +
+            $"{ability.EffectRadius:0.##} units for " +
+            $"{ability.EffectDurationSeconds:0.##} seconds.";
+
+        return true;
+    }
+
+    private static bool FailUnsupportedHeroAbility(
+        AbilityDefinition ability,
+        out string result)
+    {
+        result =
+            $"Hero execution is not implemented for effect " +
+            $"type '{ability.EffectType}' on " +
+            $"'{ability.ContentId}'.";
+
+        return false;
     }
 
     // Remove Heroes -- DEBUG ONLY
@@ -290,8 +497,9 @@ public partial class CombatController : Node
                 attacker.CombatProfile.AttackDamage),
             target.Health);
 
-        target.Threat.AddThreat(
+        BroadcastHeroDamageThreat(
             attacker,
+            target,
             result.AppliedDamage);
 
         RaiseCombatEvent(
@@ -320,6 +528,38 @@ public partial class CombatController : Node
                     Target = target,
                     Damage = result
                 });
+        }
+    }
+
+    private void BroadcastHeroDamageThreat(
+        HeroActorController attacker,
+        MonsterActorController directlyDamagedMonster,
+        float appliedDamage)
+    {
+        if (!float.IsFinite(appliedDamage)
+            || appliedDamage <= 0.0f)
+        {
+            return;
+        }
+
+        foreach (
+            MonsterActorController monster
+            in _monsterParticipants)
+        {
+            if (!GodotObject.IsInstanceValid(monster)
+                || monster.IsDead)
+            {
+                continue;
+            }
+
+            float threatMultiplier =
+                monster == directlyDamagedMonster
+                    ? DirectDamageThreatMultiplier
+                    : IndirectDamageThreatMultiplier;
+
+            monster.Threat.AddThreat(
+                attacker,
+                appliedDamage * threatMultiplier);
         }
     }
 
@@ -421,8 +661,17 @@ public partial class CombatController : Node
 
             monster.RefreshTargetValidity();
 
-            if (monster.HasValidTarget)
+            if (monster.HasForcedTarget)
                 continue;
+
+            if (monster.HasValidTarget)
+            {
+                TrySwitchMonsterThreatTarget(
+                    monster,
+                    previousTarget!);
+
+                continue;
+            }
 
             HeroActorController? replacementTarget = Targeting.SelectHeroTarget(monster, _heroParticipants);
 
@@ -461,6 +710,63 @@ public partial class CombatController : Node
         }
     }
 
+    private void TrySwitchMonsterThreatTarget(
+        MonsterActorController monster,
+        HeroActorController currentTarget)
+    {
+        HeroActorController? challenger =
+            Targeting.SelectThreatTakeoverTarget(
+                monster,
+                _heroParticipants);
+
+        if (challenger is null)
+            return;
+
+        float currentThreat =
+            monster.Threat.GetThreat(currentTarget);
+
+        float challengerThreat =
+            monster.Threat.GetThreat(challenger);
+
+        bool challengerIsInMeleeRange =
+            TargetingService.IsWithinMonsterMeleeRange(
+                monster,
+                challenger);
+
+        float takeoverMultiplier =
+            challengerIsInMeleeRange
+                ? TargetingService.MeleeThreatTakeoverMultiplier
+                : TargetingService.DistantThreatTakeoverMultiplier;
+
+        if (!monster.TrySwitchTarget(challenger))
+            return;
+
+        RaiseTargetChanged(
+            monster,
+            currentTarget,
+            challenger);
+
+        DebugLog.Print(
+            $"{monster.Name} changed threat target: " +
+            $"{currentTarget.Name}=" +
+            $"{currentThreat:0.##} → " +
+            $"{challenger.Name}=" +
+            $"{challengerThreat:0.##}; " +
+            $"required={takeoverMultiplier * 100.0f:0}% " +
+            $"({(challengerIsInMeleeRange ? "melee range" : "outside melee range")}).");
+    }
+
+    public override void _Process(double delta)
+    {
+        if (!IsInitialized
+            || !IsCombatActive)
+        {
+            return;
+        }
+
+        RefreshMonsterTargets();
+    }
+
     private void RefreshMonsterParticipants()
     {
         foreach (
@@ -475,6 +781,9 @@ public partial class CombatController : Node
 
             monster.AbilityReleased -=
                 OnMonsterAbilityReleased;
+
+            monster.ForcedTargetEnded -=
+                OnMonsterForcedTargetEnded;
         }
 
         _monsterParticipants.Clear();
@@ -496,7 +805,22 @@ public partial class CombatController : Node
 
             monster.AbilityReleased +=
                 OnMonsterAbilityReleased;
+
+            monster.ForcedTargetEnded +=
+                OnMonsterForcedTargetEnded;
         }
+    }
+
+    private void OnMonsterForcedTargetEnded(
+        MonsterActorController monster)
+    {
+        if (!GodotObject.IsInstanceValid(monster)
+            || monster.IsDead)
+        {
+            return;
+        }
+
+        RefreshMonsterTargets();
     }
 
     private void OnMonsterAttackReleased(
@@ -839,6 +1163,9 @@ public partial class CombatController : Node
 
             monster.AbilityReleased -=
                 OnMonsterAbilityReleased;
+
+            monster.ForcedTargetEnded -=
+                OnMonsterForcedTargetEnded;
         }
 
         if (GodotObject.IsInstanceValid(Encounter))

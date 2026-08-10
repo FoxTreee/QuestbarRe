@@ -21,10 +21,31 @@ public partial class DebugConsoleController : Window
 	[Export]
 	public LineEdit CommandInput { get; set; } = null!;
 
+	[Export]
+	public TabBar FilterTabs { get; set; } = null!;
+
+	[Export]
+	public LineEdit SearchInput { get; set; } = null!;
+
 	private readonly List<string> _commandHistory = new();
+	private readonly List<ConsoleEntry> _outputHistory = new();
 	private int _historyIndex;
+	private ConsoleFilter _activeFilter = ConsoleFilter.All;
+	private string _searchText = string.Empty;
 
+	private readonly record struct ConsoleEntry(
+		DebugLogCategory Category,
+		string Message);
 
+	private enum ConsoleFilter
+	{
+		All,
+		Threat,
+		Damage,
+		Ability,
+		Encounter,
+		Error
+	}
 
 	public override void _Ready()
 	{
@@ -34,11 +55,19 @@ public partial class DebugConsoleController : Window
 		if (!ValidateReferences())
 			return;
 
+		_activeFilter =
+			GetFilterForTab(FilterTabs.CurrentTab);
+
+		_searchText =
+			SearchInput.Text.Trim();
+
 		DebugLog.Subscribe(OnDebugLogMessage);
 			
 		Combat.CombatEventOccurred += OnCombatEventOccurred;
 		CommandInput.TextSubmitted += OnCommandSubmitted;
 		CommandInput.GuiInput += OnCommandInputGuiInput;
+		FilterTabs.TabChanged += OnFilterTabChanged;
+		SearchInput.TextChanged += OnSearchTextChanged;
 		CloseRequested += HideConsole;
 
 		JourneyState.StateChanged += OnJourneyStateChanged;
@@ -83,6 +112,16 @@ public partial class DebugConsoleController : Window
 			CommandInput.TextSubmitted -= OnCommandSubmitted;
 
 			CommandInput.GuiInput -= OnCommandInputGuiInput;
+		}
+
+		if (GodotObject.IsInstanceValid(FilterTabs))
+		{
+			FilterTabs.TabChanged -= OnFilterTabChanged;
+		}
+
+		if (GodotObject.IsInstanceValid(SearchInput))
+		{
+			SearchInput.TextChanged -= OnSearchTextChanged;
 		}
 
 
@@ -165,7 +204,7 @@ public partial class DebugConsoleController : Window
 				".clear",
 				StringComparison.OrdinalIgnoreCase))
 		{
-			DebugOutput.Clear();
+			ClearOutput();
 			return;
 		}
 
@@ -178,10 +217,18 @@ public partial class DebugConsoleController : Window
 		}
 	}
 
-	private void AppendOutput(string message)
+	private void AppendOutput(
+		string message,
+		DebugLogCategory category = DebugLogCategory.General)
 	{
-		DebugOutput.AppendText(
-			message + "\n");
+		_outputHistory.Add(
+			new ConsoleEntry(category, message));
+
+		if (ShouldDisplay(category, message))
+		{
+			DebugOutput.AppendText(
+				message + "\n");
+		}
 	}
 
 	private bool ValidateReferences()
@@ -191,6 +238,8 @@ public partial class DebugConsoleController : Window
 		valid &= Require(Commands, nameof(Commands));
 		valid &= Require(DebugOutput, nameof(DebugOutput));
 		valid &= Require(CommandInput, nameof(CommandInput));
+		valid &= Require(FilterTabs, nameof(FilterTabs));
+		valid &= Require(SearchInput, nameof(SearchInput));
 		valid &= Require(Combat, nameof(Combat));
 		valid &= Require(JourneyState, nameof(JourneyState));
 		valid &= Require(Encounter, nameof(Encounter));
@@ -212,43 +261,51 @@ public partial class DebugConsoleController : Window
 
 	private void OnCombatEventOccurred(CombatEvent combatEvent)
 	{
-		string message =
+		(string message, DebugLogCategory category) =
 			combatEvent.Type switch
 			{
-				CombatEventType.DamageApplied => BuildDamageMessage(combatEvent),
+				CombatEventType.DamageApplied =>
+					(BuildDamageMessage(combatEvent), DebugLogCategory.Damage),
 
-				CombatEventType.ActorDied => BuildDeathMessage(combatEvent),
+				CombatEventType.ActorDied =>
+					(BuildDeathMessage(combatEvent), DebugLogCategory.Encounter),
 
-				CombatEventType.ActorIncapacitated => BuildIncapacitationMessage(combatEvent),
+				CombatEventType.ActorIncapacitated =>
+					(BuildIncapacitationMessage(combatEvent), DebugLogCategory.Encounter),
 
-				_ => $"COMBAT  {combatEvent.Type}"
+				_ =>
+					($"COMBAT  {combatEvent.Type}", DebugLogCategory.General)
 			};
 
-		AppendTimestampedOutput(message);
+		AppendTimestampedOutput(message, category);
 	}
 
 	private void OnJourneyStateChanged(JourneyStateService.JourneyState previousState, JourneyStateService.JourneyState currentState)
 	{
 		AppendTimestampedOutput(
-			$"JOURNEY  {previousState} → {currentState}");
+			$"JOURNEY  {previousState} → {currentState}",
+			DebugLogCategory.Encounter);
 	}
 
 	private void OnEncounterStarted()
 	{
 		AppendTimestampedOutput(
-			"ENCOUNTER  Started");
+			"ENCOUNTER  Started",
+			DebugLogCategory.Encounter);
 	}
 
 	private void OnEncounterCompleted()
 	{
 		AppendTimestampedOutput(
-			"ENCOUNTER  Completed");
+			"ENCOUNTER  Completed",
+			DebugLogCategory.Encounter);
 	}
 
 	private void OnMonsterRosterChanged(int activeMonsterCount)
 	{
 		AppendTimestampedOutput(
-			$"MONSTERS  Active count={activeMonsterCount}");
+			$"MONSTERS  Active count={activeMonsterCount}",
+			DebugLogCategory.Encounter);
 	}
 
 	private void AddCommandToHistory( string command)
@@ -373,19 +430,119 @@ public partial class DebugConsoleController : Window
 	}
 	
 	private void OnDebugLogMessage(
-	DateTime timestamp,
-	string message)
+		DateTime timestamp,
+		DebugLogCategory category,
+		string message)
 	{
 		AppendOutput(
-			$"[{timestamp:HH:mm:ss}] LOG  {message}");
+			$"[{timestamp:HH:mm:ss}] " +
+			$"{GetCategoryLabel(category)}  {message}",
+			category);
 	}
 
-	private void AppendTimestampedOutput(string message)
+	private void AppendTimestampedOutput(
+		string message,
+		DebugLogCategory category)
 	{
 		string timestamp =
 			DateTime.Now.ToString("HH:mm:ss");
 
 		AppendOutput(
-			$"[{timestamp}] {message}");
+			$"[{timestamp}] {message}",
+			category);
+	}
+
+	private void OnFilterTabChanged(long tabIndex)
+	{
+		_activeFilter =
+			GetFilterForTab((int)tabIndex);
+
+		RebuildVisibleOutput();
+	}
+
+	private void OnSearchTextChanged(string searchText)
+	{
+		_searchText =
+			searchText.Trim();
+
+		RebuildVisibleOutput();
+	}
+
+	private ConsoleFilter GetFilterForTab(int tabIndex)
+	{
+		string title =
+			FilterTabs.GetTabTitle(tabIndex);
+
+		return title.Trim().ToUpperInvariant() switch
+		{
+			"THREAT" => ConsoleFilter.Threat,
+			"DAMAGE" => ConsoleFilter.Damage,
+			"ABILITY" => ConsoleFilter.Ability,
+			"ENCOUNTER" => ConsoleFilter.Encounter,
+			"ERROR" => ConsoleFilter.Error,
+			_ => ConsoleFilter.All
+		};
+	}
+
+	private void RebuildVisibleOutput()
+	{
+		DebugOutput.Clear();
+
+		foreach (ConsoleEntry entry in _outputHistory)
+		{
+			if (!ShouldDisplay(
+				entry.Category,
+				entry.Message))
+			{
+				continue;
+			}
+
+			DebugOutput.AppendText(
+				entry.Message + "\n");
+		}
+	}
+
+	private bool ShouldDisplay(
+		DebugLogCategory category,
+		string message)
+	{
+		bool categoryMatches =
+			_activeFilter switch
+			{
+				ConsoleFilter.All => true,
+				ConsoleFilter.Threat => category == DebugLogCategory.Threat,
+				ConsoleFilter.Damage => category == DebugLogCategory.Damage,
+				ConsoleFilter.Ability => category == DebugLogCategory.Ability,
+				ConsoleFilter.Encounter => category == DebugLogCategory.Encounter,
+				ConsoleFilter.Error => category == DebugLogCategory.Error,
+				_ => false
+			};
+
+		if (!categoryMatches)
+			return false;
+
+		return string.IsNullOrEmpty(_searchText)
+			|| message.Contains(
+				_searchText,
+				StringComparison.OrdinalIgnoreCase);
+	}
+
+	private void ClearOutput()
+	{
+		_outputHistory.Clear();
+		DebugOutput.Clear();
+	}
+
+	private static string GetCategoryLabel(DebugLogCategory category)
+	{
+		return category switch
+		{
+			DebugLogCategory.Threat => "THREAT",
+			DebugLogCategory.Damage => "DAMAGE",
+			DebugLogCategory.Ability => "ABILITY",
+			DebugLogCategory.Encounter => "ENCOUNTER",
+			DebugLogCategory.Error => "ERROR",
+			_ => "LOG"
+		};
 	}
 }

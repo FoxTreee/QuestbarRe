@@ -180,13 +180,108 @@ public partial class DebugCommandService : Node
                     ? "Incapacitated"
                     : "Active";
 
+            string abilityState =
+                BuildHeroAbilityStateText(hero);
+
             output.AppendLine(
                 $"- {hero.Name} [{contentId}]: {state}, " +
                 $"HP {hero.Health.CurrentHealth}/" +
-                $"{hero.Health.MaximumHealth}");
+                $"{hero.Health.MaximumHealth}" +
+                abilityState);
         }
 
+        output.AppendLine();
+        output.AppendLine("Monsters:");
+
+        foreach (
+            MonsterActorController monster
+            in Combat.MonsterParticipants)
+        {
+            if (!GodotObject.IsInstanceValid(monster)
+                || monster.IsDead)
+            {
+                continue;
+            }
+
+            string targetName =
+                GodotObject.IsInstanceValid(
+                    monster.CurrentTarget)
+                    ? monster.CurrentTarget!.Name.ToString()
+                    : "None";
+
+            string forcedTargetText = "None";
+
+            if (monster.HasForcedTarget
+                && GodotObject.IsInstanceValid(
+                    monster.ForcedTarget))
+            {
+                forcedTargetText =
+                    $"{GetHeroContentId(monster.ForcedTarget!)} " +
+                    $"({monster.ForcedTargetSecondsRemaining:0.0}s)";
+            }
+
+            List<string> threatEntries = new();
+
+            foreach (
+                HeroActorController hero
+                in Party.SpawnedHeroes)
+            {
+                if (!GodotObject.IsInstanceValid(hero))
+                    continue;
+
+                string currentTargetMarker =
+                    monster.CurrentTarget == hero
+                        ? "*"
+                        : string.Empty;
+
+                threatEntries.Add(
+                    $"{GetHeroContentId(hero)}=" +
+                    $"{monster.Threat.GetThreat(hero):0.##}" +
+                    currentTargetMarker);
+            }
+
+            output.AppendLine(
+                $"- {monster.Name} [{monster.ContentId}]: " +
+                $"Target={targetName}; " +
+                $"ForcedTarget={forcedTargetText}; " +
+                $"Threat: {string.Join(", ", threatEntries)}");
+        }
+
+        output.AppendLine(
+            "* marks the monster's current target.");
+
         return output.ToString().TrimEnd();
+    }
+
+    private static string BuildHeroAbilityStateText(
+        HeroActorController hero)
+    {
+        if (hero.Abilities.Count == 0)
+            return string.Empty;
+
+        List<string> abilityEntries = new();
+
+        foreach (AbilityDefinition ability in hero.Abilities)
+        {
+            if (!GodotObject.IsInstanceValid(ability))
+                continue;
+
+            double cooldownRemaining =
+                hero.GetAbilityCooldownRemaining(
+                    ability.ContentId);
+
+            string cooldownState =
+                cooldownRemaining > 0.0
+                    ? $"{cooldownRemaining:0.0}s"
+                    : "Ready";
+
+            abilityEntries.Add(
+                $"{ability.DisplayName}={cooldownState}");
+        }
+
+        return abilityEntries.Count == 0
+            ? string.Empty
+            : $"; Abilities: {string.Join(", ", abilityEntries)}";
     }
 
     private static string BuildHelpText()
@@ -236,7 +331,7 @@ public partial class DebugCommandService : Node
             "    If multiple slots use the same hero content ID, use PartySlotNHero to choose.\n" +
             "    Matching is case-insensitive.\n" +
             "    Examples:\n" +
-            "      .revive hero.core.starting_hero\n" +
+            "      .revive hero.core.syzygy\n" +
             "      .revive PartySlot1Hero\n\n" +
 
             ".reviveAll\n" +
@@ -245,6 +340,24 @@ public partial class DebugCommandService : Node
             "    Examples:\n" +
             "      .reviveAll\n" +
             "      .reviveAll && .startEncounter encounter.core.training_swarm\n\n" +
+
+            ".kill <hero_id>\n" +
+            ".kill partySlot <1-5>\n" +
+            "    Incapacitate one equipped hero through the normal combat cleanup path.\n" +
+            "    Accepts a HeroDefinition content ID, runtime party-slot name, or slot number.\n" +
+            "    Use this to verify monster target reacquisition after its target dies.\n" +
+            "    Examples:\n" +
+            "      .kill hero.core.syzygy\n" +
+            "      .kill PartySlot1Hero\n" +
+            "      .kill partySlot 1\n" +
+            "      .kill partySlot(1)\n\n" +
+
+            ".useAbility <hero_id> <ability_id>\n" +
+            "    Execute one equipped hero ability through normal cooldown enforcement.\n" +
+            "    Use .status to inspect whether the ability is ready or cooling down.\n" +
+            "    Examples:\n" +
+            "      .useAbility hero.core.syzygy ability.core.taunt\n" +
+            "      .useAbility PartySlot1Hero ability.core.taunt\n\n" +
 
             "MONSTERS\n" +
             "--------\n" +
@@ -469,6 +582,12 @@ public partial class DebugCommandService : Node
             ".reviveall" or "heroes.reset" =>
                 ExecuteReviveAll(),
 
+            ".kill" =>
+                ExecuteKillHero(parts),
+
+            ".useability" =>
+                ExecuteUseAbility(parts),
+
             ".spawnmonster" or "monster.spawn" =>
                 ExecuteSpawnMonster(parts),
 
@@ -494,6 +613,61 @@ public partial class DebugCommandService : Node
                 $"Unknown command: {parts[0]}\n" +
                 "Type '.help' for available commands."
         };
+    }
+
+    private string ExecuteUseAbility(string[] parts)
+    {
+        if (parts.Length != 3)
+        {
+            return
+                "Usage: .useAbility <hero_id> <ability_id>\n" +
+                "Example: .useAbility hero.core.syzygy " +
+                "ability.core.taunt";
+        }
+
+        string requestedHeroId = parts[1];
+        string abilityContentId = parts[2];
+        List<HeroActorController> matches = new();
+
+        foreach (HeroActorController hero in Party.SpawnedHeroes)
+        {
+            if (!GodotObject.IsInstanceValid(hero))
+                continue;
+
+            bool runtimeNameMatches =
+                hero.Name.ToString().Equals(
+                    requestedHeroId,
+                    StringComparison.OrdinalIgnoreCase);
+
+            bool contentIdMatches =
+                GetHeroContentId(hero).Equals(
+                    requestedHeroId,
+                    StringComparison.OrdinalIgnoreCase);
+
+            if (runtimeNameMatches || contentIdMatches)
+                matches.Add(hero);
+        }
+
+        if (matches.Count == 0)
+        {
+            return
+                $"Unknown hero ID '{requestedHeroId}'.\n" +
+                BuildAvailableHeroIdsText();
+        }
+
+        if (matches.Count > 1)
+        {
+            return
+                $"Hero ID '{requestedHeroId}' matches multiple " +
+                "party members. Use a runtime PartySlotNHero name.";
+        }
+
+        Combat.TryUseHeroAbility(
+            matches[0],
+            abilityContentId,
+            out string result);
+
+        return result;
     }
 
     private string ExecuteReviveHero(string[] parts)
@@ -570,6 +744,176 @@ public partial class DebugCommandService : Node
         return
             $"Unknown hero ID '{requestedHeroId}'.\n" +
             BuildAvailableHeroIdsText();
+    }
+
+    private string ExecuteKillHero(string[] parts)
+    {
+        if (!TryReadHeroSelector(
+            parts,
+            out string requestedHeroId,
+            out string usageError))
+        {
+            return usageError;
+        }
+
+        List<HeroActorController> matches = new();
+
+        foreach (HeroActorController hero in Party.SpawnedHeroes)
+        {
+            if (!GodotObject.IsInstanceValid(hero))
+                continue;
+
+            bool runtimeNameMatches =
+                hero.Name.ToString().Equals(
+                    requestedHeroId,
+                    StringComparison.OrdinalIgnoreCase);
+
+            bool contentIdMatches =
+                GetHeroContentId(hero).Equals(
+                    requestedHeroId,
+                    StringComparison.OrdinalIgnoreCase);
+
+            if (runtimeNameMatches || contentIdMatches)
+            {
+                matches.Add(hero);
+            }
+        }
+
+        if (matches.Count > 1)
+        {
+            StringBuilder output = new();
+
+            output.AppendLine(
+                $"Hero ID '{requestedHeroId}' matches " +
+                $"multiple party members.");
+
+            output.AppendLine(
+                "Use one runtime party-slot name:");
+
+            foreach (HeroActorController hero in matches)
+            {
+                output.AppendLine(
+                    $"- {hero.Name}");
+            }
+
+            return output.ToString().TrimEnd();
+        }
+
+        if (matches.Count == 0)
+        {
+            return
+                $"Unknown hero ID '{requestedHeroId}'.\n" +
+                BuildAvailableHeroIdsText();
+        }
+
+        HeroActorController selectedHero = matches[0];
+
+        if (selectedHero.IsIncapacitated
+            || !selectedHero.Health.IsAlive)
+        {
+            return $"{selectedHero.Name} is already incapacitated.";
+        }
+
+        if (!Combat.DebugIncapacitateHero(selectedHero))
+        {
+            return
+                $"Could not incapacitate {selectedHero.Name}.";
+        }
+
+        DebugLog.Print(
+            $"Debug command completed: .kill {selectedHero.Name}");
+
+        return
+            $"Incapacitated {selectedHero.Name} " +
+            $"({GetHeroContentId(selectedHero)}).";
+    }
+
+    private static bool TryReadHeroSelector(
+        string[] parts,
+        out string requestedHeroId,
+        out string error)
+    {
+        requestedHeroId = string.Empty;
+        error =
+            "Usage:\n" +
+            "  .kill <hero_id>\n" +
+            "  .kill partySlot <1-5>\n" +
+            "Examples:\n" +
+            "  .kill hero.core.syzygy\n" +
+            "  .kill partySlot 1";
+
+        if (parts.Length == 3
+            && parts[1].Equals(
+                "partySlot",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            if (!TryBuildPartySlotRuntimeName(
+                parts[2],
+                out requestedHeroId))
+            {
+                error = "Party slot must be a number from 1 to 5.";
+                return false;
+            }
+
+            return true;
+        }
+
+        if (parts.Length != 2)
+            return false;
+
+        string selector = parts[1];
+
+        const string partySlotPrefix = "partySlot(";
+
+        if (selector.StartsWith(
+                partySlotPrefix,
+                StringComparison.OrdinalIgnoreCase)
+            && selector.EndsWith(
+                ")",
+                StringComparison.Ordinal))
+        {
+            string slotText = selector.Substring(
+                partySlotPrefix.Length,
+                selector.Length
+                    - partySlotPrefix.Length
+                    - 1);
+
+            if (!TryBuildPartySlotRuntimeName(
+                slotText,
+                out requestedHeroId))
+            {
+                error = "Party slot must be a number from 1 to 5.";
+                return false;
+            }
+
+            return true;
+        }
+
+        requestedHeroId = selector;
+        return true;
+    }
+
+    private static bool TryBuildPartySlotRuntimeName(
+        string slotText,
+        out string runtimeName)
+    {
+        runtimeName = string.Empty;
+
+        if (!int.TryParse(
+                slotText,
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out int slotNumber)
+            || slotNumber < 1
+            || slotNumber > PartyController.MaximumPartySize)
+        {
+            return false;
+        }
+
+        runtimeName =
+            $"PartySlot{slotNumber}Hero";
+
+        return true;
     }
 
     private string ExecuteReviveAll()

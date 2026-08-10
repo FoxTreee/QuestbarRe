@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 
 public partial class HeroFactory : Node
 {
@@ -59,7 +60,37 @@ public partial class HeroFactory : Node
             definition.ActorScene.Instantiate
                 <HeroActorController>();
 
-        hero.Configure(definition);
+        List<AbilityDefinition> abilities = new();
+        HashSet<string> loadedAbilityIds =
+            new(System.StringComparer.OrdinalIgnoreCase);
+
+        foreach (string abilityContentId
+            in definition.ClassDefinition.AbilityContentIds)
+        {
+            if (loadedAbilityIds.Add(abilityContentId)
+                && Registry.AbilityRegistry.TryGet(
+                abilityContentId,
+                out AbilityDefinition ability))
+            {
+                abilities.Add(ability);
+            }
+        }
+
+        foreach (string abilityContentId
+            in definition.AbilityContentIds)
+        {
+            if (loadedAbilityIds.Add(abilityContentId)
+                && Registry.AbilityRegistry.TryGet(
+                    abilityContentId,
+                    out AbilityDefinition ability))
+            {
+                abilities.Add(ability);
+            }
+        }
+
+        hero.Configure(
+            definition,
+            abilities);
 
         return true;
     }

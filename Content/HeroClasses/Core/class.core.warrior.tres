@@ -6,4 +6,5 @@
 script = ExtResource("1_6icaq")
 ContentId = "class.core.warrior"
 DisplayName = "Warrior"
+AbilityContentIds = Array[String](["ability.core.taunt"])
 metadata/_custom_type_script = "uid://djb803f4i720b"

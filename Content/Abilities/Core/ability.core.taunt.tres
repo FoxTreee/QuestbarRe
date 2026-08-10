@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://ca677bt8r4l5a"]
+
+[ext_resource type="Script" uid="uid://bus4x5fmyodi8" path="res://Scripts/Content/Definitions/AbilityDefinition.cs" id="1_taunt"]
+
+[resource]
+script = ExtResource("1_taunt")
+ContentId = "ability.core.taunt"
+DisplayName = "Taunt"
+Description = "Force every nearby monster to attack the caster for a short duration."
+CooldownSeconds = 8.0
+CastTimeSeconds = 0.0
+TargetMode = 1
+Range = 0.0
+EffectType = 1
+EffectRadius = 140.0
+EffectDurationSeconds = 4.0
+DesignerNotes = "Core Taunt behavior and cooldown enforcement are implemented. Indicator and presentation are intentionally deferred."

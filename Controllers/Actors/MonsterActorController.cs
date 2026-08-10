@@ -19,6 +19,10 @@ public partial class MonsterActorController : Node2D
     public delegate void DiedEventHandler(
     MonsterActorController monster);
 
+    [Signal]
+    public delegate void ForcedTargetEndedEventHandler(
+        MonsterActorController monster);
+
     private enum MonsterState
     {
         WaitingForTarget,
@@ -40,6 +44,8 @@ public partial class MonsterActorController : Node2D
         _abilityCooldowns = new();
     private AbilityDefinition? _activeAbility;
     private double _abilityCastTimeRemaining;
+    private HeroActorController? _forcedTarget;
+    private double _forcedTargetTimeRemaining;
 
     public bool HasValidTarget => IsValidHeroTarget(CurrentTarget);
 
@@ -109,6 +115,20 @@ public partial class MonsterActorController : Node2D
 
     public bool HasTarget => IsValidHeroTarget(CurrentTarget);
 
+    public bool HasForcedTarget =>
+        _forcedTargetTimeRemaining > 0.0
+        && IsValidHeroTarget(_forcedTarget);
+
+    public HeroActorController? ForcedTarget =>
+        HasForcedTarget
+            ? _forcedTarget
+            : null;
+
+    public float ForcedTargetSecondsRemaining =>
+        (float)System.Math.Max(
+            0.0,
+            _forcedTargetTimeRemaining);
+
     public void Configure(
         MonsterDefinition definition,
         IReadOnlyList<AbilityDefinition>? abilities = null)
@@ -122,6 +142,8 @@ public partial class MonsterActorController : Node2D
         Definition = definition;
 
         Threat.Clear();
+        _forcedTarget = null;
+        _forcedTargetTimeRemaining = 0.0;
 
         _abilities.Clear();
         _abilityCooldowns.Clear();
@@ -139,10 +161,45 @@ public partial class MonsterActorController : Node2D
         }
     }
 
+    public bool TryApplyForcedTarget(
+        HeroActorController target,
+        float durationSeconds)
+    {
+        if (IsDead
+            || !IsValidHeroTarget(target)
+            || !float.IsFinite(durationSeconds)
+            || durationSeconds <= 0.0f)
+        {
+            return false;
+        }
+
+        _forcedTarget = target;
+        _forcedTargetTimeRemaining = durationSeconds;
+        CurrentTarget = target;
+
+        _attackCooldownRemaining = 0.0;
+        _attackTimeRemaining = 0.0;
+        _attackReleaseEmitted = false;
+        ClearAbilityCast();
+        StopAttackPresentation();
+
+        _state = MonsterState.ApproachingTarget;
+
+        return true;
+    }
+
     public void RefreshTargetValidity()
     {
         if (IsDead)
             return;
+
+        if (_forcedTarget is not null
+            && (!IsValidHeroTarget(_forcedTarget)
+                || _forcedTargetTimeRemaining <= 0.0))
+        {
+            _forcedTarget = null;
+            _forcedTargetTimeRemaining = 0.0;
+        }
 
         if (IsValidHeroTarget(CurrentTarget))
             return;
@@ -170,6 +227,8 @@ public partial class MonsterActorController : Node2D
 
         _state = MonsterState.Dead;
         CurrentTarget = null;
+        _forcedTarget = null;
+        _forcedTargetTimeRemaining = 0.0;
 
         _attackCooldownRemaining = 0.0;
         _attackTimeRemaining = 0.0;
@@ -605,6 +664,12 @@ public partial class MonsterActorController : Node2D
         if (!IsValidHeroTarget(target))
             return false;
 
+        if (HasForcedTarget
+            && target != _forcedTarget)
+        {
+            return false;
+        }
+
         if (HasValidTarget)
             return false;
 
@@ -615,6 +680,72 @@ public partial class MonsterActorController : Node2D
             $"{Name} locked onto {target.Name}.");
 
         return true;
+    }
+
+    public bool TrySwitchTarget(HeroActorController target)
+    {
+        if (IsDead
+            || HasForcedTarget
+            || !IsValidHeroTarget(target)
+            || CurrentTarget == target)
+        {
+            return false;
+        }
+
+        CurrentTarget = target;
+
+        _attackCooldownRemaining = 0.0;
+        _attackTimeRemaining = 0.0;
+        _attackReleaseEmitted = false;
+        ClearAbilityCast();
+        StopAttackPresentation();
+
+        _state = MonsterState.ApproachingTarget;
+
+        DebugLog.Print(
+            $"{Name} switched aggro to {target.Name}.");
+
+        return true;
+    }
+
+    private void UpdateForcedTarget(double delta)
+    {
+        if (_forcedTarget is null)
+            return;
+
+        if (!IsValidHeroTarget(_forcedTarget))
+        {
+            EndForcedTarget();
+
+            return;
+        }
+
+        _forcedTargetTimeRemaining -= delta;
+
+        if (_forcedTargetTimeRemaining > 0.0)
+            return;
+
+        EndForcedTarget();
+    }
+
+    private void EndForcedTarget()
+    {
+        _forcedTarget = null;
+        _forcedTargetTimeRemaining = 0.0;
+        CurrentTarget = null;
+
+        _attackCooldownRemaining = 0.0;
+        _attackTimeRemaining = 0.0;
+        _attackReleaseEmitted = false;
+        ClearAbilityCast();
+        StopAttackPresentation();
+
+        if (!IsDead)
+            _state = MonsterState.WaitingForTarget;
+
+        EmitSignal(
+            SignalName.ForcedTargetEnded,
+            this);
     }
 
     private void BeginAttack()
@@ -789,6 +920,9 @@ public partial class MonsterActorController : Node2D
 
     public override void _Process(double delta)
     {
+        if (!IsDead)
+            UpdateForcedTarget(delta);
+
         UpdateFacingTowardTarget();
 
         if (!IsDead)

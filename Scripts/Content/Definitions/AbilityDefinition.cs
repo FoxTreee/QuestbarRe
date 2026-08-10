@@ -20,7 +20,7 @@ public partial class AbilityDefinition : Resource
 
     [ExportCategory("Timing")]
 
-    [Export(PropertyHint.Range, "0.1,120,0.1")]
+    [Export(PropertyHint.Range, "0,120,0.1")]
     public float CooldownSeconds { get; set; } =
         6.0f;
 
@@ -40,8 +40,20 @@ public partial class AbilityDefinition : Resource
 
     [ExportCategory("Effect")]
 
+    [Export]
+    public AbilityEffectType EffectType { get; set; } =
+        AbilityEffectType.DirectDamage;
+
     [Export(PropertyHint.Range, "0,1000000,1")]
     public float BaseDamage { get; set; } =
+        0.0f;
+
+    [Export(PropertyHint.Range, "0,1000,1")]
+    public float EffectRadius { get; set; } =
+        0.0f;
+
+    [Export(PropertyHint.Range, "0,60,0.1")]
+    public float EffectDurationSeconds { get; set; } =
         0.0f;
 
     [ExportCategory("Authoring")]
@@ -68,11 +80,11 @@ public partial class AbilityDefinition : Resource
                 $"{ContentId}: DisplayName is required.");
         }
 
-        if (CooldownSeconds <= 0.0f)
+        if (CooldownSeconds < 0.0f)
         {
             errors.Add(
-                $"{ContentId}: CooldownSeconds must be " +
-                "greater than zero.");
+                $"{ContentId}: CooldownSeconds cannot be " +
+                "negative.");
         }
 
         if (CastTimeSeconds < 0.0f)
@@ -92,6 +104,43 @@ public partial class AbilityDefinition : Resource
         {
             errors.Add(
                 $"{ContentId}: BaseDamage cannot be negative.");
+        }
+
+        if (EffectRadius < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: EffectRadius cannot be negative.");
+        }
+
+        if (EffectDurationSeconds < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: EffectDurationSeconds cannot be " +
+                "negative.");
+        }
+
+        if (EffectType == AbilityEffectType.AreaTaunt)
+        {
+            if (TargetMode != AbilityTargetMode.Self)
+            {
+                errors.Add(
+                    $"{ContentId}: AreaTaunt abilities must use " +
+                    "the Self target mode.");
+            }
+
+            if (EffectRadius <= 0.0f)
+            {
+                errors.Add(
+                    $"{ContentId}: AreaTaunt abilities require an " +
+                    "EffectRadius greater than zero.");
+            }
+
+            if (EffectDurationSeconds <= 0.0f)
+            {
+                errors.Add(
+                    $"{ContentId}: AreaTaunt abilities require an " +
+                    "EffectDurationSeconds value greater than zero.");
+            }
         }
 
         return errors;

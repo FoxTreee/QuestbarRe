@@ -183,14 +183,6 @@ public partial class MonsterDefinition : Resource
             }
         }
 
-        if (TargetingStyle == MonsterTargetingStyle.HighestThreatHero)
-        {
-            errors.Add(
-                $"{ContentId}: HighestThreatHero is reserved " +
-                "for the future threat system and is not " +
-                "currently supported.");
-        }
-
         return errors;
     }
 }

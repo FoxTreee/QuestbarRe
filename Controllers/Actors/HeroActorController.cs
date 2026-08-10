@@ -29,7 +29,10 @@ public partial class HeroActorController : Node2D
 	private double _attackCooldownRemaining;
 	private double _attackTimeRemaining;
 	private bool _attackReleaseEmitted;
-    private ActorHealthBarController _healthBar = null!;
+	private ActorHealthBarController _healthBar = null!;
+	private readonly List<AbilityDefinition> _abilities = new();
+	private readonly HeroAbilityCooldownState
+		_abilityCooldowns = new();
 
 	public HeroCombatProfile CombatProfile { get; } = new();
 	public float CombatPresentationScale { get; private set; } = 1.0f;
@@ -61,7 +64,31 @@ public partial class HeroActorController : Node2D
 		private set;
 	}
 
-	public void Configure(HeroDefinition definition)
+	public IReadOnlyList<AbilityDefinition> Abilities =>
+		_abilities;
+
+	public double GetAbilityCooldownRemaining(
+		string abilityContentId)
+	{
+		return _abilityCooldowns.GetRemainingSeconds(
+			abilityContentId);
+	}
+
+	public bool IsAbilityReady(string abilityContentId)
+	{
+		return _abilityCooldowns.IsReady(
+			abilityContentId);
+	}
+
+	public bool TryStartAbilityCooldown(
+		AbilityDefinition ability)
+	{
+		return _abilityCooldowns.TryStart(ability);
+	}
+
+	public void Configure(
+		HeroDefinition definition,
+		IReadOnlyList<AbilityDefinition>? abilities = null)
 	{
 		if (!GodotObject.IsInstanceValid(definition))
 		{
@@ -82,6 +109,42 @@ public partial class HeroActorController : Node2D
 			definition.AttackLungeDistance;
 		TemporaryAttackDelivery = definition.AttackDelivery;
 		CombatMoveSpeed = definition.CombatMoveSpeed;
+
+		_abilities.Clear();
+
+		if (abilities is not null)
+		{
+			foreach (AbilityDefinition ability in abilities)
+			{
+				if (!GodotObject.IsInstanceValid(ability))
+					continue;
+
+				_abilities.Add(ability);
+			}
+		}
+
+		_abilityCooldowns.Configure(_abilities);
+	}
+
+	public bool TryGetAbility(
+		string contentId,
+		out AbilityDefinition ability)
+	{
+		foreach (AbilityDefinition candidate in _abilities)
+		{
+			if (!candidate.ContentId.Equals(
+				contentId.Trim(),
+				System.StringComparison.OrdinalIgnoreCase))
+			{
+				continue;
+			}
+
+			ability = candidate;
+			return true;
+		}
+
+		ability = null!;
+		return false;
 	}
 
 
@@ -105,6 +168,10 @@ public partial class HeroActorController : Node2D
 	
 	[Export]
 	public Marker2D ProjectileOrigin { get; set; } = null!;
+
+	[Export]
+	public HeroAbilityCooldownIndicatorController
+		AbilityCooldownIndicator { get; set; } = null!;
 
 	[ExportCategory("Travel Animation")]
 	[Export(PropertyHint.Range, "0,20,0.5")]
@@ -180,6 +247,7 @@ public partial class HeroActorController : Node2D
 		_attackReleaseEmitted = false;
 		_initialAttackPending = false;
 		_movementAnimationGraceRemaining = 0.0;
+		_abilityCooldowns.Reset();
 
 		StopMovementAnimation();
 
@@ -246,6 +314,7 @@ public partial class HeroActorController : Node2D
 
 		JourneyState.StateChanged += OnJourneyStateChanged;
         _healthBar.Bind(Health);
+		AbilityCooldownIndicator.Bind(this);
         ApplyJourneyState(JourneyState.CurrentState);
 		SnapToFormation();
 
@@ -272,6 +341,7 @@ public partial class HeroActorController : Node2D
 
 	public override void _Process(double delta)
 	{
+		_abilityCooldowns.Update(delta);
 		_movedThisFrame = false;
 		UpdateFacingTowardTarget();
 
@@ -795,6 +865,9 @@ public partial class HeroActorController : Node2D
 		valid &= Require(BodyBounds, nameof(BodyBounds));
 		valid &= Require(Targeting, nameof(Targeting));
 		valid &= Require(ProjectileOrigin, nameof(ProjectileOrigin));
+		valid &= Require(
+			AbilityCooldownIndicator,
+			nameof(AbilityCooldownIndicator));
 
         if (GodotObject.IsInstanceValid(VisualRoot))
         {

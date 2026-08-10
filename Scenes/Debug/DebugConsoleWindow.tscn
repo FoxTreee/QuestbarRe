@@ -23,6 +23,36 @@ theme_override_constants/margin_bottom = 10
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1325042650]
 layout_mode = 2
 
+[node name="FilterTabs" type="TabBar" parent="MarginContainer/VBoxContainer" unique_id=630389713]
+layout_mode = 2
+current_tab = 0
+close_with_middle_mouse = false
+tab_count = 6
+tab_0/title = "All"
+tab_1/title = "Threat"
+tab_1/tooltip = "Threat based logs"
+tab_2/title = "Damage"
+tab_2/tooltip = "All damage exchanges and quantities"
+tab_3/title = "Ability"
+tab_3/tooltip = "Casts, potions, world buffs"
+tab_4/title = "Encounter"
+tab_4/tooltip = "Whats on screen"
+tab_5/title = "Error"
+tab_5/tooltip = "DO NOT PANIC!"
+
+[node name="SearchRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1642698029]
+layout_mode = 2
+
+[node name="SearchLabel" type="Label" parent="MarginContainer/VBoxContainer/SearchRow" unique_id=1831395429]
+layout_mode = 2
+text = "Search:"
+
+[node name="SearchInput" type="LineEdit" parent="MarginContainer/VBoxContainer/SearchRow" unique_id=1733643406]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Timestamp, actor, message..."
+clear_button_enabled = true
+
 [node name="DebugOutput" type="RichTextLabel" parent="MarginContainer/VBoxContainer" unique_id=2047922864]
 layout_mode = 2
 size_flags_vertical = 3

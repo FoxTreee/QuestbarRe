@@ -3,12 +3,35 @@
 [ext_resource type="Script" uid="uid://b6vqdf84sajh5" path="res://Controllers/Actors/HeroActorController.cs" id="1_nd8h6"]
 [ext_resource type="Script" uid="uid://cl6hid01monyl" path="res://Controllers/Actors/BodyBounds2D.cs" id="1_vrpdx"]
 [ext_resource type="PackedScene" uid="uid://b8j8ii2jqo33s" path="res://ActorHealthBar.tscn" id="3_d8mty"]
+[ext_resource type="Script" uid="uid://bm43aglk74odj" path="res://Controllers/Actors/HeroAbilityCooldownIndicatorController.cs" id="4_d8mty"]
 
-[node name="HeroActor" type="Node2D" unique_id=162660220 node_paths=PackedStringArray("VisualRoot", "BodyBounds", "ProjectileOrigin")]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d8mty"]
+bg_color = Color(0.31174156, 0.33386132, 0.38903552, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4ebpt"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 1
+corner_radius_top_right = 1
+corner_radius_bottom_right = 1
+corner_radius_bottom_left = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_eh30r"]
+bg_color = Color(0.14509805, 0.15686275, 0.1882353, 1)
+corner_radius_top_left = 1
+corner_radius_top_right = 1
+corner_radius_bottom_right = 1
+corner_radius_bottom_left = 1
+
+[node name="HeroActor" type="Node2D" unique_id=162660220 node_paths=PackedStringArray("VisualRoot", "BodyBounds", "ProjectileOrigin", "AbilityCooldownIndicator")]
 script = ExtResource("1_nd8h6")
 VisualRoot = NodePath("VisualRoot")
 BodyBounds = NodePath("VisualRoot/BodyBounds")
 ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
+AbilityCooldownIndicator = NodePath("VisualRoot/HeroAbilityCooldownIndicator")
 
 [node name="VisualRoot" type="Node2D" parent="." unique_id=18405630]
 
@@ -27,3 +50,87 @@ metadata/_custom_type_script = "uid://cl6hid01monyl"
 
 [node name="ProjectileOrigin" type="Marker2D" parent="VisualRoot" unique_id=444408168]
 position = Vector2(-12, -24)
+
+[node name="HeroAbilityCooldownIndicator" type="Node2D" parent="VisualRoot" unique_id=390563175]
+z_index = 6
+position = Vector2(-15, -62.000004)
+scale = Vector2(1.3370678, 1.3863667)
+script = ExtResource("4_d8mty")
+
+[node name="Outline" type="Panel" parent="VisualRoot/HeroAbilityCooldownIndicator" unique_id=1815537365]
+visible = false
+offset_left = -5.0
+offset_top = -5.0
+offset_right = 5.0
+offset_bottom = 5.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_d8mty")
+
+[node name="CooldownProgress" type="ProgressBar" parent="VisualRoot/HeroAbilityCooldownIndicator" unique_id=610945823]
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+theme_override_styles/background = SubResource("StyleBoxFlat_4ebpt")
+theme_override_styles/fill = SubResource("StyleBoxFlat_eh30r")
+max_value = 1.0
+step = 0.001
+value = 1.0
+fill_mode = 3
+show_percentage = false
+
+[node name="HeroAbilityCooldownIndicator2" type="Node2D" parent="VisualRoot" unique_id=788796589]
+visible = false
+z_index = 6
+position = Vector2(0, -62.000004)
+scale = Vector2(1.3370678, 1.3863667)
+
+[node name="Outline" type="Panel" parent="VisualRoot/HeroAbilityCooldownIndicator2" unique_id=372538455]
+visible = false
+offset_left = -5.0
+offset_top = -5.0
+offset_right = 5.0
+offset_bottom = 5.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_d8mty")
+
+[node name="CooldownProgress" type="ProgressBar" parent="VisualRoot/HeroAbilityCooldownIndicator2" unique_id=1627656841]
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+theme_override_styles/background = SubResource("StyleBoxFlat_4ebpt")
+theme_override_styles/fill = SubResource("StyleBoxFlat_eh30r")
+max_value = 1.0
+step = 0.001
+value = 1.0
+fill_mode = 3
+show_percentage = false
+
+[node name="HeroAbilityCooldownIndicator3" type="Node2D" parent="VisualRoot" unique_id=529883971]
+visible = false
+z_index = 6
+position = Vector2(14.999999, -62.000004)
+scale = Vector2(1.3370678, 1.3863667)
+
+[node name="Outline" type="Panel" parent="VisualRoot/HeroAbilityCooldownIndicator3" unique_id=698572317]
+visible = false
+offset_left = -5.0
+offset_top = -5.0
+offset_right = 5.0
+offset_bottom = 5.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_d8mty")
+
+[node name="CooldownProgress" type="ProgressBar" parent="VisualRoot/HeroAbilityCooldownIndicator3" unique_id=683194982]
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+theme_override_styles/background = SubResource("StyleBoxFlat_4ebpt")
+theme_override_styles/fill = SubResource("StyleBoxFlat_eh30r")
+max_value = 1.0
+step = 0.001
+value = 1.0
+fill_mode = 3
+show_percentage = false
