@@ -201,6 +201,9 @@ public partial class MonsterActorController : Node2D
             _forcedTargetTimeRemaining = 0.0;
         }
 
+        if (CurrentTarget is null)
+            return;
+
         if (IsValidHeroTarget(CurrentTarget))
             return;
 

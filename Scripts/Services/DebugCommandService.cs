@@ -284,6 +284,353 @@ public partial class DebugCommandService : Node
             : $"; Abilities: {string.Join(", ", abilityEntries)}";
     }
 
+    public string BuildConsoleReferenceText()
+    {
+        StringBuilder output = new();
+
+        AppendCommandReference(output);
+
+        HeroContentRegistry heroRegistry =
+            Party.Factory.Registry;
+
+        MonsterContentRegistry monsterRegistry =
+            Encounter.MonsterFactory.Registry;
+
+        AbilityContentRegistry abilityRegistry =
+            heroRegistry.AbilityRegistry;
+
+        AppendMonsterReference(
+            output,
+            monsterRegistry,
+            abilityRegistry);
+
+        AppendClassAndHeroReference(
+            output,
+            heroRegistry,
+            abilityRegistry);
+
+        AppendAbilityReference(
+            output,
+            abilityRegistry);
+
+        AppendEncounterReference(
+            output,
+            Encounter.EncounterRegistry);
+
+        AppendEncounterPoolReference(
+            output,
+            Encounter.EncounterPoolRegistry);
+
+        return output.ToString().TrimEnd();
+    }
+
+    private static void AppendCommandReference(
+        StringBuilder output)
+    {
+        output.AppendLine("COMMANDS");
+        output.AppendLine("--------");
+        output.AppendLine(".help");
+        output.AppendLine(".status");
+        output.AppendLine(".clear");
+        output.AppendLine(".revive <hero_id>");
+        output.AppendLine(".reviveAll");
+        output.AppendLine(".kill <hero_id>");
+        output.AppendLine(".kill partySlot <1-5>");
+        output.AppendLine(
+            ".useAbility <hero_id> <ability_id>");
+        output.AppendLine(
+            ".spawnMonster <monster_id> [count]");
+        output.AppendLine(".addMonsters <count>");
+        output.AppendLine(".setMonsterCount <count>");
+        output.AppendLine(
+            ".startEncounter <encounter_id>");
+        output.AppendLine(
+            ".startEncounterPool <pool_id>");
+        output.AppendLine(".endEncounter");
+        output.AppendLine();
+        output.AppendLine(
+            "Use .help for descriptions, examples, chains, " +
+            "and keyboard shortcuts.");
+    }
+
+    private static void AppendMonsterReference(
+        StringBuilder output,
+        MonsterContentRegistry monsterRegistry,
+        AbilityContentRegistry abilityRegistry)
+    {
+        AppendSectionHeader(output, "MONSTERS");
+
+        foreach (string contentId in GetSortedIds(
+            monsterRegistry.GetRegisteredIds()))
+        {
+            if (!monsterRegistry.TryGet(
+                contentId,
+                out MonsterDefinition definition))
+            {
+                continue;
+            }
+
+            output.AppendLine(
+                $"{definition.ContentId} - " +
+                definition.DisplayName);
+
+            AppendAbilityIds(
+                output,
+                definition.AbilityContentIds,
+                abilityRegistry,
+                "  Abilities");
+        }
+    }
+
+    private static void AppendClassAndHeroReference(
+        StringBuilder output,
+        HeroContentRegistry heroRegistry,
+        AbilityContentRegistry abilityRegistry)
+    {
+        AppendSectionHeader(output, "CLASSES AND HEROES");
+
+        Dictionary<string, HeroClassDefinition> classesById =
+            new(StringComparer.OrdinalIgnoreCase);
+
+        Dictionary<string, List<HeroDefinition>> heroesByClassId =
+            new(StringComparer.OrdinalIgnoreCase);
+
+        List<HeroDefinition> heroesWithoutClass = new();
+
+        foreach (string heroContentId in GetSortedIds(
+            heroRegistry.GetRegisteredIds()))
+        {
+            if (!heroRegistry.TryGet(
+                heroContentId,
+                out HeroDefinition hero))
+            {
+                continue;
+            }
+
+            if (!GodotObject.IsInstanceValid(
+                hero.ClassDefinition))
+            {
+                heroesWithoutClass.Add(hero);
+                continue;
+            }
+
+            HeroClassDefinition heroClass =
+                hero.ClassDefinition;
+
+            classesById[heroClass.ContentId] =
+                heroClass;
+
+            if (!heroesByClassId.TryGetValue(
+                heroClass.ContentId,
+                out List<HeroDefinition>? classHeroes))
+            {
+                classHeroes = new List<HeroDefinition>();
+                heroesByClassId.Add(
+                    heroClass.ContentId,
+                    classHeroes);
+            }
+
+            classHeroes.Add(hero);
+        }
+
+        foreach (string classContentId in GetSortedIds(
+            classesById.Keys))
+        {
+            HeroClassDefinition heroClass =
+                classesById[classContentId];
+
+            output.AppendLine(
+                $"{heroClass.ContentId} - " +
+                heroClass.DisplayName);
+
+            AppendAbilityIds(
+                output,
+                heroClass.AbilityContentIds,
+                abilityRegistry,
+                "  Class abilities");
+
+            List<HeroDefinition> classHeroes =
+                heroesByClassId[classContentId];
+
+            classHeroes.Sort(
+                (left, right) =>
+                    StringComparer.OrdinalIgnoreCase.Compare(
+                        left.ContentId,
+                        right.ContentId));
+
+            output.AppendLine("  Heroes:");
+
+            foreach (HeroDefinition hero in classHeroes)
+            {
+                output.AppendLine(
+                    $"    {hero.ContentId} - " +
+                    hero.DisplayName);
+
+                AppendAbilityIds(
+                    output,
+                    hero.AbilityContentIds,
+                    abilityRegistry,
+                    "      Hero abilities");
+            }
+        }
+
+        if (heroesWithoutClass.Count == 0)
+            return;
+
+        heroesWithoutClass.Sort(
+            (left, right) =>
+                StringComparer.OrdinalIgnoreCase.Compare(
+                    left.ContentId,
+                    right.ContentId));
+
+        output.AppendLine("No class assigned:");
+
+        foreach (HeroDefinition hero in heroesWithoutClass)
+        {
+            output.AppendLine(
+                $"  {hero.ContentId} - " +
+                hero.DisplayName);
+
+            AppendAbilityIds(
+                output,
+                hero.AbilityContentIds,
+                abilityRegistry,
+                "    Hero abilities");
+        }
+    }
+
+    private static void AppendAbilityReference(
+        StringBuilder output,
+        AbilityContentRegistry abilityRegistry)
+    {
+        AppendSectionHeader(output, "ABILITIES");
+
+        foreach (string contentId in GetSortedIds(
+            abilityRegistry.GetRegisteredIds()))
+        {
+            if (!abilityRegistry.TryGet(
+                contentId,
+                out AbilityDefinition definition))
+            {
+                continue;
+            }
+
+            output.AppendLine(
+                $"{definition.ContentId} - " +
+                definition.DisplayName);
+        }
+    }
+
+    private static void AppendEncounterReference(
+        StringBuilder output,
+        EncounterContentRegistry encounterRegistry)
+    {
+        AppendSectionHeader(output, "ENCOUNTERS");
+
+        foreach (string contentId in GetSortedIds(
+            encounterRegistry.GetRegisteredIds()))
+        {
+            if (!encounterRegistry.TryGet(
+                contentId,
+                out EncounterDefinition definition))
+            {
+                continue;
+            }
+
+            output.AppendLine(
+                $"{definition.ContentId} - " +
+                definition.DisplayName);
+        }
+    }
+
+    private static void AppendEncounterPoolReference(
+        StringBuilder output,
+        EncounterPoolContentRegistry encounterPoolRegistry)
+    {
+        AppendSectionHeader(output, "ENCOUNTER POOLS");
+
+        foreach (string contentId in GetSortedIds(
+            encounterPoolRegistry.GetRegisteredIds()))
+        {
+            if (!encounterPoolRegistry.TryGet(
+                contentId,
+                out EncounterPoolDefinition definition))
+            {
+                continue;
+            }
+
+            output.AppendLine(
+                $"{definition.ContentId} - " +
+                definition.DisplayName);
+        }
+    }
+
+    private static void AppendAbilityIds(
+        StringBuilder output,
+        Godot.Collections.Array<string> abilityContentIds,
+        AbilityContentRegistry abilityRegistry,
+        string label)
+    {
+        if (abilityContentIds.Count == 0)
+        {
+            output.AppendLine($"{label}: None");
+            return;
+        }
+
+        output.AppendLine($"{label}:");
+
+        List<string> sortedAbilityIds =
+            new(abilityContentIds);
+
+        sortedAbilityIds.Sort(
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (string abilityContentId in sortedAbilityIds)
+        {
+            string displayName = "Unregistered";
+
+            if (abilityRegistry.TryGet(
+                abilityContentId,
+                out AbilityDefinition definition))
+            {
+                displayName = definition.DisplayName;
+            }
+
+            int leadingSpaceCount =
+                label.Length - label.TrimStart().Length;
+
+            string entryIndent =
+                new(' ', leadingSpaceCount + 2);
+
+            output.AppendLine(
+                entryIndent +
+                $"{abilityContentId} - {displayName}");
+        }
+    }
+
+    private static void AppendSectionHeader(
+        StringBuilder output,
+        string title)
+    {
+        output.AppendLine();
+        output.AppendLine();
+        output.AppendLine(title);
+        output.AppendLine(
+            new string('-', title.Length));
+    }
+
+    private static List<string> GetSortedIds(
+        IEnumerable<string> contentIds)
+    {
+        List<string> sortedIds =
+            new(contentIds);
+
+        sortedIds.Sort(
+            StringComparer.OrdinalIgnoreCase);
+
+        return sortedIds;
+    }
+
     private static string BuildHelpText()
     {
         return

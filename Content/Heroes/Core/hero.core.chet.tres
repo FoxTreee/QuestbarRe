@@ -13,6 +13,7 @@ ActorScene = ExtResource("1_ulyqf")
 CombatTagMask = 4
 MaximumHealth = 13573.0
 AttackDamage = 0.0
+AttackRange = 225.0
 AttackInterval = 0.5
 AttackDuration = 0.25
 AttackReleasePoint = 0.2

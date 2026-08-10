@@ -27,9 +27,21 @@ public partial class DebugConsoleController : Window
 	[Export]
 	public LineEdit SearchInput { get; set; } = null!;
 
+	[Export]
+	public Button PauseButton { get; set; } = null!;
+
+	[Export]
+	public Button AutoScrollButton { get; set; } = null!;
+
+	[Export]
+	public Button ClearButton { get; set; } = null!;
+
 	private readonly List<string> _commandHistory = new();
 	private readonly List<ConsoleEntry> _outputHistory = new();
 	private int _historyIndex;
+	private int _pausedHistoryCount;
+	private bool _isDisplayPaused;
+	private bool _isAutoScrollEnabled = true;
 	private ConsoleFilter _activeFilter = ConsoleFilter.All;
 	private string _searchText = string.Empty;
 
@@ -44,7 +56,8 @@ public partial class DebugConsoleController : Window
 		Damage,
 		Ability,
 		Encounter,
-		Error
+		Error,
+		Ids
 	}
 
 	public override void _Ready()
@@ -68,6 +81,9 @@ public partial class DebugConsoleController : Window
 		CommandInput.GuiInput += OnCommandInputGuiInput;
 		FilterTabs.TabChanged += OnFilterTabChanged;
 		SearchInput.TextChanged += OnSearchTextChanged;
+		PauseButton.Pressed += ToggleDisplayPause;
+		AutoScrollButton.Pressed += ToggleAutoScroll;
+		ClearButton.Pressed += ClearOutput;
 		CloseRequested += HideConsole;
 
 		JourneyState.StateChanged += OnJourneyStateChanged;
@@ -75,9 +91,13 @@ public partial class DebugConsoleController : Window
 		Encounter.EncounterCompleted += OnEncounterCompleted;
 		Encounter.MonsterRosterChanged += OnMonsterRosterChanged;
 
+		ApplyAutoScrollSetting();
+
 		AppendOutput(
 			"Questbar Debug Console ready.\n" +
 			"Type '.help' for available commands.");
+
+		UpdatePauseButtonText();
 
 		Hide();
 	}
@@ -124,6 +144,21 @@ public partial class DebugConsoleController : Window
 			SearchInput.TextChanged -= OnSearchTextChanged;
 		}
 
+		if (GodotObject.IsInstanceValid(PauseButton))
+		{
+			PauseButton.Pressed -= ToggleDisplayPause;
+		}
+
+		if (GodotObject.IsInstanceValid(AutoScrollButton))
+		{
+			AutoScrollButton.Pressed -= ToggleAutoScroll;
+		}
+
+		if (GodotObject.IsInstanceValid(ClearButton))
+		{
+			ClearButton.Pressed -= ClearOutput;
+		}
+
 
 		CloseRequested -=
 			HideConsole;
@@ -145,6 +180,25 @@ public partial class DebugConsoleController : Window
 	private void HideConsole()
 	{
 		Hide();
+	}
+
+	public override void _Input(InputEvent @event)
+	{
+		if (!Visible
+			|| @event is not InputEventKey keyEvent)
+			return;
+
+		if (!keyEvent.Pressed
+			|| keyEvent.Echo
+			|| keyEvent.Keycode != Key.Escape
+			|| string.IsNullOrEmpty(SearchInput.Text))
+		{
+			return;
+		}
+
+		SearchInput.Text = string.Empty;
+		OnSearchTextChanged(string.Empty);
+		GetViewport().SetInputAsHandled();
 	}
 
 	private void OnCommandSubmitted(string commandText)
@@ -224,7 +278,8 @@ public partial class DebugConsoleController : Window
 		_outputHistory.Add(
 			new ConsoleEntry(category, message));
 
-		if (ShouldDisplay(category, message))
+		if (!_isDisplayPaused
+			&& ShouldDisplay(category, message))
 		{
 			DebugOutput.AppendText(
 				message + "\n");
@@ -240,6 +295,9 @@ public partial class DebugConsoleController : Window
 		valid &= Require(CommandInput, nameof(CommandInput));
 		valid &= Require(FilterTabs, nameof(FilterTabs));
 		valid &= Require(SearchInput, nameof(SearchInput));
+		valid &= Require(PauseButton, nameof(PauseButton));
+		valid &= Require(AutoScrollButton, nameof(AutoScrollButton));
+		valid &= Require(ClearButton, nameof(ClearButton));
 		valid &= Require(Combat, nameof(Combat));
 		valid &= Require(JourneyState, nameof(JourneyState));
 		valid &= Require(Encounter, nameof(Encounter));
@@ -468,6 +526,67 @@ public partial class DebugConsoleController : Window
 		RebuildVisibleOutput();
 	}
 
+	private void ToggleDisplayPause()
+	{
+		if (_isDisplayPaused)
+		{
+			_isDisplayPaused = false;
+		}
+		else
+		{
+			_pausedHistoryCount =
+				_outputHistory.Count;
+
+			_isDisplayPaused = true;
+		}
+
+		UpdatePauseButtonText();
+		RebuildVisibleOutput();
+	}
+
+	private void UpdatePauseButtonText()
+	{
+		PauseButton.Text =
+			_isDisplayPaused
+				? "Resume"
+				: "Pause";
+	}
+
+	private void ToggleAutoScroll()
+	{
+		_isAutoScrollEnabled =
+			!_isAutoScrollEnabled;
+
+		ApplyAutoScrollSetting();
+	}
+
+	private void ApplyAutoScrollSetting()
+	{
+		DebugOutput.ScrollFollowing =
+			_isAutoScrollEnabled;
+
+		AutoScrollButton.Text =
+			_isAutoScrollEnabled
+				? "Auto Scroll: On"
+				: "Auto Scroll: Off";
+
+		if (_isAutoScrollEnabled)
+		{
+			ScrollToLatestLine();
+		}
+	}
+
+	private void ScrollToLatestLine()
+	{
+		int lastLine =
+			DebugOutput.GetLineCount() - 1;
+
+		if (lastLine >= 0)
+		{
+			DebugOutput.ScrollToLine(lastLine);
+		}
+	}
+
 	private ConsoleFilter GetFilterForTab(int tabIndex)
 	{
 		string title =
@@ -480,6 +599,7 @@ public partial class DebugConsoleController : Window
 			"ABILITY" => ConsoleFilter.Ability,
 			"ENCOUNTER" => ConsoleFilter.Encounter,
 			"ERROR" => ConsoleFilter.Error,
+			"IDS" => ConsoleFilter.Ids,
 			_ => ConsoleFilter.All
 		};
 	}
@@ -488,8 +608,24 @@ public partial class DebugConsoleController : Window
 	{
 		DebugOutput.Clear();
 
-		foreach (ConsoleEntry entry in _outputHistory)
+		if (_activeFilter == ConsoleFilter.Ids)
 		{
+			AppendReferenceOutput();
+			return;
+		}
+
+		int visibleEntryCount =
+			_isDisplayPaused
+				? Math.Min(
+					_pausedHistoryCount,
+					_outputHistory.Count)
+				: _outputHistory.Count;
+
+		for (int i = 0; i < visibleEntryCount; i++)
+		{
+			ConsoleEntry entry =
+				_outputHistory[i];
+
 			if (!ShouldDisplay(
 				entry.Category,
 				entry.Message))
@@ -515,6 +651,7 @@ public partial class DebugConsoleController : Window
 				ConsoleFilter.Ability => category == DebugLogCategory.Ability,
 				ConsoleFilter.Encounter => category == DebugLogCategory.Encounter,
 				ConsoleFilter.Error => category == DebugLogCategory.Error,
+				ConsoleFilter.Ids => false,
 				_ => false
 			};
 
@@ -530,7 +667,34 @@ public partial class DebugConsoleController : Window
 	private void ClearOutput()
 	{
 		_outputHistory.Clear();
-		DebugOutput.Clear();
+		_pausedHistoryCount = 0;
+		RebuildVisibleOutput();
+	}
+
+	private void AppendReferenceOutput()
+	{
+		string referenceText =
+			Commands.BuildConsoleReferenceText();
+
+		string[] lines =
+			referenceText.Replace(
+				"\r\n",
+				"\n")
+			.Split('\n');
+
+		foreach (string line in lines)
+		{
+			if (!string.IsNullOrEmpty(_searchText)
+				&& !line.Contains(
+					_searchText,
+					StringComparison.OrdinalIgnoreCase))
+			{
+				continue;
+			}
+
+			DebugOutput.AppendText(
+				line + "\n");
+		}
 	}
 
 	private static string GetCategoryLabel(DebugLogCategory category)
