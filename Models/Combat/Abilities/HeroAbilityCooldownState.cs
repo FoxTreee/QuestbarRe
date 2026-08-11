@@ -7,6 +7,10 @@ public sealed class HeroAbilityCooldownState
         _remainingSecondsByAbilityId =
             new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Performs the configure operation for Hero Ability Cooldown State.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void Configure(
         IReadOnlyList<AbilityDefinition> abilities)
     {
@@ -27,6 +31,10 @@ public sealed class HeroAbilityCooldownState
         }
     }
 
+    /// <summary>
+    /// Retrieves remaining seconds from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting double to the caller.
+    /// </summary>
     public double GetRemainingSeconds(string abilityContentId)
     {
         if (string.IsNullOrWhiteSpace(abilityContentId))
@@ -39,11 +47,19 @@ public sealed class HeroAbilityCooldownState
                 : 0.0;
     }
 
+    /// <summary>
+    /// Performs the is ready operation for Hero Ability Cooldown State.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool IsReady(string abilityContentId)
     {
         return GetRemainingSeconds(abilityContentId) <= 0.0;
     }
 
+    /// <summary>
+    /// Attempts to start without throwing when the operation cannot be completed.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool TryStart(AbilityDefinition ability)
     {
         ArgumentNullException.ThrowIfNull(ability);
@@ -58,6 +74,10 @@ public sealed class HeroAbilityCooldownState
         return true;
     }
 
+    /// <summary>
+    /// Recalculates  from the latest runtime state.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void Update(double delta)
     {
         if (delta <= 0.0)
@@ -83,6 +103,10 @@ public sealed class HeroAbilityCooldownState
         }
     }
 
+    /// <summary>
+    /// Resets  so the system can begin from a clean state.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void Reset()
     {
         List<string> abilityContentIds =

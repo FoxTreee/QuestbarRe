@@ -29,6 +29,10 @@ project/assembly_name="Questbar"
 
 movie_writer/movie_file="C:/Users/jafox/github/Questbar/SimpleCombat.avi"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/questbar_inspector_help/plugin.cfg")
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

@@ -9,6 +9,10 @@ public sealed class MonsterThreatState
     public int EntryCount =>
         _threatByHero.Count;
 
+    /// <summary>
+    /// Retrieves threat from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting float to the caller.
+    /// </summary>
     public float GetThreat(HeroActorController hero)
     {
         ArgumentNullException.ThrowIfNull(hero);
@@ -20,6 +24,10 @@ public sealed class MonsterThreatState
                 : 0.0f;
     }
 
+    /// <summary>
+    /// Performs the add threat operation for Monster Threat State.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void AddThreat(
         HeroActorController hero,
         float amount)
@@ -36,6 +44,10 @@ public sealed class MonsterThreatState
             GetThreat(hero) + amount;
     }
 
+    /// <summary>
+    /// Performs the remove threat operation for Monster Threat State.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool RemoveThreat(
         HeroActorController hero)
     {
@@ -44,6 +56,10 @@ public sealed class MonsterThreatState
         return _threatByHero.Remove(hero);
     }
 
+    /// <summary>
+    /// Resets  so the system can begin from a clean state.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void Clear()
     {
         _threatByHero.Clear();

@@ -13,6 +13,10 @@ public sealed class CombatHealthState
     public bool IsAlive =>
         CurrentHealth > 0.0f;
 
+    /// <summary>
+    /// Performs the initialize operation for Combat Health State.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void Initialize(float maximumHealth)
     {
         if (IsInitialized)
@@ -27,6 +31,10 @@ public sealed class CombatHealthState
         NotifyHealthChanged();
     }
 
+    /// <summary>
+    /// Performs the restore to maximum operation for Combat Health State.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void RestoreToMaximum()
     {
         if (!IsInitialized)
@@ -38,6 +46,10 @@ public sealed class CombatHealthState
         NotifyHealthChanged();
     }
 
+    /// <summary>
+    /// Applies damage to the relevant actor, resource, or presentation state.
+    /// Uses the supplied arguments and current state and returns the resulting damage result to the caller.
+    /// </summary>
     public DamageResult ApplyDamage(float requestedDamage)
     {
         float validDamage =
@@ -76,16 +88,28 @@ public sealed class CombatHealthState
             wasLethal);
     }
 
+    /// <summary>
+    /// Applies spell healing to the relevant actor, resource, or presentation state.
+    /// Uses the supplied arguments and current state and returns the resulting float to the caller.
+    /// </summary>
     public float ApplySpellHealing(float requestedHealing)
     {
         return ApplyRecovery(requestedHealing);
     }
 
+    /// <summary>
+    /// Applies passive recovery to the relevant actor, resource, or presentation state.
+    /// Uses the supplied arguments and current state and returns the resulting float to the caller.
+    /// </summary>
     public float ApplyPassiveRecovery(float requestedRecovery)
     {
         return ApplyRecovery(requestedRecovery);
     }
 
+    /// <summary>
+    /// Applies recovery to the relevant actor, resource, or presentation state.
+    /// Uses the supplied arguments and current state and returns the resulting float to the caller.
+    /// </summary>
     private float ApplyRecovery(float requestedRecovery)
     {
         float validRecovery =
@@ -112,6 +136,10 @@ public sealed class CombatHealthState
         return appliedRecovery;
     }
 
+    /// <summary>
+    /// Performs the notify health changed operation for Combat Health State.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void NotifyHealthChanged()
     {
         HealthChanged?.Invoke(

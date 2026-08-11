@@ -13,23 +13,47 @@ public partial class CombatController : Node
 		int monsterCount);
 
 	[ExportCategory("Dependencies")]
+	/// <summary>
+	/// Inspector reference used by this component for its encounter dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public EncounterController Encounter { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its actor layer dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Node2D ActorLayer { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its targeting dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public TargetingService Targeting { get; set; } = null!;
 
+	/// <summary>
+	/// Controls damage resolver, measured as damage points.
+	/// For example, selecting a different value changes which damage resolver behavior or content the owning system uses.
+	/// </summary>
 	[Export]
 	public CombatDamageResolver DamageResolver { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its party dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public PartyController Party { get; set; } = null!;
 
 
 	[ExportCategory("Combat Content")]
+	/// <summary>
+	/// Inspector reference used by this component for its projectile scene dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public PackedScene ProjectileScene { get; set; } = null!;
 
@@ -61,6 +85,10 @@ public partial class CombatController : Node
 		public int RemainingTicks { get; private set; }
 		public double SecondsUntilNextTick { get; set; }
 
+		/// <summary>
+		/// Performs the active damage over time effect operation for Active Damage Over Time Effect.
+		/// Uses the supplied arguments and current state and returns the resulting active damage over time effect to the caller.
+		/// </summary>
 		public ActiveDamageOverTimeEffect(
 			HeroActorController source,
 			MonsterActorController target,
@@ -77,6 +105,10 @@ public partial class CombatController : Node
 		public int AppliedTickCount =>
 			TotalTicks - RemainingTicks;
 
+		/// <summary>
+		/// Performs the consume tick operation for Active Damage Over Time Effect.
+		/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+		/// </summary>
 		public void ConsumeTick()
 		{
 			RemainingTicks = Math.Max(
@@ -84,6 +116,10 @@ public partial class CombatController : Node
 				0);
 		}
 
+		/// <summary>
+		/// Performs the refresh operation for Active Damage Over Time Effect.
+		/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+		/// </summary>
 		public void Refresh()
 		{
 			RemainingTicks = TotalTicks;
@@ -115,6 +151,10 @@ public partial class CombatController : Node
 	public bool IsInitialized { get; private set; }
 
 	// Reffresh heroes -- DEBUG ONLY
+	/// <summary>
+	/// Performs the debug refresh hero participants operation for Active Damage Over Time Effect.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void DebugRefreshHeroParticipants()
 	{
 		if (!IsInitialized)
@@ -153,6 +193,10 @@ public partial class CombatController : Node
 			$"existing monsters={_monsterParticipants.Count}");
 	}
 
+	/// <summary>
+	/// Performs the debug incapacitate hero operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool DebugIncapacitateHero(
 		HeroActorController hero)
 	{
@@ -196,6 +240,10 @@ public partial class CombatController : Node
 		return true;
 	}
 
+	/// <summary>
+	/// Attempts to use hero ability without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool TryUseHeroAbility(
 		HeroActorController hero,
 		string abilityContentId,
@@ -296,6 +344,10 @@ public partial class CombatController : Node
 		return true;
 	}
 
+	/// <summary>
+	/// Attempts to apply automatic direct healing without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TryApplyAutomaticDirectHealing(
 		HeroActorController caster,
 		AbilityDefinition ability,
@@ -320,6 +372,10 @@ public partial class CombatController : Node
 			out result);
 	}
 
+	/// <summary>
+	/// Attempts to apply direct healing without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TryApplyDirectHealing(
 		HeroActorController caster,
 		HeroActorController target,
@@ -353,6 +409,10 @@ public partial class CombatController : Node
 		return true;
 	}
 
+	/// <summary>
+	/// Attempts to apply area taunt without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TryApplyAreaTaunt(
 		HeroActorController caster,
 		AbilityDefinition ability,
@@ -418,6 +478,10 @@ public partial class CombatController : Node
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the fail unsupported hero ability operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool FailUnsupportedHeroAbility(
 		AbilityDefinition ability,
 		out string result)
@@ -431,6 +495,10 @@ public partial class CombatController : Node
 	}
 
 	// Remove Heroes -- DEBUG ONLY
+	/// <summary>
+	/// Performs the unsubscribe hero participants operation for Active Damage Over Time Effect.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UnsubscribeHeroParticipants()
 	{
 		foreach (
@@ -451,6 +519,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Runs Godot setup for Active Damage Over Time Effect when the node enters the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Ready()
 	{
 		if (!ValidateReferences())
@@ -468,6 +540,10 @@ public partial class CombatController : Node
 			"CombatController waiting for PartyController roster.");
 	}
 
+	/// <summary>
+	/// Handles the party spawned event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnPartySpawned(int heroCount)
 	{
 		if (IsInitialized)
@@ -485,6 +561,10 @@ public partial class CombatController : Node
 		InitializeCombatParticipants();
 	}
 
+	/// <summary>
+	/// Performs the initialize combat participants operation for Active Damage Over Time Effect.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void InitializeCombatParticipants()
 	{
 		BuildHeroParticipants();
@@ -519,6 +599,10 @@ public partial class CombatController : Node
 			$"Monsters={MonsterParticipantCount}");
 	}
 
+	/// <summary>
+	/// Creates hero participants from the supplied configuration and current dependencies.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void BuildHeroParticipants()
 	{
 		_heroParticipants.Clear();
@@ -541,6 +625,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Handles the encounter started event and updates the related game state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnEncounterStarted()
 	{
 		CurrentOutcome = CombatOutcome.None;
@@ -553,11 +641,19 @@ public partial class CombatController : Node
 		ApplyCombatState();
 	}
 
+	/// <summary>
+	/// Handles the encounter completed event and updates the related game state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnEncounterCompleted()
 	{
 		ResolveCombatOutcome(CombatOutcome.Victory);
 	}
 
+	/// <summary>
+	/// Handles the active monster count changed event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnActiveMonsterCountChanged(
 	int activeMonsterCount)
 	{
@@ -580,6 +676,10 @@ public partial class CombatController : Node
 		EmitParticipantsChanged();
 	}
 
+	/// <summary>
+	/// Handles the hero attack released event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnHeroAttackReleased(HeroActorController attacker, MonsterActorController target)
 	{
 		if (!GodotObject.IsInstanceValid(attacker)
@@ -617,6 +717,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Handles the hero ability released event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnHeroAbilityReleased(
 		HeroActorController caster,
 		HeroActorController target,
@@ -655,6 +759,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Performs the confirm hero impact operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ConfirmHeroImpact(
 	HeroActorController attacker,
 	MonsterActorController target)
@@ -710,6 +818,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Performs the broadcast hero damage threat operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void BroadcastHeroDamageThreat(
 		HeroActorController attacker,
 		MonsterActorController directlyDamagedMonster,
@@ -742,6 +854,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Handles the pending projectile release event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void HandlePendingProjectileRelease(HeroActorController attacker, MonsterActorController target)
 	{
 		ProjectileActorController projectile =
@@ -763,6 +879,10 @@ public partial class CombatController : Node
 			$"{attacker.Name} → {target.Name}");
 	}
 
+	/// <summary>
+	/// Handles the hero projectile impacted event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnHeroProjectileImpacted(
 	ProjectileActorController projectile,
 	HeroActorController attacker,
@@ -786,6 +906,10 @@ public partial class CombatController : Node
 			projectile.QueueFree();
 	}
 
+	/// <summary>
+	/// Attempts to release automatic damage over time ability without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TryReleaseAutomaticDamageOverTimeAbility(
 		HeroActorController attacker,
 		MonsterActorController target)
@@ -847,6 +971,10 @@ public partial class CombatController : Node
 		return false;
 	}
 
+	/// <summary>
+	/// Handles the pending damage over time projectile release event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void HandlePendingDamageOverTimeProjectileRelease(
 		HeroActorController attacker,
 		MonsterActorController target,
@@ -874,6 +1002,10 @@ public partial class CombatController : Node
 			DebugLogCategory.Ability);
 	}
 
+	/// <summary>
+	/// Handles the damage over time projectile impacted event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnDamageOverTimeProjectileImpacted(
 		ProjectileActorController projectile,
 		HeroActorController attacker,
@@ -906,6 +1038,10 @@ public partial class CombatController : Node
 			projectile.QueueFree();
 	}
 
+	/// <summary>
+	/// Attempts to apply damage over time effect without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void TryApplyDamageOverTimeEffect(
 		HeroActorController source,
 		MonsterActorController target,
@@ -962,6 +1098,10 @@ public partial class CombatController : Node
 			DebugLogCategory.Ability);
 	}
 
+	/// <summary>
+	/// Performs the refresh hero targets operation for Active Damage Over Time Effect.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void RefreshHeroTargets()
 	{
 		foreach (HeroActorController hero in _heroParticipants)
@@ -999,6 +1139,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Performs the refresh monster targets operation for Active Damage Over Time Effect.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void RefreshMonsterTargets()
 	{
 		foreach (
@@ -1065,6 +1209,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Attempts to switch monster threat target without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void TrySwitchMonsterThreatTarget(
 		MonsterActorController monster,
 		HeroActorController currentTarget)
@@ -1116,6 +1264,10 @@ public partial class CombatController : Node
 			$"({(challengerIsInMeleeRange ? "melee range" : "outside melee range")}).");
 	}
 
+	/// <summary>
+	/// Updates Active Damage Over Time Effect every rendered frame using the supplied frame delta.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Process(double delta)
 	{
 		if (!IsInitialized)
@@ -1139,6 +1291,10 @@ public partial class CombatController : Node
 		RefreshMonsterTargets();
 	}
 
+	/// <summary>
+	/// Recalculates active damage over time effects from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateActiveDamageOverTimeEffects(
 		double delta)
 	{
@@ -1201,6 +1357,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Applies damage over time tick to the relevant actor, resource, or presentation state.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool ApplyDamageOverTimeTick(
 		ActiveDamageOverTimeEffect activeEffect)
 	{
@@ -1259,6 +1419,10 @@ public partial class CombatController : Node
 		return false;
 	}
 
+	/// <summary>
+	/// Performs the is valid damage over time effect operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool IsValidDamageOverTimeEffect(
 		ActiveDamageOverTimeEffect activeEffect)
 	{
@@ -1270,6 +1434,10 @@ public partial class CombatController : Node
 			&& activeEffect.Target.Health.IsAlive;
 	}
 
+	/// <summary>
+	/// Resets active damage over time effects so the system can begin from a clean state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ClearActiveDamageOverTimeEffects()
 	{
 		if (_activeDamageOverTimeEffects.Count == 0)
@@ -1278,6 +1446,10 @@ public partial class CombatController : Node
 		_activeDamageOverTimeEffects.Clear();
 	}
 
+	/// <summary>
+	/// Recalculates automatic hero abilities from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateAutomaticHeroAbilities(double delta)
 	{
 		foreach (HeroActorController hero
@@ -1345,6 +1517,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Performs the should use automatic taunt operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool ShouldUseAutomaticTaunt(
 		HeroActorController caster,
 		AbilityDefinition ability,
@@ -1400,6 +1576,10 @@ public partial class CombatController : Node
 				|| zeroAggroFallbackReady);
 	}
 
+	/// <summary>
+	/// Performs the is holding any monster aggro operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool IsHoldingAnyMonsterAggro(
 		HeroActorController hero)
 	{
@@ -1417,6 +1597,10 @@ public partial class CombatController : Node
 		return false;
 	}
 
+	/// <summary>
+	/// Performs the arm taunt recovery after aggro loss operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ArmTauntRecoveryAfterAggroLoss(
 		HeroActorController previousTarget,
 		MonsterActorController monster,
@@ -1440,6 +1624,10 @@ public partial class CombatController : Node
 			$"{currentTarget.Name}.");
 	}
 
+	/// <summary>
+	/// Performs the has area taunt ability operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool HasAreaTauntAbility(
 		HeroActorController hero)
 	{
@@ -1456,6 +1644,10 @@ public partial class CombatController : Node
 		return false;
 	}
 
+	/// <summary>
+	/// Performs the consume automatic taunt trigger operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ConsumeAutomaticTauntTrigger(
 		HeroActorController caster)
 	{
@@ -1463,6 +1655,10 @@ public partial class CombatController : Node
 		_zeroAggroTauntElapsed.Remove(caster);
 	}
 
+	/// <summary>
+	/// Resets automatic taunt state so the system can begin from a clean state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ResetAutomaticTauntState()
 	{
 		_tauntRecoveryArmed.Clear();
@@ -1470,6 +1666,10 @@ public partial class CombatController : Node
 		_forcedTauntCasters.Clear();
 	}
 
+	/// <summary>
+	/// Performs the find lowest health ally below threshold operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current state and returns the resulting hero actor controller to the caller.
+	/// </summary>
 	private HeroActorController?
 		FindLowestHealthAllyBelowThreshold(
 			AbilityDefinition ability)
@@ -1510,6 +1710,10 @@ public partial class CombatController : Node
 		return lowestHealthAlly;
 	}
 
+	/// <summary>
+	/// Performs the has monster within taunt radius operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool HasMonsterWithinTauntRadius(
 		HeroActorController caster,
 		AbilityDefinition ability)
@@ -1539,6 +1743,10 @@ public partial class CombatController : Node
 		return false;
 	}
 
+	/// <summary>
+	/// Performs the refresh monster participants operation for Active Damage Over Time Effect.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void RefreshMonsterParticipants()
 	{
 		foreach (
@@ -1583,6 +1791,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Handles the monster forced target ended event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnMonsterForcedTargetEnded(
 		MonsterActorController monster)
 	{
@@ -1612,6 +1824,10 @@ public partial class CombatController : Node
 		}
 	}
 
+	/// <summary>
+	/// Handles the monster attack released event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnMonsterAttackReleased(
 	MonsterActorController attacker,
 	HeroActorController target)
@@ -1631,6 +1847,10 @@ public partial class CombatController : Node
 			target);
 	}
 
+	/// <summary>
+	/// Handles the monster ability released event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnMonsterAbilityReleased(
 		MonsterActorController attacker,
 		HeroActorController target,
@@ -1654,6 +1874,10 @@ public partial class CombatController : Node
 			ability);
 	}
 
+	/// <summary>
+	/// Performs the confirm monster ability impact operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ConfirmMonsterAbilityImpact(
 		MonsterActorController attacker,
 		HeroActorController target,
@@ -1707,6 +1931,10 @@ public partial class CombatController : Node
 			});
 	}
 
+	/// <summary>
+	/// Performs the confirm monster impact operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ConfirmMonsterImpact(
 	MonsterActorController attacker,
 	HeroActorController target)
@@ -1754,12 +1982,20 @@ public partial class CombatController : Node
 			});
 	}
 
+	/// <summary>
+	/// Performs the raise combat event operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void RaiseCombatEvent(
 	CombatEvent combatEvent)
 	{
 		CombatEventOccurred?.Invoke(combatEvent);
 	}
 
+	/// <summary>
+	/// Performs the raise target changed operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void RaiseTargetChanged(
 	Node actor,
 	Node? previousTarget,
@@ -1774,6 +2010,10 @@ public partial class CombatController : Node
 			});
 	}
 
+	/// <summary>
+	/// Performs the print damage result operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private static void PrintDamageResult(
 	StringName attackerName,
 	StringName targetName,
@@ -1793,6 +2033,10 @@ public partial class CombatController : Node
 			$"{targetName} received lethal damage.");
 	}
 
+	/// <summary>
+	/// Handles the hero incapacitated event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnHeroIncapacitated(
 	HeroActorController hero)
 	{
@@ -1833,6 +2077,10 @@ public partial class CombatController : Node
 		EmitParticipantsChanged();
 	}
 
+	/// <summary>
+	/// Performs the resolve combat outcome operation for Active Damage Over Time Effect.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ResolveCombatOutcome(
 	CombatOutcome outcome)
 	{
@@ -1854,6 +2102,10 @@ public partial class CombatController : Node
 		CombatResolved?.Invoke(CurrentOutcome);
 	}
 
+	/// <summary>
+	/// Applies combat state to the relevant actor, resource, or presentation state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ApplyCombatState()
 	{
 		bool shouldCombatBeActive =
@@ -1874,6 +2126,10 @@ public partial class CombatController : Node
 				: "Combat ended.");
 	}
 
+	/// <summary>
+	/// Performs the emit participants changed operation for Active Damage Over Time Effect.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void EmitParticipantsChanged()
 	{
 		EmitSignal(
@@ -1882,6 +2138,10 @@ public partial class CombatController : Node
 			MonsterParticipantCount);
 	}
 
+	/// <summary>
+	/// Performs the validate references operation for Active Damage Over Time Effect.
+	/// Reads the current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool ValidateReferences()
 	{
 		if (!GodotObject.IsInstanceValid(Encounter))
@@ -1934,6 +2194,10 @@ public partial class CombatController : Node
 		return true;
 	}
 
+	/// <summary>
+	/// Cleans up Active Damage Over Time Effect when the node leaves the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _ExitTree()
 	{
 		UnsubscribeHeroParticipants();

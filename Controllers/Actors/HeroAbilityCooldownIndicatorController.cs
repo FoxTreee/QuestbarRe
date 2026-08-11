@@ -7,6 +7,10 @@ public partial class HeroAbilityCooldownIndicatorController : Node2D
     private HeroActorController? _hero;
     private AbilityDefinition? _ability;
 
+    /// <summary>
+    /// Runs Godot setup for Hero Ability Cooldown Indicator Controller when the node enters the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _Ready()
     {
         _cooldownProgress =
@@ -32,16 +36,28 @@ public partial class HeroAbilityCooldownIndicatorController : Node2D
         SetProcess(false);
     }
 
+    /// <summary>
+    /// Cleans up Hero Ability Cooldown Indicator Controller when the node leaves the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _ExitTree()
     {
         Unbind();
     }
 
+    /// <summary>
+    /// Updates Hero Ability Cooldown Indicator Controller every rendered frame using the supplied frame delta.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _Process(double delta)
     {
         Refresh();
     }
 
+    /// <summary>
+    /// Performs the bind operation for Hero Ability Cooldown Indicator Controller.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void Bind(HeroActorController hero)
     {
         if (!GodotObject.IsInstanceValid(hero))
@@ -62,6 +78,10 @@ public partial class HeroAbilityCooldownIndicatorController : Node2D
         Refresh();
     }
 
+    /// <summary>
+    /// Performs the unbind operation for Hero Ability Cooldown Indicator Controller.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void Unbind()
     {
         _hero = null;
@@ -70,6 +90,10 @@ public partial class HeroAbilityCooldownIndicatorController : Node2D
         SetProcess(false);
     }
 
+    /// <summary>
+    /// Performs the refresh operation for Hero Ability Cooldown Indicator Controller.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void Refresh()
     {
         if (_hero is null

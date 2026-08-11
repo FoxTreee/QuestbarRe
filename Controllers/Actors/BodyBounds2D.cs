@@ -8,6 +8,10 @@ public partial class BodyBounds2D : Node2D
 
     [ExportCategory("Body Template")]
 
+    /// <summary>
+    /// Controls bounds size.
+    /// For example, selecting a different value changes which bounds size behavior or content the owning system uses.
+    /// </summary>
     [Export]
     public Vector2 BoundsSize
     {
@@ -22,6 +26,10 @@ public partial class BodyBounds2D : Node2D
         }
     }
 
+    /// <summary>
+    /// Retrieves horizontal radius in parent space from the current game state.
+    /// Reads the current state and returns the resulting float to the caller.
+    /// </summary>
     public float GetHorizontalRadiusInParentSpace()
     {
         float halfWidth = BoundsSize.X * 0.5f;
@@ -50,6 +58,10 @@ public partial class BodyBounds2D : Node2D
         return radius;
     }
 
+    /// <summary>
+    /// Performs the draw operation for Body Bounds2 D.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _Draw()
     {
         if (!Engine.IsEditorHint())

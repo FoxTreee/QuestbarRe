@@ -4,6 +4,10 @@ using System.Collections.Generic;
 public partial class MonsterFactory : Node
 {
     [ExportCategory("Dependencies")]
+    /// <summary>
+    /// Inspector reference used by this component for its registry dependency.
+    /// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+    /// </summary>
     [Export]
     public MonsterContentRegistry Registry
     {
@@ -11,6 +15,10 @@ public partial class MonsterFactory : Node
         set;
     } = null!;
 
+    /// <summary>
+    /// Runs Godot setup for Monster Factory when the node enters the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _Ready()
     {
         if (!GodotObject.IsInstanceValid(Registry))
@@ -21,6 +29,10 @@ public partial class MonsterFactory : Node
         }
     }
 
+    /// <summary>
+    /// Attempts to create without throwing when the operation cannot be completed.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool TryCreate(
         string contentId,
         out MonsterActorController monster,
@@ -82,6 +94,10 @@ public partial class MonsterFactory : Node
         return true;
     }
 
+    /// <summary>
+    /// Creates required from the supplied configuration and current dependencies.
+    /// Uses the supplied arguments and current state and returns the resulting monster actor controller to the caller.
+    /// </summary>
     public MonsterActorController CreateRequired(
         string contentId)
     {

@@ -9,6 +9,10 @@ public static class WindowSettingsStorage
     private const string Section =
         "window_placement";
 
+    /// <summary>
+    /// Performs the load into operation for Window Settings Storage.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public static bool LoadInto(
         WindowPlacementSettings settings)
     {
@@ -84,6 +88,10 @@ public static class WindowSettingsStorage
         return true;
     }
 
+    /// <summary>
+    /// Performs the save operation for Window Settings Storage.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public static bool Save(
         WindowPlacementSettings settings)
     {

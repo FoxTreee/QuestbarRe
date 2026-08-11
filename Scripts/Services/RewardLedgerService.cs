@@ -5,6 +5,10 @@ public partial class RewardLedgerService : Node
 {
 	private readonly Dictionary<string, int> _balances = new();
 
+	/// <summary>
+	/// Performs the grant operation for Reward Ledger Service.
+	/// Uses the supplied arguments and current state and returns the resulting int to the caller.
+	/// </summary>
 	public int Grant(string rewardContentId, int amount)
 	{
 		if (!ContentId.IsValid(rewardContentId))
@@ -27,6 +31,10 @@ public partial class RewardLedgerService : Node
 		return newBalance;
 	}
 
+	/// <summary>
+	/// Retrieves balance from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting int to the caller.
+	/// </summary>
 	public int GetBalance(string rewardContentId)
 	{
 		return _balances.TryGetValue(rewardContentId, out int balance)

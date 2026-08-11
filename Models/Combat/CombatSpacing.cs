@@ -4,6 +4,10 @@ public static class CombatSpacing
 {
     public const float MinimumBodyGap = 3.0f;
 
+    /// <summary>
+    /// Retrieves body clearance distance from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting float to the caller.
+    /// </summary>
     public static float GetBodyClearanceDistance(
         float attackerRadius,
         float targetRadius,
@@ -35,6 +39,10 @@ public static class CombatSpacing
             + MinimumBodyGap * gapScale;
     }
 
+    /// <summary>
+    /// Retrieves required center distance from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting float to the caller.
+    /// </summary>
     public static float GetRequiredCenterDistance(
         float attackRange,
         float attackerRadius,

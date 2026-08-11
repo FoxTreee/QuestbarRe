@@ -15,19 +15,35 @@ public partial class TargetingService : Node
 
     [ExportCategory("Shared Hero Stance Profiles")]
 
+    /// <summary>
+    /// Controls passive stance profile.
+    /// For example, selecting a different value changes which passive stance profile behavior or content the owning system uses.
+    /// </summary>
     [Export]
     public HeroCombatStanceProfile PassiveStanceProfile
     { get; set; } = null!;
 
+    /// <summary>
+    /// Controls defensive stance profile.
+    /// For example, selecting a different value changes which defensive stance profile behavior or content the owning system uses.
+    /// </summary>
     [Export]
     public HeroCombatStanceProfile DefensiveStanceProfile
     { get; set; } = null!;
 
+    /// <summary>
+    /// Controls aggressive stance profile.
+    /// For example, selecting a different value changes which aggressive stance profile behavior or content the owning system uses.
+    /// </summary>
     [Export]
     public HeroCombatStanceProfile AggressiveStanceProfile
     { get; set; } = null!;
 
 
+    /// <summary>
+    /// Runs Godot setup for Targeting Service when the node enters the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _Ready()
     {
         _random.Randomize();
@@ -46,6 +62,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Retrieves stance profile from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting hero combat stance profile to the caller.
+    /// </summary>
     public HeroCombatStanceProfile GetStanceProfile(
         HeroCombatStance stance)
     {
@@ -71,6 +91,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the select priority monster operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting monster actor controller to the caller.
+    /// </summary>
     public MonsterActorController? SelectPriorityMonster(
         IReadOnlyList<MonsterActorController> candidates)
     {
@@ -80,6 +104,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the select priority monster operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting monster actor controller to the caller.
+    /// </summary>
     public MonsterActorController? SelectPriorityMonster(
         IReadOnlyList<MonsterActorController> candidates,
         out HeroTargetDecision decision)
@@ -120,6 +148,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the select priority monster operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting monster actor controller to the caller.
+    /// </summary>
     public MonsterActorController? SelectPriorityMonster(
         HeroActorController hero,
         IReadOnlyList<MonsterActorController> candidates,
@@ -182,6 +214,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Attempts to select defensive rescue target without throwing when the operation cannot be completed.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool TrySelectDefensiveRescueTarget(
         HeroActorController hero,
         IReadOnlyList<MonsterActorController> candidates,
@@ -362,6 +398,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the score monster for hero operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting hero target score to the caller.
+    /// </summary>
     private HeroTargetScore ScoreMonsterForHero(
         HeroActorController hero,
         MonsterActorController monster,
@@ -472,6 +512,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the count monsters targeting hero operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting int to the caller.
+    /// </summary>
     private int CountMonstersTargetingHero(
         HeroActorController hero,
         IReadOnlyList<MonsterActorController> candidates)
@@ -492,6 +536,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the is better defensive rescue target operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     private static bool IsBetterDefensiveRescueTarget(
         MonsterActorController candidate,
         MonsterActorController selected)
@@ -538,6 +586,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the is genuinely more dangerous rescue target operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     private static bool
         IsGenuinelyMoreDangerousRescueTarget(
             MonsterActorController candidate,
@@ -556,6 +608,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the validate shared stance profile operation for Targeting Service.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private static void ValidateSharedStanceProfile(
         HeroCombatStanceProfile profile,
         string profileName)
@@ -577,6 +633,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the is better hero target score operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     private static bool IsBetterHeroTargetScore(
         HeroActorController hero,
         HeroTargetScore candidate,
@@ -611,6 +671,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the count other hero attackers operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting int to the caller.
+    /// </summary>
     private int CountOtherHeroAttackers(
         HeroActorController hero,
         MonsterActorController monster,
@@ -635,6 +699,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the should support healthy ally operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     private static bool ShouldSupportHealthyAlly(
         HeroActorController hero,
         MonsterActorController monster,
@@ -659,6 +727,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Retrieves aggro score from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting float to the caller.
+    /// </summary>
     private static float GetAggroScore(
         HeroActorController hero,
         MonsterActorController monster,
@@ -676,6 +748,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Retrieves highest current monster health from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting float to the caller.
+    /// </summary>
     private float GetHighestCurrentMonsterHealth(
         IReadOnlyList<MonsterActorController> candidates)
     {
@@ -696,6 +772,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Retrieves highest monster danger rating from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting float to the caller.
+    /// </summary>
     private float GetHighestMonsterDangerRating(
         IReadOnlyList<MonsterActorController> candidates)
     {
@@ -716,6 +796,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the select hero target operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting hero actor controller to the caller.
+    /// </summary>
     public HeroActorController? SelectHeroTarget(
         MonsterActorController monster,
         IReadOnlyList<HeroActorController> candidates)
@@ -757,6 +841,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Retrieves preferred hero candidates from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting i read only list hero actor controller to the caller.
+    /// </summary>
     private static IReadOnlyList<HeroActorController>
         GetPreferredHeroCandidates(
             MonsterActorController monster,
@@ -790,6 +878,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the select nearest hero operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting hero actor controller to the caller.
+    /// </summary>
     private static HeroActorController?
         SelectNearestHero(
             MonsterActorController monster,
@@ -830,6 +922,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the select lowest health hero operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting hero actor controller to the caller.
+    /// </summary>
     private static HeroActorController?
         SelectLowestHealthHero(
             IReadOnlyList<HeroActorController> candidates)
@@ -857,6 +953,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the select random living hero operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting hero actor controller to the caller.
+    /// </summary>
     private HeroActorController?
         SelectRandomLivingHero(
             IReadOnlyList<HeroActorController> candidates)
@@ -886,6 +986,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the select highest threat hero operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting hero actor controller to the caller.
+    /// </summary>
     private static HeroActorController?
         SelectHighestThreatHero(
             MonsterActorController monster,
@@ -941,6 +1045,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the select threat takeover target operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting hero actor controller to the caller.
+    /// </summary>
     public HeroActorController?
         SelectThreatTakeoverTarget(
             MonsterActorController monster,
@@ -1043,6 +1151,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the has living preferred candidate operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     private static bool HasLivingPreferredCandidate(
         HeroCombatTag preferredTags,
         IReadOnlyList<HeroActorController> candidates)
@@ -1065,6 +1177,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the is within monster melee range operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public static bool IsWithinMonsterMeleeRange(
         MonsterActorController monster,
         HeroActorController hero)
@@ -1094,6 +1210,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the is valid monster target operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool IsValidMonsterTarget(
         MonsterActorController? monster)
     {
@@ -1104,6 +1224,10 @@ public partial class TargetingService : Node
     }
 
 
+    /// <summary>
+    /// Performs the is valid hero target operation for Targeting Service.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public static bool IsValidHeroTarget(
         HeroActorController? hero)
     {

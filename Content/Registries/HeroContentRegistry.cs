@@ -5,12 +5,20 @@ public partial class HeroContentRegistry : Node
 {
     [ExportCategory("Dependencies")]
 
+    /// <summary>
+    /// Inspector reference used by this component for its ability registry dependency.
+    /// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+    /// </summary>
     [Export]
     public AbilityContentRegistry AbilityRegistry
     { get; set; } = null!;
 
     [ExportCategory("Hero Content")]
 
+    /// <summary>
+    /// Controls definitions.
+    /// For example, adding another entry gives the owning system one more configured definitions to use.
+    /// </summary>
     [Export]
     public Godot.Collections.Array<HeroDefinition>
         Definitions
@@ -26,6 +34,10 @@ public partial class HeroContentRegistry : Node
     public int Count =>
         _definitionsById.Count;
 
+    /// <summary>
+    /// Runs Godot setup for Hero Content Registry when the node enters the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _Ready()
     {
         if (!GodotObject.IsInstanceValid(AbilityRegistry))
@@ -75,6 +87,10 @@ public partial class HeroContentRegistry : Node
         }
     }
 
+    /// <summary>
+    /// Performs the rebuild operation for Hero Content Registry.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void Rebuild()
     {
         _definitionsById.Clear();
@@ -86,6 +102,10 @@ public partial class HeroContentRegistry : Node
         }
     }
 
+    /// <summary>
+    /// Attempts to get without throwing when the operation cannot be completed.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool TryGet(
         string contentId,
         out HeroDefinition definition)
@@ -98,6 +118,10 @@ public partial class HeroContentRegistry : Node
             out definition!);
     }
 
+    /// <summary>
+    /// Retrieves required from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting hero definition to the caller.
+    /// </summary>
     public HeroDefinition GetRequired(
         string contentId)
     {
@@ -113,12 +137,20 @@ public partial class HeroContentRegistry : Node
             $"Content ID '{contentId}'.");
     }
 
+    /// <summary>
+    /// Retrieves registered ids from the current game state.
+    /// Reads the current state and returns the resulting i read only collection string to the caller.
+    /// </summary>
     public IReadOnlyCollection<string>
         GetRegisteredIds()
     {
         return _definitionsById.Keys;
     }
 
+    /// <summary>
+    /// Performs the register operation for Hero Content Registry.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void Register(
         HeroDefinition definition)
     {
@@ -202,6 +234,10 @@ public partial class HeroContentRegistry : Node
         }
     }
 
+    /// <summary>
+    /// Performs the normalize operation for Hero Content Registry.
+    /// Uses the supplied arguments and current state and returns the resulting string to the caller.
+    /// </summary>
     private static string Normalize(
         string contentId)
     {

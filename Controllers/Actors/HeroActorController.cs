@@ -69,6 +69,10 @@ public partial class HeroActorController : Node2D
 	public HeroCombatStanceProfile ActiveStanceProfile =>
 		Targeting.GetStanceProfile(CombatStance);
 
+	/// <summary>
+	/// Updates combat presentation scale and applies the new value to the owning system.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void SetCombatPresentationScale(float scale)
 	{
 		CombatPresentationScale =
@@ -76,6 +80,10 @@ public partial class HeroActorController : Node2D
 	}
 
 	[ExportCategory("Combat Identity")]
+	/// <summary>
+	/// Controls combat tag mask.
+	/// For example, selecting a different value changes which combat tag mask behavior or content the owning system uses.
+	/// </summary>
 	[Export(PropertyHint.Flags, "Melee,Ranged,Caster,Healer,Tank,Summoner,Armored")]
 	public int CombatTagMask { get; set; } =
 		(int)HeroCombatTag.Melee;
@@ -83,6 +91,10 @@ public partial class HeroActorController : Node2D
 	public HeroCombatTag CombatTags =>
 		(HeroCombatTag)CombatTagMask;
 
+	/// <summary>
+	/// Performs the has combat tag operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool HasCombatTag(HeroCombatTag tag)
 	{
 		return tag != HeroCombatTag.None
@@ -98,6 +110,12 @@ public partial class HeroActorController : Node2D
 	public IReadOnlyList<AbilityDefinition> Abilities =>
 		_abilities;
 
+	public HeroResourceState Resource { get; } = new();
+
+	/// <summary>
+	/// Retrieves ability cooldown remaining from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting double to the caller.
+	/// </summary>
 	public double GetAbilityCooldownRemaining(
 		string abilityContentId)
 	{
@@ -105,12 +123,20 @@ public partial class HeroActorController : Node2D
 			abilityContentId);
 	}
 
+	/// <summary>
+	/// Performs the is ability ready operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool IsAbilityReady(string abilityContentId)
 	{
 		return _abilityCooldowns.IsReady(
 			abilityContentId);
 	}
 
+	/// <summary>
+	/// Attempts to start ability cooldown without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool TryStartAbilityCooldown(
 		AbilityDefinition ability)
 	{
@@ -120,6 +146,10 @@ public partial class HeroActorController : Node2D
 	public bool IsUsingAbility =>
 		_activeAbility is not null;
 
+	/// <summary>
+	/// Attempts to begin ability without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool TryBeginAbility(
 		AbilityDefinition ability,
 		HeroActorController target)
@@ -156,6 +186,10 @@ public partial class HeroActorController : Node2D
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the configure operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void Configure(
 		HeroDefinition definition,
 		IReadOnlyList<AbilityDefinition>? abilities = null)
@@ -181,6 +215,8 @@ public partial class HeroActorController : Node2D
 			definition.AttackLungeDistance;
 		TemporaryAttackDelivery = definition.AttackDelivery;
 		CombatMoveSpeed = definition.CombatMoveSpeed;
+		Resource.Configure(
+			definition.ClassDefinition.ResourceDefinition);
 
 		_abilities.Clear();
 
@@ -198,6 +234,10 @@ public partial class HeroActorController : Node2D
 		_abilityCooldowns.Configure(_abilities);
 	}
 
+	/// <summary>
+	/// Updates combat stance and applies the new value to the owning system.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void SetCombatStance(HeroCombatStance stance)
 	{
 		if (!System.Enum.IsDefined(
@@ -224,6 +264,10 @@ public partial class HeroActorController : Node2D
 		}
 	}
 
+	/// <summary>
+	/// Attempts to get ability without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool TryGetAbility(
 		string contentId,
 		out AbilityDefinition ability)
@@ -245,6 +289,10 @@ public partial class HeroActorController : Node2D
 		return false;
 	}
 
+	/// <summary>
+	/// Performs the is valid ability target operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool IsValidAbilityTarget(
 		AbilityDefinition ability,
 		HeroActorController target)
@@ -261,6 +309,10 @@ public partial class HeroActorController : Node2D
 		};
 	}
 
+	/// <summary>
+	/// Performs the is living party member operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool IsLivingPartyMember(
 		HeroActorController target)
 	{
@@ -283,110 +335,230 @@ public partial class HeroActorController : Node2D
 
 
 	[ExportCategory("Formation")]
+	/// <summary>
+	/// Inspector reference used by this component for its formation anchor dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Node2D FormationAnchor { get; set; } = null!;
 
+	/// <summary>
+	/// Controls formation offset, measured as pixels.
+	/// For example, changing 2 to 4 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export]
 	public Vector2 FormationOffset { get; set; } = Vector2.Zero;
 	
 	[ExportCategory("Dependencies")]
+	/// <summary>
+	/// Inspector reference used by this component for its journey state dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public JourneyStateService JourneyState { get; set; } = null!;
 
 	[ExportCategory("Visuals")]
+	/// <summary>
+	/// Inspector reference used by this component for its visual root dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Node2D VisualRoot { get; set; } = null!;
 
+	/// <summary>
+	/// Controls body bounds.
+	/// For example, selecting a different value changes which body bounds behavior or content the owning system uses.
+	/// </summary>
 	[Export]
 	public BodyBounds2D BodyBounds { get; set; } = null!;
 	
+	/// <summary>
+	/// Inspector reference used by this component for its projectile origin dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Marker2D ProjectileOrigin { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its ability cooldown indicator dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public HeroAbilityCooldownIndicatorController
 		AbilityCooldownIndicator { get; set; } = null!;
 
 	[ExportCategory("Travel Animation")]
+	/// <summary>
+	/// Controls bob height, measured as pixels.
+	/// For example, changing 4 to 8 doubles the configured bob height.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,20,0.5")]
 	public float BobHeight { get; set; } = 4.0f;
 
+	/// <summary>
+	/// Controls bob speed, measured as pixels per second.
+	/// For example, changing 7 to 14 makes the affected movement or animation run about twice as fast.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,20,0.1")]
 	public float BobSpeed { get; set; } = 7.0f;
 
+	/// <summary>
+	/// Controls bob phase offset, measured as pixels.
+	/// For example, changing 0 to 1 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,6.28,0.01")]
 	public float BobPhaseOffset { get; set; } = 0.0f;
 
+	/// <summary>
+	/// Controls movement animation grace time, measured as seconds.
+	/// For example, changing 0.15 to 0.3 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,0.5,0.01")]
 	public float MovementAnimationGraceTime { get; set; } = 0.15f;
 
 	[ExportCategory("Temporary Combat Values")]
+	/// <summary>
+	/// Controls temporary maximum health, measured as health points.
+	/// For example, changing 100 to 200 doubles the configured temporary maximum health.
+	/// </summary>
 	[Export(PropertyHint.Range, "1,100000,1")]
 	public float TemporaryMaximumHealth { get; set; } = 100.0f;
 
+	/// <summary>
+	/// Controls temporary attack damage, measured as damage points.
+	/// For example, changing 20 to 40 doubles the configured temporary attack damage.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,100000,1")]
 	public float TemporaryAttackDamage { get; set; } = 20.0f;
 
 	[ExportCategory("Temporary Combat Movement")]
+	/// <summary>
+	/// Controls combat move speed, measured as pixels per second.
+	/// For example, changing 140 to 280 makes the affected movement or animation run about twice as fast.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float CombatMoveSpeed { get; set; } = 140.0f;
 
+	/// <summary>
+	/// Controls temporary attack range, measured as pixels.
+	/// For example, changing 28 to 56 doubles the configured temporary attack range.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,400,1")]
 	public float TemporaryAttackRange { get; set; } = 28.0f;
 
+	/// <summary>
+	/// Controls combat arrival distance, measured as pixels.
+	/// For example, changing 1 to 2 doubles the configured combat arrival distance.
+	/// </summary>
 	[Export(PropertyHint.Range, "0.1,20,0.1")]
 	public float CombatArrivalDistance { get; set; } = 1.0f;
 
+	/// <summary>
+	/// Controls attack range tolerance, measured as pixels.
+	/// For example, changing 3 to 6 doubles the configured attack range tolerance.
+	/// </summary>
 	[Export(PropertyHint.Range, "0.1,20,0.1")]
 	public float AttackRangeTolerance { get; set; } = 3.0f;
 	
+	/// <summary>
+	/// Controls facing dead zone.
+	/// For example, changing 1 to 2 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,10,0.1")]
 	public float FacingDeadZone { get; set; } = 1.0f;
 
 	[ExportCategory("Melee Engagement Slots")]
+	/// <summary>
+	/// Controls melee slot horizontal spacing multiplier, measured as pixels.
+	/// For example, changing 1 to 2 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0.5,2,0.05")]
 	public float MeleeSlotHorizontalSpacingMultiplier
 	{ get; set; } = 1.0f;
 
+	/// <summary>
+	/// Controls melee slot vertical spacing multiplier, measured as pixels.
+	/// For example, changing 0.75 to 1.5 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0.25,2,0.05")]
 	public float MeleeSlotVerticalSpacingMultiplier
 	{ get; set; } = 0.75f;
 
 	[ExportCategory("Hero Separation")]
+	/// <summary>
+	/// Controls hero separation horizontal range multiplier, measured as pixels.
+	/// For example, changing 1 to 2 doubles the configured hero separation horizontal range multiplier.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,3,0.05")]
 	public float HeroSeparationHorizontalRangeMultiplier
 	{ get; set; } = 1.0f;
 
+	/// <summary>
+	/// Controls hero separation vertical spacing multiplier, measured as pixels.
+	/// For example, changing 0.75 to 1.5 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,3,0.05")]
 	public float HeroSeparationVerticalSpacingMultiplier
 	{ get; set; } = 0.75f;
 
+	/// <summary>
+	/// Controls hero separation speed, measured as pixels per second.
+	/// For example, changing 24 to 48 makes the affected movement or animation run about twice as fast.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,100,1")]
 	public float HeroSeparationSpeed
 	{ get; set; } = 24.0f;
 
 	[ExportCategory("Temporary Attack Cycle")]
+	/// <summary>
+	/// Controls temporary attack interval, measured as seconds.
+	/// For example, changing 1.5 to 3 makes the affected action wait twice as long between uses.
+	/// </summary>
 	[Export(PropertyHint.Range, "0.1,10,0.1")]
 	public float TemporaryAttackInterval { get; set; } = 1.5f;
 
+	/// <summary>
+	/// Controls temporary attack duration, measured as seconds.
+	/// For example, changing 0.3 to 0.6 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0.05,2,0.05")]
 	public float TemporaryAttackDuration { get; set; } = 0.3f;
 
+	/// <summary>
+	/// Controls temporary attack lunge distance, measured as pixels.
+	/// For example, changing 8 to 16 doubles the configured temporary attack lunge distance.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,30,0.5")]
 	public float TemporaryAttackLungeDistance { get; set; } = 8.0f;
 
+	/// <summary>
+	/// Controls temporary attack release point.
+	/// For example, changing 0.5 to 1 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,1,0.05")]
 	public float TemporaryAttackReleasePoint { get; set; } = 0.5f;
 	
+	/// <summary>
+	/// Controls temporary attack delivery.
+	/// For example, selecting a different value changes which temporary attack delivery behavior or content the owning system uses.
+	/// </summary>
 	[Export]
 	public AttackDeliveryMode TemporaryAttackDelivery { get; set; }
 	= AttackDeliveryMode.ImmediateImpact;
 
 	[ExportCategory("Passive Recovery")]
+	/// <summary>
+	/// Controls traveling recovery percent per second, measured as a ratio or multiplier.
+	/// For example, changing 2.5 to 5 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,10,0.1")]
 	public float TravelingRecoveryPercentPerSecond
 	{ get; set; } = 2.5f;
 
+	/// <summary>
+	/// Inspector reference used by this component for its targeting dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public TargetingService Targeting { get; set; } = null!;
 
@@ -399,6 +571,10 @@ public partial class HeroActorController : Node2D
 	public MeleeEngagementSlotSet MeleeEngagementSlots { get; } =
 		new();
 
+	/// <summary>
+	/// Updates party members and applies the new value to the owning system.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void SetPartyMembers(
 		IReadOnlyList<HeroActorController> partyMembers)
 	{
@@ -406,10 +582,15 @@ public partial class HeroActorController : Node2D
 			?? System.Array.Empty<HeroActorController>();
 	}
 
+	/// <summary>
+	/// Performs the revive from incapacitation operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void ReviveFromIncapacitation()
 	{
 		ReleaseMeleeEngagementSlot(CurrentTarget);
 		Health.RestoreToMaximum();
+		Resource.RestoreToMaximum();
 		MeleeEngagementSlots.Clear();
 
 		CurrentTarget = null;
@@ -439,11 +620,19 @@ public partial class HeroActorController : Node2D
 	}
 
 	// Incapacitation Reset -- DEBUG ONLY
+	/// <summary>
+	/// Performs the debug reset from incapacitation operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void DebugResetFromIncapacitation()
 	{
 		ReviveFromIncapacitation();
 	}
 	
+	/// <summary>
+	/// Performs the resume combat after debug reset operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void ResumeCombatAfterDebugReset()
 	{
 		if (IsIncapacitated)
@@ -479,6 +668,10 @@ public partial class HeroActorController : Node2D
 			$"{CurrentTarget!.Name}.");
 	}
 
+	/// <summary>
+	/// Runs Godot setup for Hero Actor Controller when the node enters the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Ready()
 	{
 		if (!ValidateReferences())
@@ -511,6 +704,10 @@ public partial class HeroActorController : Node2D
 	public FacingDirection Facing { get; private set; }
 	= FacingDirection.Left;
 
+	/// <summary>
+	/// Cleans up Hero Actor Controller when the node leaves the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _ExitTree()
 	{
 		ClearAbilityCast();
@@ -524,9 +721,16 @@ public partial class HeroActorController : Node2D
 		}
 	}
 
+	/// <summary>
+	/// Updates Hero Actor Controller every rendered frame using the supplied frame delta.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Process(double delta)
 	{
 		_abilityCooldowns.Update(delta);
+		Resource.Update(
+			delta,
+			Definition?.ClassDefinition.ResourceDefinition);
 		UpdatePassiveRecovery(delta);
 		UpdateTargetDecisionTimers(delta);
 		_movedThisFrame = false;
@@ -586,6 +790,10 @@ public partial class HeroActorController : Node2D
 		ApplyHeroSeparation(delta);
 	}
 
+	/// <summary>
+	/// Recalculates passive recovery from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdatePassiveRecovery(double delta)
 	{
 		if (JourneyState.CurrentState
@@ -609,6 +817,10 @@ public partial class HeroActorController : Node2D
 		Health.ApplyPassiveRecovery(requestedRecovery);
 	}
 
+	/// <summary>
+	/// Recalculates target decision timers from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateTargetDecisionTimers(double delta)
 	{
 		if (JourneyState.CurrentState
@@ -629,6 +841,10 @@ public partial class HeroActorController : Node2D
 				_targetReassessmentRemainingSeconds - delta);
 	}
 
+	/// <summary>
+	/// Performs the begin target commitment operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void BeginTargetCommitment(
 		float? commitmentSeconds = null)
 	{
@@ -646,6 +862,10 @@ public partial class HeroActorController : Node2D
 				0.0f);
 	}
 
+	/// <summary>
+	/// Performs the restart target reassessment timer operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void RestartTargetReassessmentTimer()
 	{
 		_targetReassessmentRemainingSeconds =
@@ -655,6 +875,10 @@ public partial class HeroActorController : Node2D
 				0.0f);
 	}
 
+	/// <summary>
+	/// Resets target decision timers so the system can begin from a clean state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ResetTargetDecisionTimers()
 	{
 		_targetCommitmentRemainingSeconds = 0.0;
@@ -665,6 +889,10 @@ public partial class HeroActorController : Node2D
 
 	private double _movementAnimationGraceRemaining;
 
+	/// <summary>
+	/// Recalculates movement presentation from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateMovementPresentation(double delta)
 	{
 		if (_movedThisFrame)
@@ -690,6 +918,10 @@ public partial class HeroActorController : Node2D
 		StopMovementAnimation();
 	}
 
+	/// <summary>
+	/// Recalculates movement animation from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateMovementAnimation(double delta)
 	{
 		_animationTime += delta;
@@ -706,6 +938,10 @@ public partial class HeroActorController : Node2D
 			+ Vector2.Up * bobOffset;
 	}
 
+	/// <summary>
+	/// Performs the stop movement animation operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void StopMovementAnimation()
 	{
 		_animationTime = 0.0;
@@ -714,6 +950,10 @@ public partial class HeroActorController : Node2D
 
 	private bool _initialAttackPending;
 
+	/// <summary>
+	/// Retrieves melee slot horizontal distance from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetMeleeSlotHorizontalDistance(
 		MonsterActorController target)
 	{
@@ -731,6 +971,10 @@ public partial class HeroActorController : Node2D
 			adjustedDistance);
 	}
 
+	/// <summary>
+	/// Retrieves melee slot vertical distance from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetMeleeSlotVerticalDistance(
 		MonsterActorController target)
 	{
@@ -750,6 +994,10 @@ public partial class HeroActorController : Node2D
 					0.0f));
 	}
 
+	/// <summary>
+	/// Attempts to get melee engagement position without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TryGetMeleeEngagementPosition(
 		MonsterActorController target,
 		out Vector2 engagementPosition)
@@ -798,6 +1046,10 @@ public partial class HeroActorController : Node2D
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the has melee engagement reservation operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool HasMeleeEngagementReservation(
 		MonsterActorController target)
 	{
@@ -807,6 +1059,10 @@ public partial class HeroActorController : Node2D
 				out _);
 	}
 
+	/// <summary>
+	/// Performs the is target within melee engagement range operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool IsTargetWithinMeleeEngagementRange(
 		MonsterActorController target)
 	{
@@ -829,6 +1085,10 @@ public partial class HeroActorController : Node2D
 			<= maximumDistance + scaledTolerance;
 	}
 
+	/// <summary>
+	/// Performs the has reached melee engagement position operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool HasReachedMeleeEngagementPosition(
 		MonsterActorController target,
 		Vector2 engagementPosition)
@@ -849,6 +1109,10 @@ public partial class HeroActorController : Node2D
 			&& IsTargetWithinMeleeEngagementRange(target);
 	}
 
+	/// <summary>
+	/// Performs the release melee engagement slot operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ReleaseMeleeEngagementSlot(
 		MonsterActorController? target)
 	{
@@ -861,6 +1125,10 @@ public partial class HeroActorController : Node2D
 		target.MeleeEngagementSlots.Release(this);
 	}
 
+	/// <summary>
+	/// Retrieves body clearance distance from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetBodyClearanceDistance(
 		MonsterActorController target)
 	{
@@ -873,6 +1141,10 @@ public partial class HeroActorController : Node2D
 			target.CombatPresentationScale);
 	}
 
+	/// <summary>
+	/// Retrieves required attack distance from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetRequiredAttackDistance(MonsterActorController target)
 	{
 		return CombatSpacing.GetRequiredCenterDistance(
@@ -885,6 +1157,10 @@ public partial class HeroActorController : Node2D
 			target.CombatPresentationScale);
 	}
 
+	/// <summary>
+	/// Performs the calculate approach position operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting vector2 to the caller.
+	/// </summary>
 	private Vector2 CalculateApproachPosition(MonsterActorController target)
 	{
 		float requiredCenterDistance = GetRequiredAttackDistance(target);
@@ -910,6 +1186,10 @@ public partial class HeroActorController : Node2D
 		return new Vector2( destinationX, target.GlobalPosition.Y);
 	}
 
+	/// <summary>
+	/// Performs the initialize combat profile operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void InitializeCombatProfile()
 	{
 		CombatProfile.AttackRange = TemporaryAttackRange;
@@ -925,6 +1205,10 @@ public partial class HeroActorController : Node2D
 		CombatProfile.AttackLungeDistance = TemporaryAttackLungeDistance;
 	}
 
+	/// <summary>
+	/// Performs the is target within attack range operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool IsTargetWithinAttackRange(MonsterActorController target)
 	{
 		float requiredCenterDistance =
@@ -941,6 +1225,10 @@ public partial class HeroActorController : Node2D
 			<= requiredCenterDistance + scaledTolerance;
 	}
 
+	/// <summary>
+	/// Retrieves scaled combat radius from the current game state.
+	/// Reads the current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetScaledCombatRadius()
 	{
 		return Mathf.Max(
@@ -949,6 +1237,10 @@ public partial class HeroActorController : Node2D
 			* CombatPresentationScale;
 	}
 
+	/// <summary>
+	/// Retrieves hero separation vertical leash from the current game state.
+	/// Reads the current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetHeroSeparationVerticalLeash()
 	{
 		float verticalMultiplier = Mathf.Max(
@@ -979,12 +1271,20 @@ public partial class HeroActorController : Node2D
 		return maximumSpacing;
 	}
 
+	/// <summary>
+	/// Retrieves non melee vertical alignment tolerance from the current game state.
+	/// Reads the current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetNonMeleeVerticalAlignmentTolerance()
 	{
 		return AttackRangeTolerance
 			+ GetHeroSeparationVerticalLeash();
 	}
 
+	/// <summary>
+	/// Retrieves combat separation anchor y from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetCombatSeparationAnchorY(
 		MonsterActorController target)
 	{
@@ -1003,6 +1303,10 @@ public partial class HeroActorController : Node2D
 		return target.GlobalPosition.Y;
 	}
 
+	/// <summary>
+	/// Performs the is valid separation peer operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool IsValidSeparationPeer(
 		HeroActorController? partyMember)
 	{
@@ -1013,6 +1317,10 @@ public partial class HeroActorController : Node2D
 			&& !partyMember.IsIncapacitated;
 	}
 
+	/// <summary>
+	/// Applies hero separation to the relevant actor, resource, or presentation state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ApplyHeroSeparation(double delta)
 	{
 		if (JourneyState.CurrentState
@@ -1162,6 +1470,10 @@ public partial class HeroActorController : Node2D
 			nextY);
 	}
 
+	/// <summary>
+	/// Recalculates facing toward target from the latest runtime state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateFacingTowardTarget()
 	{
 		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
@@ -1192,6 +1504,10 @@ public partial class HeroActorController : Node2D
 			$"{CurrentTarget.Name}.");
 	}
 
+	/// <summary>
+	/// Performs the prepare to attack operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void PrepareToAttack()
 	{
 		if (_initialAttackPending)
@@ -1206,6 +1522,10 @@ public partial class HeroActorController : Node2D
 		_state = HeroState.WaitingToAttack;
 	}
 
+	/// <summary>
+	/// Recalculates combat approach from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateCombatApproach(double delta)
 	{
 		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
@@ -1284,6 +1604,10 @@ public partial class HeroActorController : Node2D
 		PrepareToAttack();
 	}
 
+	/// <summary>
+	/// Recalculates waiting to attack from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateWaitingToAttack(double delta)
 	{
 		StopMovementAnimation();
@@ -1323,6 +1647,10 @@ public partial class HeroActorController : Node2D
 		BeginAttack();
 	}
 
+	/// <summary>
+	/// Performs the begin attack operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void BeginAttack()
 	{
 
@@ -1339,6 +1667,10 @@ public partial class HeroActorController : Node2D
 			$"{Name} began attacking {CurrentTarget!.Name}.");
 	}
 
+	/// <summary>
+	/// Recalculates ability from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateAbility(double delta)
 	{
 		if (_activeAbility is null
@@ -1389,6 +1721,10 @@ public partial class HeroActorController : Node2D
 		ResumeAfterAbility();
 	}
 
+	/// <summary>
+	/// Performs the resume after ability operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ResumeAfterAbility()
 	{
 		if (IsIncapacitated)
@@ -1426,6 +1762,10 @@ public partial class HeroActorController : Node2D
 			: HeroState.ReturningToFormation;
 	}
 
+	/// <summary>
+	/// Resets ability cast so the system can begin from a clean state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ClearAbilityCast()
 	{
 		_activeAbility = null;
@@ -1433,6 +1773,10 @@ public partial class HeroActorController : Node2D
 		_abilityCastTimeRemaining = 0.0;
 	}
 
+	/// <summary>
+	/// Recalculates attack from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateAttack(double delta)
 	{
 		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
@@ -1488,6 +1832,10 @@ public partial class HeroActorController : Node2D
 		EndAttack();
 	}
 
+	/// <summary>
+	/// Performs the end attack operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void EndAttack()
 	{
 		VisualRoot.Position =
@@ -1527,6 +1875,10 @@ public partial class HeroActorController : Node2D
 				: HeroState.ApproachingTarget;
 	}
 
+	/// <summary>
+	/// Performs the enter incapacitated state operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void EnterIncapacitatedState()
 	{
 		if (IsIncapacitated)
@@ -1555,6 +1907,10 @@ public partial class HeroActorController : Node2D
 			this);
 	}
 
+	/// <summary>
+	/// Attempts to emit attack release without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void TryEmitAttackRelease(float attackProgress)
 	{
 		if (_attackReleaseEmitted)
@@ -1577,6 +1933,10 @@ public partial class HeroActorController : Node2D
 			CurrentTarget!);
 	}
 
+	/// <summary>
+	/// Recalculates return to formation from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateReturnToFormation(double delta)
 	{
 		Vector2 previousPosition =
@@ -1613,6 +1973,10 @@ public partial class HeroActorController : Node2D
 			$"{FormationPosition}.");
 	}
 
+	/// <summary>
+	/// Applies journey state to the relevant actor, resource, or presentation state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ApplyJourneyState(JourneyStateService.JourneyState state)
 	{
 		if (state
@@ -1661,6 +2025,10 @@ public partial class HeroActorController : Node2D
 				: HeroState.ReturningToFormation;
 	}
 
+	/// <summary>
+	/// Handles the journey state changed event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnJourneyStateChanged(
 		JourneyStateService.JourneyState previousState,
 		JourneyStateService.JourneyState currentState)
@@ -1668,6 +2036,10 @@ public partial class HeroActorController : Node2D
 		ApplyJourneyState(currentState);
 	}
 
+	/// <summary>
+	/// Performs the validate references operation for Hero Actor Controller.
+	/// Reads the current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool ValidateReferences()
 	{
 		bool valid = true;
@@ -1697,11 +2069,19 @@ public partial class HeroActorController : Node2D
 		return valid;
 	}
 	
+	/// <summary>
+	/// Performs the snap to formation operation for Hero Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void SnapToFormation()
 	{
 		GlobalPosition = FormationPosition;
 	}
 
+	/// <summary>
+	/// Performs the refresh target operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void RefreshTarget(IReadOnlyList<MonsterActorController> candidates)
 	{
 		if (IsIncapacitated)
@@ -1787,6 +2167,10 @@ public partial class HeroActorController : Node2D
 		
 	}
 
+	/// <summary>
+	/// Attempts to refresh defensive rescue target without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TryRefreshDefensiveRescueTarget(
 		IReadOnlyList<MonsterActorController> candidates,
 		bool hasValidCurrentTarget)
@@ -1846,6 +2230,10 @@ public partial class HeroActorController : Node2D
 		return true;
 	}
 
+	/// <summary>
+	/// Applies target change to the relevant actor, resource, or presentation state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ApplyTargetChange(
 		MonsterActorController? proposedTarget,
 		MonsterActorController? previousTarget,
@@ -1882,6 +2270,10 @@ public partial class HeroActorController : Node2D
 		}
 	}
 
+	/// <summary>
+	/// Performs the does target switch meet advantage operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool DoesTargetSwitchMeetAdvantage(
 		HeroTargetDecision decision,
 		out float requiredSwitchScore)
@@ -1917,6 +2309,10 @@ public partial class HeroActorController : Node2D
 				requiredSwitchScore);
 	}
 
+	/// <summary>
+	/// Performs the print target decision operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void PrintTargetDecision(
 		HeroTargetDecision decision,
 		MonsterActorController? previousTarget,
@@ -1955,6 +2351,10 @@ public partial class HeroActorController : Node2D
 			$"{ActiveStanceProfile.MinimumTargetCommitmentSeconds:0.##}s.");
 	}
 
+	/// <summary>
+	/// Performs the print defensive rescue decision operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void PrintDefensiveRescueDecision(
 		HeroTargetDecision decision)
 	{
@@ -1977,6 +2377,10 @@ public partial class HeroActorController : Node2D
 			$"{ActiveStanceProfile.RescueTargetCommitmentSeconds:0.##}s.");
 	}
 
+	/// <summary>
+	/// Performs the contains target operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool ContainsTarget(IReadOnlyList<MonsterActorController> candidates, MonsterActorController target)
 	{
 		foreach (MonsterActorController candidate in candidates)
@@ -1988,6 +2392,10 @@ public partial class HeroActorController : Node2D
 		return false;
 	}
 
+	/// <summary>
+	/// Resets target so the system can begin from a clean state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void ClearTarget()
 	{
 		if (CurrentTarget is null)
@@ -2016,6 +2424,10 @@ public partial class HeroActorController : Node2D
 
 		DebugLog.Print($"{Name} cleared its monster target.");
 	}
+	/// <summary>
+	/// Performs the require operation for Hero Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool Require(GodotObject value, string propertyName)
 	{
 		if (GodotObject.IsInstanceValid(value))

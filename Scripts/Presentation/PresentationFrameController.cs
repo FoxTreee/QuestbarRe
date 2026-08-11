@@ -6,6 +6,10 @@ public partial class PresentationFrameController : Node
         new(800, 192);
 
     [ExportCategory("Dependencies")]
+    /// <summary>
+    /// Controls presentation frame.
+    /// For example, selecting a different value changes which presentation frame behavior or content the owning system uses.
+    /// </summary>
     [Export]
     public SubViewportContainer PresentationFrame
     {
@@ -13,6 +17,10 @@ public partial class PresentationFrameController : Node
         set;
     } = null!;
 
+    /// <summary>
+    /// Controls region viewport.
+    /// For example, selecting a different value changes which region viewport behavior or content the owning system uses.
+    /// </summary>
     [Export]
     public SubViewport RegionViewport
     {
@@ -20,6 +28,10 @@ public partial class PresentationFrameController : Node
         set;
     } = null!;
 
+    /// <summary>
+    /// Controls ground.
+    /// For example, selecting a different value changes which ground behavior or content the owning system uses.
+    /// </summary>
     [Export]
     public Polygon2D Ground
     {
@@ -27,6 +39,10 @@ public partial class PresentationFrameController : Node
         set;
     } = null!;
 
+    /// <summary>
+    /// Inspector reference used by this component for its window host dependency.
+    /// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+    /// </summary>
     [Export]
     public DesktopWindowHostController WindowHost
     {
@@ -34,6 +50,10 @@ public partial class PresentationFrameController : Node
         set;
     } = null!;
 
+    /// <summary>
+    /// Runs Godot setup for Presentation Frame Controller when the node enters the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _Ready()
     {
         if (!ValidateReferences())
@@ -47,6 +67,10 @@ public partial class PresentationFrameController : Node
         ApplyPresentationFrame();
     }
 
+    /// <summary>
+    /// Cleans up Presentation Frame Controller when the node leaves the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _ExitTree()
     {
         if (GodotObject.IsInstanceValid(WindowHost))
@@ -56,6 +80,10 @@ public partial class PresentationFrameController : Node
         }
     }
 
+    /// <summary>
+    /// Performs the configure logical viewport operation for Presentation Frame Controller.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void ConfigureLogicalViewport()
     {
         PresentationFrame.AnchorLeft = 0.0f;
@@ -68,11 +96,19 @@ public partial class PresentationFrameController : Node
         RegionViewport.Size2DOverrideStretch = true;
     }
 
+    /// <summary>
+    /// Handles the window placement applied event and updates the related game state.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void OnWindowPlacementApplied()
     {
         ApplyPresentationFrame();
     }
 
+    /// <summary>
+    /// Applies presentation frame to the relevant actor, resource, or presentation state.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void ApplyPresentationFrame()
     {
         Vector2I windowSize = GetWindow().Size;
@@ -103,6 +139,10 @@ public partial class PresentationFrameController : Node
             $"FrameSize={PresentationFrame.Size}");
     }
 
+    /// <summary>
+    /// Applies ground height to the relevant actor, resource, or presentation state.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void ApplyGroundHeight(float uniformScale)
     {
         float collapsedHeight = Mathf.Clamp(
@@ -129,6 +169,10 @@ public partial class PresentationFrameController : Node
         };
     }
 
+    /// <summary>
+    /// Performs the validate references operation for Presentation Frame Controller.
+    /// Reads the current state and returns the resulting bool to the caller.
+    /// </summary>
     private bool ValidateReferences()
     {
         bool valid = true;
@@ -152,6 +196,10 @@ public partial class PresentationFrameController : Node
         return valid;
     }
 
+    /// <summary>
+    /// Performs the require operation for Presentation Frame Controller.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     private static bool Require(
         GodotObject value,
         string propertyName)

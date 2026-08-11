@@ -50,36 +50,76 @@ public partial class MonsterActorController : Node2D
 	public bool HasValidTarget => IsValidHeroTarget(CurrentTarget);
 
 	[ExportCategory("Visuals")]
+	/// <summary>
+	/// Inspector reference used by this component for its presentation root dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Node2D PresentationRoot { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its visual root dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Node2D VisualRoot { get; set; } = null!;
 
+	/// <summary>
+	/// Controls body bounds.
+	/// For example, selecting a different value changes which body bounds behavior or content the owning system uses.
+	/// </summary>
 	[Export]
 	public BodyBounds2D BodyBounds { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its impact origin dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Marker2D ImpactOrigin { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its health bar anchor dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Marker2D HealthBarAnchor { get; set; } = null!;
 
+	/// <summary>
+	/// Controls health bar gap, measured as health points.
+	/// For example, changing 18 to 36 doubles the configured health bar gap.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,32,1")]
 	public float HealthBarGap { get; set; } = 18.0f;
 
 	[ExportCategory("Combat Movement")]
+	/// <summary>
+	/// Controls combat arrival distance, measured as pixels.
+	/// For example, changing 1 to 2 doubles the configured combat arrival distance.
+	/// </summary>
 	[Export(PropertyHint.Range, "0.1,20,0.1")]
 	public float CombatArrivalDistance { get; set; } = 1.0f;
 
+	/// <summary>
+	/// Controls facing dead zone.
+	/// For example, changing 1 to 2 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,10,0.1")]
 	public float FacingDeadZone { get; set; } = 1.0f;
 
 	[ExportCategory("Melee Engagement Slots")]
+	/// <summary>
+	/// Controls melee slot horizontal spacing multiplier, measured as pixels.
+	/// For example, changing 1 to 2 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0.5,2,0.05")]
 	public float MeleeSlotHorizontalSpacingMultiplier
 	{ get; set; } = 1.0f;
 
+	/// <summary>
+	/// Controls melee slot vertical spacing multiplier, measured as pixels.
+	/// For example, changing 0.75 to 1.5 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0.25,2,0.05")]
 	public float MeleeSlotVerticalSpacingMultiplier
 	{ get; set; } = 0.75f;
@@ -101,6 +141,10 @@ public partial class MonsterActorController : Node2D
 	public MonsterCombatProfile CombatProfile { get; } = new();
 	public float CombatPresentationScale { get; private set; } = 1.0f;
 
+	/// <summary>
+	/// Updates combat presentation scale and applies the new value to the owning system.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void SetCombatPresentationScale(float scale)
 	{
 		CombatPresentationScale =
@@ -141,6 +185,10 @@ public partial class MonsterActorController : Node2D
 			0.0,
 			_forcedTargetTimeRemaining);
 
+	/// <summary>
+	/// Performs the configure operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void Configure(
 		MonsterDefinition definition,
 		IReadOnlyList<AbilityDefinition>? abilities = null)
@@ -175,6 +223,10 @@ public partial class MonsterActorController : Node2D
 		}
 	}
 
+	/// <summary>
+	/// Attempts to apply forced target without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool TryApplyForcedTarget(
 		HeroActorController target,
 		float durationSeconds)
@@ -202,6 +254,10 @@ public partial class MonsterActorController : Node2D
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the refresh target validity operation for Monster Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void RefreshTargetValidity()
 	{
 		if (IsDead)
@@ -237,6 +293,10 @@ public partial class MonsterActorController : Node2D
 			$"{Name} released its invalid hero target.");
 	}
 
+	/// <summary>
+	/// Performs the enter dead state operation for Monster Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void EnterDeadState()
 	{
 		if (IsDead)
@@ -263,6 +323,10 @@ public partial class MonsterActorController : Node2D
 			this);
 	}
 
+	/// <summary>
+	/// Applies definition to the relevant actor, resource, or presentation state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ApplyDefinition()
 	{
 		CombatProfile.MaximumHealth = Definition.MaximumHealth;
@@ -277,6 +341,10 @@ public partial class MonsterActorController : Node2D
 		CombatProfile.AttackDelivery = Definition.AttackDelivery;
 	}
 
+	/// <summary>
+	/// Performs the position health bar operation for Monster Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void PositionHealthBar()
 	{
 		if (!GodotObject.IsInstanceValid(_healthBar)
@@ -295,6 +363,10 @@ public partial class MonsterActorController : Node2D
 			+ Vector2.Up * HealthBarGap;
 	}
 
+	/// <summary>
+	/// Runs Godot setup for Monster Actor Controller when the node enters the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Ready()
 	{
 		if (!GodotObject.IsInstanceValid(Definition))
@@ -411,6 +483,10 @@ public partial class MonsterActorController : Node2D
 			$"selection={Definition.TargetingStyle}.");
 	}
 
+	/// <summary>
+	/// Performs the is valid hero target operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool IsValidHeroTarget(HeroActorController? hero)
 	{
 		return hero is not null
@@ -420,6 +496,10 @@ public partial class MonsterActorController : Node2D
 			&& !hero.IsIncapacitated;
 	}
 
+	/// <summary>
+	/// Performs the uses melee engagement slots operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool UsesMeleeEngagementSlots(
 		HeroActorController target)
 	{
@@ -436,6 +516,10 @@ public partial class MonsterActorController : Node2D
 			+ scaledArrivalDistance;
 	}
 
+	/// <summary>
+	/// Retrieves melee slot horizontal distance from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetMeleeSlotHorizontalDistance(
 		HeroActorController target)
 	{
@@ -453,6 +537,10 @@ public partial class MonsterActorController : Node2D
 			adjustedDistance);
 	}
 
+	/// <summary>
+	/// Retrieves melee slot vertical distance from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetMeleeSlotVerticalDistance(
 		HeroActorController target)
 	{
@@ -472,6 +560,10 @@ public partial class MonsterActorController : Node2D
 					0.0f));
 	}
 
+	/// <summary>
+	/// Attempts to get melee engagement position without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TryGetMeleeEngagementPosition(
 		HeroActorController target,
 		out Vector2 engagementPosition)
@@ -520,6 +612,10 @@ public partial class MonsterActorController : Node2D
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the has melee engagement reservation operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool HasMeleeEngagementReservation(
 		HeroActorController target)
 	{
@@ -529,6 +625,10 @@ public partial class MonsterActorController : Node2D
 				out _);
 	}
 
+	/// <summary>
+	/// Performs the is target within melee engagement range operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool IsTargetWithinMeleeEngagementRange(
 		HeroActorController target)
 	{
@@ -551,6 +651,10 @@ public partial class MonsterActorController : Node2D
 			<= maximumDistance + scaledTolerance;
 	}
 
+	/// <summary>
+	/// Performs the has reached melee engagement position operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool HasReachedMeleeEngagementPosition(
 		HeroActorController target,
 		Vector2 engagementPosition)
@@ -571,6 +675,10 @@ public partial class MonsterActorController : Node2D
 			&& IsTargetWithinMeleeEngagementRange(target);
 	}
 
+	/// <summary>
+	/// Performs the release melee engagement slot operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ReleaseMeleeEngagementSlot(
 		HeroActorController? target)
 	{
@@ -583,6 +691,10 @@ public partial class MonsterActorController : Node2D
 		target.MeleeEngagementSlots.Release(this);
 	}
 
+	/// <summary>
+	/// Updates current target and applies the new value to the owning system.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void SetCurrentTarget(
 		HeroActorController? target)
 	{
@@ -600,6 +712,10 @@ public partial class MonsterActorController : Node2D
 		}
 	}
 
+	/// <summary>
+	/// Retrieves body clearance distance from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetBodyClearanceDistance(
 		HeroActorController target)
 	{
@@ -612,6 +728,10 @@ public partial class MonsterActorController : Node2D
 			target.CombatPresentationScale);
 	}
 
+	/// <summary>
+	/// Retrieves required attack distance from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting float to the caller.
+	/// </summary>
 	private float GetRequiredAttackDistance(HeroActorController target)
 	{
 		return CombatSpacing.GetRequiredCenterDistance(
@@ -624,6 +744,10 @@ public partial class MonsterActorController : Node2D
 			target.CombatPresentationScale);
 	}
 
+	/// <summary>
+	/// Performs the is target within attack range operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool IsTargetWithinAttackRange(HeroActorController target)
 	{
 		float minimumCenterDistance =
@@ -644,6 +768,10 @@ public partial class MonsterActorController : Node2D
 			<= requiredCenterDistance + scaledTolerance;
 	}
 
+	/// <summary>
+	/// Performs the is vertically aligned operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool IsVerticallyAligned(HeroActorController target)
 	{
 		return Mathf.Abs(
@@ -652,6 +780,10 @@ public partial class MonsterActorController : Node2D
 			<= CombatArrivalDistance;
 	}
 
+	/// <summary>
+	/// Performs the is aligned for current engagement operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool IsAlignedForCurrentEngagement(
 		HeroActorController target)
 	{
@@ -660,6 +792,10 @@ public partial class MonsterActorController : Node2D
 			: IsVerticallyAligned(target);
 	}
 
+	/// <summary>
+	/// Performs the is target within ability range operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool IsTargetWithinAbilityRange(
 		HeroActorController target,
 		AbilityDefinition ability)
@@ -674,6 +810,10 @@ public partial class MonsterActorController : Node2D
 			+ CombatArrivalDistance;
 	}
 
+	/// <summary>
+	/// Recalculates ability cooldowns from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateAbilityCooldowns(double delta)
 	{
 		foreach (AbilityDefinition ability in _abilities)
@@ -691,6 +831,10 @@ public partial class MonsterActorController : Node2D
 		}
 	}
 
+	/// <summary>
+	/// Performs the find ready ability operation for Monster Actor Controller.
+	/// Reads the current state and returns the resulting ability definition to the caller.
+	/// </summary>
 	private AbilityDefinition? FindReadyAbility()
 	{
 		if (!IsValidHeroTarget(CurrentTarget))
@@ -730,6 +874,10 @@ public partial class MonsterActorController : Node2D
 		return null;
 	}
 
+	/// <summary>
+	/// Performs the calculate approach position operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current state and returns the resulting vector2 to the caller.
+	/// </summary>
 	private Vector2 CalculateApproachPosition(
 	HeroActorController target)
 	{
@@ -750,6 +898,10 @@ public partial class MonsterActorController : Node2D
 			target.GlobalPosition.Y);
 	}
 
+	/// <summary>
+	/// Recalculates facing toward target from the latest runtime state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateFacingTowardTarget()
 	{
 		if (!IsValidHeroTarget(CurrentTarget))
@@ -780,6 +932,10 @@ public partial class MonsterActorController : Node2D
 			$"{CurrentTarget.Name}.");
 	}
 
+	/// <summary>
+	/// Recalculates combat approach from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateCombatApproach(double delta)
 	{
 		if (!IsValidHeroTarget(CurrentTarget))
@@ -861,6 +1017,10 @@ public partial class MonsterActorController : Node2D
 			$"{target.Name}.");
 	}
 
+	/// <summary>
+	/// Recalculates waiting to attack from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateWaitingToAttack(double delta)
 	{
 		StopAttackPresentation();
@@ -906,6 +1066,10 @@ public partial class MonsterActorController : Node2D
 		BeginAttack();
 	}
 
+	/// <summary>
+	/// Attempts to acquire target without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool TryAcquireTarget(HeroActorController target)
 	{
 		if (IsDead)
@@ -932,6 +1096,10 @@ public partial class MonsterActorController : Node2D
 		return true;
 	}
 
+	/// <summary>
+	/// Attempts to switch target without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool TrySwitchTarget(HeroActorController target)
 	{
 		if (IsDead
@@ -958,6 +1126,10 @@ public partial class MonsterActorController : Node2D
 		return true;
 	}
 
+	/// <summary>
+	/// Recalculates forced target from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateForcedTarget(double delta)
 	{
 		if (_forcedTarget is null)
@@ -978,6 +1150,10 @@ public partial class MonsterActorController : Node2D
 		EndForcedTarget();
 	}
 
+	/// <summary>
+	/// Performs the end forced target operation for Monster Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void EndForcedTarget()
 	{
 		_forcedTarget = null;
@@ -998,6 +1174,10 @@ public partial class MonsterActorController : Node2D
 			this);
 	}
 
+	/// <summary>
+	/// Performs the begin attack operation for Monster Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void BeginAttack()
 	{
 		if (!IsValidHeroTarget(CurrentTarget))
@@ -1015,6 +1195,10 @@ public partial class MonsterActorController : Node2D
 			$"{Name} began attacking {CurrentTarget!.Name}.");
 	}
 
+	/// <summary>
+	/// Performs the begin ability operation for Monster Actor Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void BeginAbility(AbilityDefinition ability)
 	{
 		if (!IsValidHeroTarget(CurrentTarget))
@@ -1034,6 +1218,10 @@ public partial class MonsterActorController : Node2D
 			$"Cast={ability.CastTimeSeconds:0.##}s.");
 	}
 
+	/// <summary>
+	/// Recalculates ability from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateAbility(double delta)
 	{
 		if (_activeAbility is null
@@ -1095,6 +1283,10 @@ public partial class MonsterActorController : Node2D
 		EndAbility();
 	}
 
+	/// <summary>
+	/// Performs the end ability operation for Monster Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void EndAbility()
 	{
 		ClearAbilityCast();
@@ -1126,12 +1318,20 @@ public partial class MonsterActorController : Node2D
 				: MonsterState.ApproachingTarget;
 	}
 
+	/// <summary>
+	/// Resets ability cast so the system can begin from a clean state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ClearAbilityCast()
 	{
 		_activeAbility = null;
 		_abilityCastTimeRemaining = 0.0;
 	}
 
+	/// <summary>
+	/// Recalculates attack from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateAttack(double delta)
 	{
 		if (!IsValidHeroTarget(CurrentTarget))
@@ -1175,6 +1375,10 @@ public partial class MonsterActorController : Node2D
 		EndAttack();
 	}
 
+	/// <summary>
+	/// Updates Monster Actor Controller every rendered frame using the supplied frame delta.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Process(double delta)
 	{
 		if (!IsDead)
@@ -1214,6 +1418,10 @@ public partial class MonsterActorController : Node2D
 		PositionHealthBar();
 	}
 
+	/// <summary>
+	/// Attempts to emit attack release without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void TryEmitAttackRelease(float attackProgress)
 	{
 		if (_attackReleaseEmitted)
@@ -1236,6 +1444,10 @@ public partial class MonsterActorController : Node2D
 			CurrentTarget!);
 	}
 
+	/// <summary>
+	/// Performs the end attack operation for Monster Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void EndAttack()
 	{
 		StopAttackPresentation();
@@ -1268,11 +1480,19 @@ public partial class MonsterActorController : Node2D
 				: MonsterState.ApproachingTarget;
 	}
 
+	/// <summary>
+	/// Performs the stop attack presentation operation for Monster Actor Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void StopAttackPresentation()
 	{
 		VisualRoot.Position = _visualRestPosition;
 	}
 
+	/// <summary>
+	/// Cleans up Monster Actor Controller when the node leaves the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _ExitTree()
 	{
 		SetCurrentTarget(null);

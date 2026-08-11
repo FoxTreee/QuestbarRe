@@ -32,12 +32,20 @@ public static class WindowsNotificationAreaGeometryReader
 		"user32.dll",
 		CharSet = CharSet.Unicode,
 		ExactSpelling = true)]
+	/// <summary>
+	/// Performs the find window w operation for Windows Notification Area Geometry Reader.
+	/// Uses the supplied arguments and current state and returns the resulting int ptr to the caller.
+	/// </summary>
 	private static extern IntPtr FindWindowW(
 		string? className,
 		string? windowName);
 
 	[DllImport("user32.dll")]
 	[return: MarshalAs(UnmanagedType.Bool)]
+	/// <summary>
+	/// Performs the enum child windows operation for Windows Notification Area Geometry Reader.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static extern bool EnumChildWindows(
 		IntPtr parentWindowHandle,
 		EnumChildWindowCallback callback,
@@ -48,6 +56,10 @@ public static class WindowsNotificationAreaGeometryReader
 		CharSet = CharSet.Unicode,
 		ExactSpelling = true,
 		SetLastError = true)]
+	/// <summary>
+	/// Retrieves class name w from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting int to the caller.
+	/// </summary>
 	private static extern int GetClassNameW(
 		IntPtr windowHandle,
 		StringBuilder className,
@@ -55,10 +67,18 @@ public static class WindowsNotificationAreaGeometryReader
 
 	[DllImport("user32.dll", SetLastError = true)]
 	[return: MarshalAs(UnmanagedType.Bool)]
+	/// <summary>
+	/// Retrieves window rect from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static extern bool GetWindowRect(
 		IntPtr windowHandle,
 		out NativeRectangle rectangle);
 
+	/// <summary>
+	/// Attempts to read without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public static bool TryRead(
 		WindowsTaskbarGeometry taskbarGeometry,
 		out WindowsNotificationAreaGeometry geometry,
@@ -151,6 +171,10 @@ public static class WindowsNotificationAreaGeometryReader
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the find descendant window by class operation for Windows Notification Area Geometry Reader.
+	/// Uses the supplied arguments and current state and returns the resulting int ptr to the caller.
+	/// </summary>
 	private static IntPtr FindDescendantWindowByClass(
 		IntPtr parentWindow,
 		string desiredClassName)
@@ -189,6 +213,10 @@ public static class WindowsNotificationAreaGeometryReader
 		return matchingWindow;
 	}
 
+	/// <summary>
+	/// Retrieves native to godot coordinate offset from the current game state.
+	/// Reads the current state and returns the resulting vector2 i to the caller.
+	/// </summary>
 	private static Vector2I
 		GetNativeToGodotCoordinateOffset()
 	{
@@ -203,6 +231,10 @@ public static class WindowsNotificationAreaGeometryReader
 		return DisplayServer.ScreenGetPosition(primaryScreen);
 	}
 
+	/// <summary>
+	/// Retrieves intersection area from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting long to the caller.
+	/// </summary>
 	private static long GetIntersectionArea(
 		Rect2I first,
 		Rect2I second)

@@ -8,6 +8,10 @@ public readonly struct DamageRequest
 
     public float RequestedDamage { get; }
 
+    /// <summary>
+    /// Performs the damage request operation for Damage Request.
+    /// Uses the supplied arguments and current state and returns the resulting damage request to the caller.
+    /// </summary>
     public DamageRequest(
         Node source,
         Node target,

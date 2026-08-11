@@ -1,0 +1,359 @@
+{
+  "res://Content/Factories/HeroFactory.cs": {
+    "Registry": "Inspector reference used by this component for its registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Content/Factories/MonsterFactory.cs": {
+    "Registry": "Inspector reference used by this component for its registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Content/Registries/AbilityContentRegistry.cs": {
+    "Definitions": "Controls definitions. For example, adding another entry gives the owning system one more configured definitions to use."
+  },
+  "res://Content/Registries/EncounterContentRegistry.cs": {
+    "MonsterRegistry": "Inspector reference used by this component for its monster registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Definitions": "Controls definitions. For example, adding another entry gives the owning system one more configured definitions to use."
+  },
+  "res://Content/Registries/EncounterPoolContentRegistry.cs": {
+    "EncounterRegistry": "Inspector reference used by this component for its encounter registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Definitions": "Controls definitions. For example, adding another entry gives the owning system one more configured definitions to use."
+  },
+  "res://Content/Registries/HeroContentRegistry.cs": {
+    "AbilityRegistry": "Inspector reference used by this component for its ability registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Definitions": "Controls definitions. For example, adding another entry gives the owning system one more configured definitions to use."
+  },
+  "res://Content/Registries/MonsterContentRegistry.cs": {
+    "AbilityRegistry": "Inspector reference used by this component for its ability registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Definitions": "Controls definitions. For example, adding another entry gives the owning system one more configured definitions to use."
+  },
+  "res://Controllers/ActorGroundConstraintController.cs": {
+    "ActorLayer": "Inspector reference used by this component for its actor layer dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "GroundTopBoundary": "Inspector reference used by this component for its ground top boundary dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "GroundBottomBoundary": "Inspector reference used by this component for its ground bottom boundary dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Controllers/ActorScalePresentationController.cs": {
+    "ActorLayer": "Inspector reference used by this component for its actor layer dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "WindowHost": "Inspector reference used by this component for its window host dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "CollapsedActorScale": "Controls collapsed actor scale, measured as a ratio or multiplier. For example, changing 0.4 to 0.8 doubles this setting's configured contribution to the system."
+  },
+  "res://Controllers/Actors/BodyBounds2D.cs": {
+    "BoundsSize": "Controls bounds size. For example, selecting a different value changes which bounds size behavior or content the owning system uses."
+  },
+  "res://Controllers/Actors/HeroActorController.cs": {
+    "CombatTagMask": "Controls combat tag mask. For example, selecting a different value changes which combat tag mask behavior or content the owning system uses.",
+    "FormationAnchor": "Inspector reference used by this component for its formation anchor dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "FormationOffset": "Controls formation offset, measured as pixels. For example, changing 2 to 4 doubles this setting's configured contribution to the system.",
+    "JourneyState": "Inspector reference used by this component for its journey state dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "VisualRoot": "Inspector reference used by this component for its visual root dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "BodyBounds": "Controls body bounds. For example, selecting a different value changes which body bounds behavior or content the owning system uses.",
+    "ProjectileOrigin": "Inspector reference used by this component for its projectile origin dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "AbilityCooldownIndicator": "Inspector reference used by this component for its ability cooldown indicator dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "BobHeight": "Controls bob height, measured as pixels. For example, changing 4 to 8 doubles the configured bob height.",
+    "BobSpeed": "Controls bob speed, measured as pixels per second. For example, changing 7 to 14 makes the affected movement or animation run about twice as fast.",
+    "BobPhaseOffset": "Controls bob phase offset, measured as pixels. For example, changing 0 to 1 doubles this setting's configured contribution to the system.",
+    "MovementAnimationGraceTime": "Controls movement animation grace time, measured as seconds. For example, changing 0.15 to 0.3 doubles this setting's configured contribution to the system.",
+    "TemporaryMaximumHealth": "Controls temporary maximum health, measured as health points. For example, changing 100 to 200 doubles the configured temporary maximum health.",
+    "TemporaryAttackDamage": "Controls temporary attack damage, measured as damage points. For example, changing 20 to 40 doubles the configured temporary attack damage.",
+    "CombatMoveSpeed": "Controls combat move speed, measured as pixels per second. For example, changing 140 to 280 makes the affected movement or animation run about twice as fast.",
+    "TemporaryAttackRange": "Controls temporary attack range, measured as pixels. For example, changing 28 to 56 doubles the configured temporary attack range.",
+    "CombatArrivalDistance": "Controls combat arrival distance, measured as pixels. For example, changing 1 to 2 doubles the configured combat arrival distance.",
+    "AttackRangeTolerance": "Controls attack range tolerance, measured as pixels. For example, changing 3 to 6 doubles the configured attack range tolerance.",
+    "FacingDeadZone": "Controls facing dead zone. For example, changing 1 to 2 doubles this setting's configured contribution to the system.",
+    "MeleeSlotHorizontalSpacingMultiplier": "Controls melee slot horizontal spacing multiplier, measured as pixels. For example, changing 1 to 2 doubles this setting's configured contribution to the system.",
+    "MeleeSlotVerticalSpacingMultiplier": "Controls melee slot vertical spacing multiplier, measured as pixels. For example, changing 0.75 to 1.5 doubles this setting's configured contribution to the system.",
+    "HeroSeparationHorizontalRangeMultiplier": "Controls hero separation horizontal range multiplier, measured as pixels. For example, changing 1 to 2 doubles the configured hero separation horizontal range multiplier.",
+    "HeroSeparationVerticalSpacingMultiplier": "Controls hero separation vertical spacing multiplier, measured as pixels. For example, changing 0.75 to 1.5 doubles this setting's configured contribution to the system.",
+    "HeroSeparationSpeed": "Controls hero separation speed, measured as pixels per second. For example, changing 24 to 48 makes the affected movement or animation run about twice as fast.",
+    "TemporaryAttackInterval": "Controls temporary attack interval, measured as seconds. For example, changing 1.5 to 3 makes the affected action wait twice as long between uses.",
+    "TemporaryAttackDuration": "Controls temporary attack duration, measured as seconds. For example, changing 0.3 to 0.6 doubles this setting's configured contribution to the system.",
+    "TemporaryAttackLungeDistance": "Controls temporary attack lunge distance, measured as pixels. For example, changing 8 to 16 doubles the configured temporary attack lunge distance.",
+    "TemporaryAttackReleasePoint": "Controls temporary attack release point. For example, changing 0.5 to 1 doubles this setting's configured contribution to the system.",
+    "TemporaryAttackDelivery": "Controls temporary attack delivery. For example, selecting a different value changes which temporary attack delivery behavior or content the owning system uses.",
+    "TravelingRecoveryPercentPerSecond": "Controls traveling recovery percent per second, measured as a ratio or multiplier. For example, changing 2.5 to 5 doubles this setting's configured contribution to the system.",
+    "Targeting": "Inspector reference used by this component for its targeting dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Controllers/Actors/MonsterActorController.cs": {
+    "PresentationRoot": "Inspector reference used by this component for its presentation root dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "VisualRoot": "Inspector reference used by this component for its visual root dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "BodyBounds": "Controls body bounds. For example, selecting a different value changes which body bounds behavior or content the owning system uses.",
+    "ImpactOrigin": "Inspector reference used by this component for its impact origin dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "HealthBarAnchor": "Inspector reference used by this component for its health bar anchor dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "HealthBarGap": "Controls health bar gap, measured as health points. For example, changing 18 to 36 doubles the configured health bar gap.",
+    "CombatArrivalDistance": "Controls combat arrival distance, measured as pixels. For example, changing 1 to 2 doubles the configured combat arrival distance.",
+    "FacingDeadZone": "Controls facing dead zone. For example, changing 1 to 2 doubles this setting's configured contribution to the system.",
+    "MeleeSlotHorizontalSpacingMultiplier": "Controls melee slot horizontal spacing multiplier, measured as pixels. For example, changing 1 to 2 doubles this setting's configured contribution to the system.",
+    "MeleeSlotVerticalSpacingMultiplier": "Controls melee slot vertical spacing multiplier, measured as pixels. For example, changing 0.75 to 1.5 doubles this setting's configured contribution to the system."
+  },
+  "res://Controllers/Combat/ProjectileActorController.cs": {
+    "TravelSpeed": "Controls travel speed, measured as pixels per second. For example, changing 500 to 1000 makes the affected movement or animation run about twice as fast.",
+    "ImpactDistance": "Controls impact distance, measured as pixels. For example, changing 4 to 8 doubles the configured impact distance."
+  },
+  "res://Controllers/CombatController.cs": {
+    "Encounter": "Inspector reference used by this component for its encounter dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "ActorLayer": "Inspector reference used by this component for its actor layer dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Targeting": "Inspector reference used by this component for its targeting dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "DamageResolver": "Controls damage resolver, measured as damage points. For example, selecting a different value changes which damage resolver behavior or content the owning system uses.",
+    "Party": "Inspector reference used by this component for its party dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "ProjectileScene": "Inspector reference used by this component for its projectile scene dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Controllers/Debug/DebugConsoleController.cs": {
+    "Commands": "Inspector reference used by this component for its commands dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Combat": "Inspector reference used by this component for its combat dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "JourneyState": "Inspector reference used by this component for its journey state dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Encounter": "Inspector reference used by this component for its encounter dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "DebugOutput": "Controls debug output. For example, selecting a different value changes which debug output behavior or content the owning system uses.",
+    "CommandInput": "Controls command input. For example, selecting a different value changes which command input behavior or content the owning system uses.",
+    "FilterTabs": "Controls filter tabs. For example, selecting a different value changes which filter tabs behavior or content the owning system uses.",
+    "SearchInput": "Controls search input. For example, selecting a different value changes which search input behavior or content the owning system uses.",
+    "PauseButton": "Inspector reference used by this component for its pause button dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "AutoScrollButton": "Inspector reference used by this component for its auto scroll button dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "ClearButton": "Inspector reference used by this component for its clear button dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Controllers/Debug/HeroFactorySpawnProbe.cs": {
+    "HeroContentId": "Stable content identifier for hero; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered hero.",
+    "Factory": "Controls factory. For example, selecting a different value changes which factory behavior or content the owning system uses.",
+    "ActorLayer": "Inspector reference used by this component for its actor layer dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "FormationAnchor": "Inspector reference used by this component for its formation anchor dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "JourneyState": "Inspector reference used by this component for its journey state dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Targeting": "Inspector reference used by this component for its targeting dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Controllers/DesktopWindowHostController.cs": {
+    "PlacementSettings": "Controls placement settings. For example, selecting a different value changes which placement settings behavior or content the owning system uses.",
+    "TopmostRefreshIntervalSeconds": "Controls topmost refresh interval seconds, measured as seconds. For example, changing 0.25 to 0.5 makes the affected action wait twice as long between uses.",
+    "TaskbarRefreshIntervalSeconds": "Controls taskbar refresh interval seconds, measured as seconds. For example, changing 1 to 2 makes the affected action wait twice as long between uses."
+  },
+  "res://Controllers/EncounterController.cs": {
+    "JourneyState": "Inspector reference used by this component for its journey state dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "ActorLayer": "Inspector reference used by this component for its actor layer dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "MonsterSpawnAnchor": "Inspector reference used by this component for its monster spawn anchor dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "MonsterFactory": "Controls monster factory. For example, selecting a different value changes which monster factory behavior or content the owning system uses.",
+    "EncounterRegistry": "Inspector reference used by this component for its encounter registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "EncounterPoolRegistry": "Inspector reference used by this component for its encounter pool registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "SpawnRows": "Controls spawn rows. For example, changing 4 to 8 doubles this setting's configured contribution to the system.",
+    "StartingSpawnColumns": "Controls starting spawn columns. For example, changing 2 to 4 doubles this setting's configured contribution to the system.",
+    "SpawnsPerColumnExpansion": "Controls spawns per column expansion. For example, changing 6 to 12 doubles this setting's configured contribution to the system.",
+    "VerticalSpawnSpacing": "Controls vertical spawn spacing, measured as pixels. For example, changing 24 to 48 doubles this setting's configured contribution to the system.",
+    "HorizontalSpawnSpacing": "Controls horizontal spawn spacing, measured as pixels. For example, changing 48 to 96 doubles this setting's configured contribution to the system.",
+    "DefaultEncounterPoolContentId": "Stable content identifier for default encounter pool; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered default encounter pool.",
+    "DefaultEncounterContentId": "Stable content identifier for default encounter; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered default encounter.",
+    "DefaultMonsterContentId": "Stable content identifier for default monster; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered default monster."
+  },
+  "res://Controllers/IncapacitationChoicePopupController.cs": {
+    "RegionRun": "Inspector reference used by this component for its region run dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "ChoiceWindow": "Inspector reference used by this component for its choice window dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "HeroNameLabel": "Inspector reference used by this component for its hero name label dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "MessageLabel": "Inspector reference used by this component for its message label dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "ReviveButton": "Inspector reference used by this component for its revive button dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "IncapacitateButton": "Inspector reference used by this component for its incapacitate button dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "PopupSize": "Controls popup size. For example, changing 520 to 1040 doubles this setting's configured contribution to the system."
+  },
+  "res://Controllers/PartyController.cs": {
+    "EquippedHeroContentIds": "Stable content identifier for equipped heros; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered equipped heros.",
+    "PartySlotAnchors": "Controls party slot anchors. For example, adding another entry gives the owning system one more configured party slot anchors to use.",
+    "Factory": "Controls factory. For example, selecting a different value changes which factory behavior or content the owning system uses.",
+    "ActorLayer": "Inspector reference used by this component for its actor layer dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "JourneyState": "Inspector reference used by this component for its journey state dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Targeting": "Inspector reference used by this component for its targeting dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Controllers/RegionPresentationController.cs": {
+    "RegionTileA": "Inspector reference used by this component for its region tile a dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "RegionTileB": "Inspector reference used by this component for its region tile b dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "BackgroundPresentation": "Inspector reference used by this component for its background presentation dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "TravelingGround": "Inspector reference used by this component for its traveling ground dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "GroundSprite": "Inspector reference used by this component for its ground sprite dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "TravelSpeed": "Controls travel speed, measured as pixels per second. For example, changing 60 to 120 makes the affected movement or animation run about twice as fast.",
+    "GroundTravelSpeed": "Controls ground travel speed, measured as pixels per second. For example, changing 90 to 180 makes the affected movement or animation run about twice as fast.",
+    "TileWidth": "Controls tile width, measured as pixels. For example, changing 800 to 1600 doubles the configured tile width.",
+    "JourneyState": "Inspector reference used by this component for its journey state dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Controllers/RegionRunController.cs": {
+    "Encounter": "Inspector reference used by this component for its encounter dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Combat": "Inspector reference used by this component for its combat dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "JourneyState": "Inspector reference used by this component for its journey state dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "RewardLedger": "Inspector reference used by this component for its reward ledger dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "RegionPresentation": "Inspector reference used by this component for its region presentation dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "ActiveRegion": "Inspector reference used by this component for its active region dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "TravelSecondsBetweenGroups": "Controls travel seconds between groups, measured as seconds. For example, changing 5 to 10 makes the affected action wait twice as long between uses.",
+    "AutoStart": "Enables or disables auto start. For example, turn this on to enable auto start, or off to suppress that behavior."
+  },
+  "res://Controllers/WindowSettingsPanelController.cs": {
+    "WidthSlider": "Controls width slider, measured as pixels. For example, selecting a different value changes which width slider behavior or content the owning system uses.",
+    "WidthValue": "Controls width value, measured as pixels. For example, selecting a different value changes which width value behavior or content the owning system uses.",
+    "CollapsedHeightSlider": "Controls collapsed height slider, measured as pixels. For example, selecting a different value changes which collapsed height slider behavior or content the owning system uses.",
+    "CollapsedHeightValue": "Controls collapsed height value, measured as pixels. For example, selecting a different value changes which collapsed height value behavior or content the owning system uses.",
+    "ExpandedHeightSlider": "Controls expanded height slider, measured as pixels. For example, selecting a different value changes which expanded height slider behavior or content the owning system uses.",
+    "ExpandedHeightValue": "Controls expanded height value, measured as pixels. For example, selecting a different value changes which expanded height value behavior or content the owning system uses.",
+    "HorizontalAdjustmentSlider": "Controls horizontal adjustment slider. For example, selecting a different value changes which horizontal adjustment slider behavior or content the owning system uses.",
+    "HorizontalAdjustmentValue": "Controls horizontal adjustment value. For example, selecting a different value changes which horizontal adjustment value behavior or content the owning system uses."
+  },
+  "res://Controllers/WindowSettingsPopupController.cs": {
+    "WindowHost": "Inspector reference used by this component for its window host dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "SettingsWindow": "Inspector reference used by this component for its settings window dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "PanelController": "Inspector reference used by this component for its panel controller dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "PopupSize": "Controls popup size. For example, changing 640 to 1280 doubles this setting's configured contribution to the system."
+  },
+  "res://Data/Window/WindowPlacementSettings.cs": {
+    "SelectedMonitor": "Controls selected monitor. For example, selecting a different value changes which selected monitor behavior or content the owning system uses.",
+    "ScreenAnchor": "Controls screen anchor. For example, selecting a different value changes which screen anchor behavior or content the owning system uses.",
+    "WindowWidth": "Controls window width, measured as pixels. For example, selecting a different value changes which window width behavior or content the owning system uses.",
+    "HorizontalOffset": "Controls horizontal offset, measured as pixels. For example, selecting a different value changes which horizontal offset behavior or content the owning system uses.",
+    "BottomOffset": "Controls bottom offset, measured as pixels. For example, selecting a different value changes which bottom offset behavior or content the owning system uses.",
+    "CollapsedHeight": "Controls collapsed height, measured as pixels. For example, selecting a different value changes which collapsed height behavior or content the owning system uses.",
+    "ExpandedHeight": "Controls expanded height, measured as pixels. For example, selecting a different value changes which expanded height behavior or content the owning system uses.",
+    "StartExpanded": "Enables or disables start expanded. For example, turn this on to enable start expanded, or off to suppress that behavior."
+  },
+  "res://Scripts/Content/Definitions/AbilityDefinition.cs": {
+    "ContentId": "Stable content identifier for content; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered content.",
+    "DisplayName": "Controls display name. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "Description": "Controls description. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "CooldownSeconds": "Controls cooldown seconds, measured as seconds. For example, changing 6 to 12 makes the affected action wait twice as long between uses.",
+    "CastTimeSeconds": "Controls cast time seconds, measured as seconds. For example, changing 1 to 2 doubles this setting's configured contribution to the system.",
+    "TargetMode": "Controls target mode. For example, selecting a different value changes which target mode behavior or content the owning system uses.",
+    "Range": "Controls range, measured as pixels. For example, changing 45 to 90 doubles the configured range.",
+    "EffectType": "Controls effect type. For example, selecting a different value changes which effect type behavior or content the owning system uses.",
+    "BaseDamage": "Controls base damage, measured as damage points. For example, changing 0 to 1 doubles the configured base damage.",
+    "BaseHealing": "Controls base healing. For example, changing 0 to 1 doubles this setting's configured contribution to the system.",
+    "EffectRadius": "Controls effect radius, measured as pixels. For example, changing 0 to 1 doubles the configured effect radius.",
+    "EffectDurationSeconds": "Controls effect duration seconds, measured as seconds. For example, changing 0 to 1 doubles this setting's configured contribution to the system.",
+    "EffectTickIntervalSeconds": "Controls effect tick interval seconds, measured as seconds. For example, changing 1 to 2 makes the affected action wait twice as long between uses.",
+    "AutoCastDelaySeconds": "Controls auto cast delay seconds, measured as seconds. For example, changing 0 to 1 makes the affected action wait twice as long between uses.",
+    "AutoCastHealthThresholdPercent": "Controls auto cast health threshold percent, measured as a ratio or multiplier. For example, changing 50 to 100 doubles the configured auto cast health threshold percent.",
+    "DesignerNotes": "Controls designer notes. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system."
+  },
+  "res://Scripts/Content/Definitions/EncounterDefinition.cs": {
+    "ContentId": "Stable content identifier for content; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered content.",
+    "DisplayName": "Controls display name. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "Description": "Controls description. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "MonsterComposition": "Controls monster composition, measured as pixels. For example, adding another entry gives the owning system one more configured monster composition to use.",
+    "DesignerNotes": "Controls designer notes. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system."
+  },
+  "res://Scripts/Content/Definitions/EncounterMonsterEntry.cs": {
+    "MonsterContentId": "Stable content identifier for monster; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered monster.",
+    "MinimumCount": "Controls minimum count, measured as a count. For example, changing 1 to 2 doubles the configured minimum count.",
+    "MaximumCount": "Controls maximum count, measured as a count. For example, changing 1 to 2 doubles the configured maximum count.",
+    "DesignerNotes": "Controls designer notes. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system."
+  },
+  "res://Scripts/Content/Definitions/EncounterPoolDefinition.cs": {
+    "ContentId": "Stable content identifier for content; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered content.",
+    "DisplayName": "Controls display name. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "Description": "Controls description. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "Entries": "Controls entries. For example, adding another entry gives the owning system one more configured entries to use.",
+    "DesignerNotes": "Controls designer notes. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system."
+  },
+  "res://Scripts/Content/Definitions/EncounterPoolEntry.cs": {
+    "EncounterContentId": "Stable content identifier for encounter; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered encounter.",
+    "Weight": "Controls weight, measured as a ratio or multiplier. For example, changing 1 to 2 doubles this setting's configured contribution to the system.",
+    "DesignerNotes": "Controls designer notes. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system."
+  },
+  "res://Scripts/Content/Definitions/HeroClassDefinition.cs": {
+    "ContentId": "Stable content identifier for content; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered content.",
+    "DisplayName": "Controls display name. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "ResourceDefinition": "Defines this class's resource type, capacity, starting amount, and regeneration. Leave it empty for a class that does not use Mana, Energy, or Rage.",
+    "AbilityContentIds": "Stable content identifier for abilitys; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered abilitys."
+  },
+  "res://Scripts/Content/Definitions/HeroResourceDefinition.cs": {
+    "ResourceType": "Selects Mana, Energy, Rage, or None. None disables runtime resource tracking for heroes using this definition.",
+    "MaximumAmount": "Maximum resource capacity. Energy and Rage normally use 100; Mana can receive class-specific scaling later.",
+    "StartFull": "When enabled, newly created and revived heroes begin with a full pool. For example, a 100-point Energy pool begins at 100.",
+    "RegenerationAmount": "Points restored per completed regeneration tick. Setting this to 10 restores ten resource at each interval.",
+    "RegenerationIntervalSeconds": "Seconds between regeneration ticks. An amount of 10 with an interval of 2 restores ten resource every two seconds."
+  },
+  "res://Scripts/Content/Definitions/HeroCombatStanceProfile.cs": {
+    "LowestCurrentHealthWeight": "Controls lowest current health weight, measured as a ratio or multiplier. For example, selecting a different value changes which lowest current health weight behavior or content the owning system uses.",
+    "HighestCurrentHealthWeight": "Controls highest current health weight, measured as a ratio or multiplier. For example, selecting a different value changes which highest current health weight behavior or content the owning system uses.",
+    "MonsterDangerWeight": "Controls monster danger weight, measured as a ratio or multiplier. For example, selecting a different value changes which monster danger weight behavior or content the owning system uses.",
+    "UntargetedCoverageBonus": "Controls untargeted coverage bonus. For example, selecting a different value changes which untargeted coverage bonus behavior or content the owning system uses.",
+    "HealthyAllySupportBonus": "Controls healthy ally support bonus, measured as health points. For example, selecting a different value changes which healthy ally support bonus behavior or content the owning system uses.",
+    "SaturationPenaltyPerHero": "Controls saturation penalty per hero. For example, changing 35 to 70 doubles this setting's configured contribution to the system.",
+    "CurrentTargetBonus": "Controls current target bonus. For example, changing 35 to 70 doubles this setting's configured contribution to the system.",
+    "HealthyAllyMinimumHealthPercent": "Controls healthy ally minimum health percent, measured as a ratio or multiplier. For example, changing 60 to 120 doubles the configured healthy ally minimum health percent.",
+    "MinimumTargetCommitmentSeconds": "Controls minimum target commitment seconds, measured as seconds. For example, changing 2 to 4 doubles this setting's configured contribution to the system.",
+    "TargetReassessmentIntervalSeconds": "Controls target reassessment interval seconds, measured as seconds. For example, changing 0.5 to 1 makes the affected action wait twice as long between uses.",
+    "RequiredSwitchAdvantagePercent": "Controls required switch advantage percent, measured as a ratio or multiplier. For example, changing 25 to 50 doubles this setting's configured contribution to the system.",
+    "LogTargetingDecisions": "Enables or disables log targeting decisions. For example, turn this on to enable log targeting decisions, or off to suppress that behavior.",
+    "AvoidAggroPenalty": "Controls avoid aggro penalty. For example, selecting a different value changes which avoid aggro penalty behavior or content the owning system uses.",
+    "SeekAggroBonus": "Controls seek aggro bonus. For example, selecting a different value changes which seek aggro bonus behavior or content the owning system uses.",
+    "RescueVulnerableAllies": "Enables or disables rescue vulnerable allies. For example, turn this on to enable rescue vulnerable allies, or off to suppress that behavior.",
+    "RescueAllyHealthThresholdPercent": "Controls rescue ally health threshold percent, measured as a ratio or multiplier. For example, changing 50 to 100 doubles the configured rescue ally health threshold percent.",
+    "MinimumRescuePressure": "Controls minimum rescue pressure, measured as a count. For example, changing 1 to 2 doubles this setting's configured contribution to the system.",
+    "RescueTargetCommitmentSeconds": "Controls rescue target commitment seconds, measured as seconds. For example, changing 2 to 4 doubles this setting's configured contribution to the system.",
+    "CriticalAllyRescueBonus": "Controls critical ally rescue bonus. For example, selecting a different value changes which critical ally rescue bonus behavior or content the owning system uses.",
+    "RescueCriticalAllies": "Enables or disables rescue critical allies. For example, turn this on to enable rescue critical allies, or off to suppress that behavior."
+  },
+  "res://Scripts/Content/Definitions/HeroDefinition.cs": {
+    "ContentId": "Stable content identifier for content; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered content.",
+    "DisplayName": "Controls display name. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "ClassDefinition": "Inspector reference used by this component for its class definition dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "ActorScene": "Inspector reference used by this component for its actor scene dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "CombatTagMask": "Controls combat tag mask. For example, selecting a different value changes which combat tag mask behavior or content the owning system uses.",
+    "StartingCombatStance": "Controls starting combat stance. For example, selecting a different value changes which starting combat stance behavior or content the owning system uses.",
+    "MaximumHealth": "Controls maximum health, measured as health points. For example, changing 100 to 200 doubles the configured maximum health.",
+    "AttackDamage": "Controls attack damage, measured as damage points. For example, changing 20 to 40 doubles the configured attack damage.",
+    "AttackRange": "Controls attack range, measured as pixels. For example, changing 28 to 56 doubles the configured attack range.",
+    "AttackInterval": "Controls attack interval, measured as seconds. For example, changing 1.5 to 3 makes the affected action wait twice as long between uses.",
+    "AttackDuration": "Controls attack duration, measured as seconds. For example, changing 0.3 to 0.6 doubles this setting's configured contribution to the system.",
+    "AttackReleasePoint": "Controls attack release point. For example, changing 0.5 to 1 doubles this setting's configured contribution to the system.",
+    "AttackLungeDistance": "Controls attack lunge distance, measured as pixels. For example, changing 8 to 16 doubles the configured attack lunge distance.",
+    "AttackDelivery": "Controls attack delivery. For example, selecting a different value changes which attack delivery behavior or content the owning system uses.",
+    "CombatMoveSpeed": "Controls combat move speed, measured as pixels per second. For example, changing 140 to 280 makes the affected movement or animation run about twice as fast.",
+    "AbilityContentIds": "Stable content identifier for abilitys; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered abilitys."
+  },
+  "res://Scripts/Content/Definitions/MonsterDefinition.cs": {
+    "ContentId": "Stable content identifier for content; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered content.",
+    "DisplayName": "Controls display name. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "ActorScene": "Inspector reference used by this component for its actor scene dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "MaximumHealth": "Controls maximum health, measured as health points. For example, changing 100 to 200 doubles the configured maximum health.",
+    "AttackDamage": "Controls attack damage, measured as damage points. For example, changing 10 to 20 doubles the configured attack damage.",
+    "AttackRange": "Controls attack range, measured as pixels. For example, changing 28 to 56 doubles the configured attack range.",
+    "AttackInterval": "Controls attack interval, measured as seconds. For example, changing 1.5 to 3 makes the affected action wait twice as long between uses.",
+    "AttackDuration": "Controls attack duration, measured as seconds. For example, changing 0.3 to 0.6 doubles this setting's configured contribution to the system.",
+    "AttackReleasePoint": "Controls attack release point. For example, changing 0.5 to 1 doubles this setting's configured contribution to the system.",
+    "AttackLungeDistance": "Controls attack lunge distance, measured as pixels. For example, changing 8 to 16 doubles the configured attack lunge distance.",
+    "AttackDelivery": "Controls attack delivery. For example, selecting a different value changes which attack delivery behavior or content the owning system uses.",
+    "EntrySpeed": "Controls entry speed, measured as pixels per second. For example, changing 100 to 200 makes the affected movement or animation run about twice as fast.",
+    "CombatMoveSpeed": "Controls combat move speed, measured as pixels per second. For example, changing 100 to 200 makes the affected movement or animation run about twice as fast.",
+    "PreferredTargetTagMask": "Controls preferred target tag mask. For example, selecting a different value changes which preferred target tag mask behavior or content the owning system uses.",
+    "TargetingStyle": "Controls targeting style. For example, selecting a different value changes which targeting style behavior or content the owning system uses.",
+    "DangerRating": "Controls danger rating. For example, changing 1 to 2 doubles this setting's configured contribution to the system.",
+    "PreferredHeroAttackerCount": "Controls preferred hero attacker count, measured as a count. For example, changing 1 to 2 doubles the configured preferred hero attacker count.",
+    "AbilityContentIds": "Stable content identifier for abilitys; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered abilitys."
+  },
+  "res://Scripts/Content/Definitions/RegionDefinition.cs": {
+    "ContentId": "Stable content identifier for content; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered content.",
+    "DisplayName": "Controls display name. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "Description": "Controls description. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "EncounterPoolContentId": "Stable content identifier for encounter pool; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered encounter pool.",
+    "MonsterGroupCount": "Controls monster group count, measured as a count. For example, changing 4 to 8 doubles the configured monster group count.",
+    "CompletionRewardContentId": "Stable content identifier for completion reward; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered completion reward.",
+    "CompletionRewardAmount": "Controls completion reward amount, measured as a count. For example, changing 100 to 200 doubles the configured completion reward amount.",
+    "BackgroundTexture": "Inspector reference used by this component for its background texture dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "GroundTexture": "Inspector reference used by this component for its ground texture dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Scripts/Presentation/BackgroundPresentationController.cs": {
+    "WindowHost": "Inspector reference used by this component for its window host dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "CloudBackground": "Inspector reference used by this component for its cloud background dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Scripts/Presentation/PresentationFrameController.cs": {
+    "PresentationFrame": "Controls presentation frame. For example, selecting a different value changes which presentation frame behavior or content the owning system uses.",
+    "RegionViewport": "Controls region viewport. For example, selecting a different value changes which region viewport behavior or content the owning system uses.",
+    "Ground": "Controls ground. For example, selecting a different value changes which ground behavior or content the owning system uses.",
+    "WindowHost": "Inspector reference used by this component for its window host dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Scripts/Presentation/WorldScaleController.cs": {
+    "ScalableWorld": "Inspector reference used by this component for its scalable world dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "BackgroundLayer": "Inspector reference used by this component for its background layer dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "WindowHost": "Inspector reference used by this component for its window host dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Scripts/Services/DebugCommandService.cs": {
+    "Encounter": "Inspector reference used by this component for its encounter dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Combat": "Inspector reference used by this component for its combat dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Party": "Inspector reference used by this component for its party dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "Console": "Inspector reference used by this component for its console dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+  },
+  "res://Scripts/Services/JourneyStateService.cs": {
+    "InitialState": "Controls initial state. For example, selecting a different value changes which initial state behavior or content the owning system uses."
+  },
+  "res://Scripts/Services/TargetingService.cs": {
+    "PassiveStanceProfile": "Controls passive stance profile. For example, selecting a different value changes which passive stance profile behavior or content the owning system uses.",
+    "DefensiveStanceProfile": "Controls defensive stance profile. For example, selecting a different value changes which defensive stance profile behavior or content the owning system uses.",
+    "AggressiveStanceProfile": "Controls aggressive stance profile. For example, selecting a different value changes which aggressive stance profile behavior or content the owning system uses."
+  }
+}

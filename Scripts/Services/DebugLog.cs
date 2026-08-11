@@ -22,6 +22,10 @@ public static class DebugLog
 	private static readonly List<LogEntry> BufferedEntries = new();
 	private static Action<DateTime, DebugLogCategory, string>? _messageLogged;
 
+	/// <summary>
+	/// Performs the print operation for Debug Log.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public static void Print(
 		object? message,
 		DebugLogCategory? category = null)
@@ -53,6 +57,10 @@ public static class DebugLog
 			text);
 	}
 
+	/// <summary>
+	/// Performs the subscribe operation for Debug Log.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public static void Subscribe(
 		Action<DateTime, DebugLogCategory, string> listener)
 	{
@@ -69,12 +77,20 @@ public static class DebugLog
 		BufferedEntries.Clear();
 	}
 
+	/// <summary>
+	/// Performs the unsubscribe operation for Debug Log.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public static void Unsubscribe(
 		Action<DateTime, DebugLogCategory, string> listener)
 	{
 		_messageLogged -= listener;
 	}
 
+	/// <summary>
+	/// Performs the classify operation for Debug Log.
+	/// Uses the supplied arguments and current state and returns the resulting debug log category to the caller.
+	/// </summary>
 	private static DebugLogCategory Classify(string message)
 	{
 		if (ContainsAny(
@@ -139,6 +155,10 @@ public static class DebugLog
 		return DebugLogCategory.General;
 	}
 
+	/// <summary>
+	/// Performs the contains any operation for Debug Log.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool ContainsAny(
 		string message,
 		params string[] terms)

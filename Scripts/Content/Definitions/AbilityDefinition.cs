@@ -6,80 +6,148 @@ public partial class AbilityDefinition : Resource
 {
     [ExportCategory("Identity")]
 
+    /// <summary>
+    /// Stable content identifier for content; other systems use this value to find the same game data.
+    /// For example, changing this ID makes the owning resource resolve a different registered content.
+    /// </summary>
     [Export(PropertyHint.PlaceholderText, "ability.core.heavy_slam")]
     public string ContentId { get; set; } =
         string.Empty;
 
+    /// <summary>
+    /// Controls display name.
+    /// For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.
+    /// </summary>
     [Export(PropertyHint.PlaceholderText, "Heavy Slam")]
     public string DisplayName { get; set; } =
         "Unnamed Ability";
 
+    /// <summary>
+    /// Controls description.
+    /// For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.
+    /// </summary>
     [Export(PropertyHint.MultilineText)]
     public string Description { get; set; } =
         string.Empty;
 
     [ExportCategory("Timing")]
 
+    /// <summary>
+    /// Controls cooldown seconds, measured as seconds.
+    /// For example, changing 6 to 12 makes the affected action wait twice as long between uses.
+    /// </summary>
     [Export(PropertyHint.Range, "0,120,0.1")]
     public float CooldownSeconds { get; set; } =
         6.0f;
 
+    /// <summary>
+    /// Controls cast time seconds, measured as seconds.
+    /// For example, changing 1 to 2 doubles this setting's configured contribution to the system.
+    /// </summary>
     [Export(PropertyHint.Range, "0,10,0.05")]
     public float CastTimeSeconds { get; set; } =
         1.0f;
 
     [ExportCategory("Targeting")]
 
+    /// <summary>
+    /// Controls target mode.
+    /// For example, selecting a different value changes which target mode behavior or content the owning system uses.
+    /// </summary>
     [Export]
     public AbilityTargetMode TargetMode { get; set; } =
         AbilityTargetMode.CurrentTarget;
 
+    /// <summary>
+    /// Controls range, measured as pixels.
+    /// For example, changing 45 to 90 doubles the configured range.
+    /// </summary>
     [Export(PropertyHint.Range, "0,500,1")]
     public float Range { get; set; } =
         45.0f;
 
     [ExportCategory("Effect")]
 
+    /// <summary>
+    /// Controls effect type.
+    /// For example, selecting a different value changes which effect type behavior or content the owning system uses.
+    /// </summary>
     [Export]
     public AbilityEffectType EffectType { get; set; } =
         AbilityEffectType.DirectDamage;
 
+    /// <summary>
+    /// Controls base damage, measured as damage points.
+    /// For example, changing 0 to 1 doubles the configured base damage.
+    /// </summary>
     [Export(PropertyHint.Range, "0,1000000,1")]
     public float BaseDamage { get; set; } =
         0.0f;
 
+    /// <summary>
+    /// Controls base healing.
+    /// For example, changing 0 to 1 doubles this setting's configured contribution to the system.
+    /// </summary>
     [Export(PropertyHint.Range, "0,1000000,1")]
     public float BaseHealing { get; set; } =
         0.0f;
 
+    /// <summary>
+    /// Controls effect radius, measured as pixels.
+    /// For example, changing 0 to 1 doubles the configured effect radius.
+    /// </summary>
     [Export(PropertyHint.Range, "0,1000,1")]
     public float EffectRadius { get; set; } =
         0.0f;
 
+    /// <summary>
+    /// Controls effect duration seconds, measured as seconds.
+    /// For example, changing 0 to 1 doubles this setting's configured contribution to the system.
+    /// </summary>
     [Export(PropertyHint.Range, "0,60,0.1")]
     public float EffectDurationSeconds { get; set; } =
         0.0f;
 
+    /// <summary>
+    /// Controls effect tick interval seconds, measured as seconds.
+    /// For example, changing 1 to 2 makes the affected action wait twice as long between uses.
+    /// </summary>
     [Export(PropertyHint.Range, "0.05,60,0.05")]
     public float EffectTickIntervalSeconds { get; set; } =
         1.0f;
 
     [ExportCategory("Automatic Use")]
 
+    /// <summary>
+    /// Controls auto cast delay seconds, measured as seconds.
+    /// For example, changing 0 to 1 makes the affected action wait twice as long between uses.
+    /// </summary>
     [Export(PropertyHint.Range, "0,30,0.1")]
     public float AutoCastDelaySeconds { get; set; } =
         0.0f;
 
+    /// <summary>
+    /// Controls auto cast health threshold percent, measured as a ratio or multiplier.
+    /// For example, changing 50 to 100 doubles the configured auto cast health threshold percent.
+    /// </summary>
     [Export(PropertyHint.Range, "1,100,1")]
     public float AutoCastHealthThresholdPercent { get; set; } =
         50.0f;
 
     [ExportCategory("Authoring")]
 
+    /// <summary>
+    /// Controls designer notes.
+    /// For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.
+    /// </summary>
     [Export(PropertyHint.MultilineText)]
     public string DesignerNotes { get; set; } =
         string.Empty;
 
+    /// <summary>
+    /// Retrieves validation errors from the current game state.
+    /// Reads the current state and returns the resulting i read only list string to the caller.
+    /// </summary>
     public IReadOnlyList<string> GetValidationErrors()
     {
         List<string> errors = new();

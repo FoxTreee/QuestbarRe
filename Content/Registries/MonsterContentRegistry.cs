@@ -5,11 +5,19 @@ public partial class MonsterContentRegistry : Node
 {
     [ExportCategory("Dependencies")]
 
+    /// <summary>
+    /// Inspector reference used by this component for its ability registry dependency.
+    /// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+    /// </summary>
     [Export]
     public AbilityContentRegistry AbilityRegistry
     { get; set; } = null!;
 
     [ExportCategory("Monster Content")]
+    /// <summary>
+    /// Controls definitions.
+    /// For example, adding another entry gives the owning system one more configured definitions to use.
+    /// </summary>
     [Export]
     public Godot.Collections.Array<MonsterDefinition>
         Definitions
@@ -25,6 +33,10 @@ public partial class MonsterContentRegistry : Node
     public int Count =>
         _definitionsById.Count;
 
+    /// <summary>
+    /// Runs Godot setup for Monster Content Registry when the node enters the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _Ready()
     {
         if (!GodotObject.IsInstanceValid(AbilityRegistry))
@@ -63,6 +75,10 @@ public partial class MonsterContentRegistry : Node
         }
     }
 
+    /// <summary>
+    /// Performs the rebuild operation for Monster Content Registry.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void Rebuild()
     {
         _definitionsById.Clear();
@@ -75,6 +91,10 @@ public partial class MonsterContentRegistry : Node
         }
     }
 
+    /// <summary>
+    /// Attempts to get without throwing when the operation cannot be completed.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool TryGet(
         string contentId,
         out MonsterDefinition definition)
@@ -87,6 +107,10 @@ public partial class MonsterContentRegistry : Node
             out definition!);
     }
 
+    /// <summary>
+    /// Retrieves required from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting monster definition to the caller.
+    /// </summary>
     public MonsterDefinition GetRequired(
         string contentId)
     {
@@ -102,12 +126,20 @@ public partial class MonsterContentRegistry : Node
             $"Content ID '{contentId}'.");
     }
 
+    /// <summary>
+    /// Retrieves registered ids from the current game state.
+    /// Reads the current state and returns the resulting i read only collection string to the caller.
+    /// </summary>
     public IReadOnlyCollection<string>
         GetRegisteredIds()
     {
         return _definitionsById.Keys;
     }
 
+    /// <summary>
+    /// Performs the register operation for Monster Content Registry.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void Register(
         MonsterDefinition definition)
     {
@@ -164,6 +196,10 @@ public partial class MonsterContentRegistry : Node
         }
     }
 
+    /// <summary>
+    /// Performs the normalize operation for Monster Content Registry.
+    /// Uses the supplied arguments and current state and returns the resulting string to the caller.
+    /// </summary>
     private static string Normalize(
         string contentId)
     {

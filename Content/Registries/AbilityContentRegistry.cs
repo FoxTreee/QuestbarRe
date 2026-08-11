@@ -5,6 +5,10 @@ public partial class AbilityContentRegistry : Node
 {
     [ExportCategory("Ability Content")]
 
+    /// <summary>
+    /// Controls definitions.
+    /// For example, adding another entry gives the owning system one more configured definitions to use.
+    /// </summary>
     [Export]
     public Godot.Collections.Array<AbilityDefinition>
         Definitions
@@ -15,6 +19,10 @@ public partial class AbilityContentRegistry : Node
 
     public int Count => _definitionsById.Count;
 
+    /// <summary>
+    /// Runs Godot setup for Ability Content Registry when the node enters the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _Ready()
     {
         Rebuild();
@@ -38,6 +46,10 @@ public partial class AbilityContentRegistry : Node
         }
     }
 
+    /// <summary>
+    /// Performs the rebuild operation for Ability Content Registry.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void Rebuild()
     {
         _definitionsById.Clear();
@@ -49,6 +61,10 @@ public partial class AbilityContentRegistry : Node
         }
     }
 
+    /// <summary>
+    /// Attempts to get without throwing when the operation cannot be completed.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool TryGet(
         string contentId,
         out AbilityDefinition definition)
@@ -60,6 +76,10 @@ public partial class AbilityContentRegistry : Node
             out definition!);
     }
 
+    /// <summary>
+    /// Retrieves required from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting ability definition to the caller.
+    /// </summary>
     public AbilityDefinition GetRequired(
         string contentId)
     {
@@ -75,11 +95,19 @@ public partial class AbilityContentRegistry : Node
             $"Content ID '{contentId}'.");
     }
 
+    /// <summary>
+    /// Retrieves registered ids from the current game state.
+    /// Reads the current state and returns the resulting i read only collection string to the caller.
+    /// </summary>
     public IReadOnlyCollection<string> GetRegisteredIds()
     {
         return _definitionsById.Keys;
     }
 
+    /// <summary>
+    /// Performs the register operation for Ability Content Registry.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void Register(
         AbilityDefinition definition)
     {
@@ -124,6 +152,10 @@ public partial class AbilityContentRegistry : Node
         }
     }
 
+    /// <summary>
+    /// Performs the normalize operation for Ability Content Registry.
+    /// Uses the supplied arguments and current state and returns the resulting string to the caller.
+    /// </summary>
     private static string Normalize(
         string contentId)
     {

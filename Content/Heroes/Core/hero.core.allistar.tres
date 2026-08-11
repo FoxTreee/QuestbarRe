@@ -1,42 +1,8 @@
 [gd_resource type="Resource" script_class="HeroDefinition" format=3 uid="uid://dr031a00gvhxg"]
 
 [ext_resource type="PackedScene" uid="uid://cwql7jun21h0v" path="res://Allistar.tscn" id="1_icxwp"]
-[ext_resource type="Script" uid="uid://cn13kih68tti5" path="res://Scripts/Content/Definitions/HeroCombatStanceProfile.cs" id="2_roiul"]
 [ext_resource type="Resource" uid="uid://dshs5bil76hq2" path="res://Content/HeroClasses/Core/class.core.priest.tres" id="2_wrmgm"]
 [ext_resource type="Script" uid="uid://b38xxk3rax5nx" path="res://Scripts/Content/Definitions/HeroDefinition.cs" id="3_roiul"]
-
-[sub_resource type="Resource" id="Resource_wiu11"]
-script = ExtResource("2_roiul")
-HighestCurrentHealthWeight = 100.0
-MonsterDangerWeight = 15.0
-UntargetedCoverageBonus = 50.0
-SaturationPenaltyPerHero = 10.0
-SeekAggroBonus = 100.0
-CriticalAllyRescueBonus = 150.0
-RescueCriticalAllies = true
-
-[sub_resource type="Resource" id="Resource_rtunn"]
-script = ExtResource("2_roiul")
-HighestCurrentHealthWeight = 10.0
-MonsterDangerWeight = 100.0
-UntargetedCoverageBonus = 35.0
-SaturationPenaltyPerHero = 15.0
-SeekAggroBonus = 75.0
-KitingAllyRescueBonus = 150.0
-CriticalAllyRescueBonus = 100.0
-RescueKitingAllies = true
-RescueCriticalAllies = true
-
-[sub_resource type="Resource" id="Resource_nat8a"]
-script = ExtResource("2_roiul")
-LowestCurrentHealthWeight = 100.0
-MonsterDangerWeight = 10.0
-HealthyAllySupportBonus = 50.0
-SaturationPenaltyPerHero = 10.0
-AvoidAggroPenalty = 100.0
-CriticalAllyRescueBonus = 80.0
-KiteWhenTargeted = true
-RescueCriticalAllies = true
 
 [resource]
 script = ExtResource("3_roiul")

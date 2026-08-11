@@ -11,6 +11,10 @@ public partial class DesktopWindowHostController : Node
 	private const uint SwpNoActivate = 0x0010;
 
 	[DllImport("user32.dll", SetLastError = true)]
+	/// <summary>
+	/// Updates window pos and applies the new value to the owning system.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static extern bool SetWindowPos(
 		IntPtr windowHandle,
 		IntPtr insertAfter,
@@ -21,14 +25,26 @@ public partial class DesktopWindowHostController : Node
 		uint flags);
 
 	[ExportCategory("Settings")]
+	/// <summary>
+	/// Controls placement settings.
+	/// For example, selecting a different value changes which placement settings behavior or content the owning system uses.
+	/// </summary>
 	[Export]
 	public WindowPlacementSettings PlacementSettings { get; set; }
 		= new();
 
 	[ExportCategory("Windows")]
+	/// <summary>
+	/// Controls topmost refresh interval seconds, measured as seconds.
+	/// For example, changing 0.25 to 0.5 makes the affected action wait twice as long between uses.
+	/// </summary>
 	[Export(PropertyHint.Range, "0.1,5.0,0.1")]
 	public double TopmostRefreshIntervalSeconds { get; set; } = 0.25;
 
+	/// <summary>
+	/// Controls taskbar refresh interval seconds, measured as seconds.
+	/// For example, changing 1 to 2 makes the affected action wait twice as long between uses.
+	/// </summary>
 	[Export(PropertyHint.Range, "0.25,10.0,0.25")]
 	public double TaskbarRefreshIntervalSeconds { get; set; } = 1.0;
 
@@ -51,6 +67,10 @@ public partial class DesktopWindowHostController : Node
 	public event Action<WindowsNotificationAreaGeometry?>?
 		NotificationAreaGeometryChanged;
 
+	/// <summary>
+	/// Runs Godot setup for Desktop Window Host Controller when the node enters the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Ready()
 	{
 		_window = GetWindow();
@@ -87,6 +107,10 @@ public partial class DesktopWindowHostController : Node
 			$"Size={_window.Size}");
 	}
 
+	/// <summary>
+	/// Handles the placement settings changed event and updates the related game state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnPlacementSettingsChanged()
 	{
 		if (!IsInsideTree())
@@ -101,12 +125,20 @@ public partial class DesktopWindowHostController : Node
 			$"Size={_window.Size}");
 	}
 
+	/// <summary>
+	/// Cleans up Desktop Window Host Controller when the node leaves the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _ExitTree()
 	{
 		if (PlacementSettings is not null)
 			PlacementSettings.Changed -= OnPlacementSettingsChanged;
 	}
 
+	/// <summary>
+	/// Updates Desktop Window Host Controller every rendered frame using the supplied frame delta.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Process(double delta)
 	{
 		if (!OS.HasFeature("windows"))
@@ -130,6 +162,10 @@ public partial class DesktopWindowHostController : Node
 		}
 	}
 
+	/// <summary>
+	/// Performs the refresh taskbar geometry operation for Desktop Window Host Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool RefreshTaskbarGeometry(
 		bool forceLog = false)
 	{
@@ -183,6 +219,10 @@ public partial class DesktopWindowHostController : Node
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the refresh notification area geometry operation for Desktop Window Host Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool RefreshNotificationAreaGeometry(
 		WindowsTaskbarGeometry taskbarGeometry,
 		bool forceLog)
@@ -235,6 +275,10 @@ public partial class DesktopWindowHostController : Node
 		return true;
 	}
 
+	/// <summary>
+	/// Resets notification area geometry so the system can begin from a clean state.
+	/// Reads the current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool ClearNotificationAreaGeometry()
 	{
 		if (!CurrentNotificationAreaGeometry.HasValue)
@@ -245,6 +289,10 @@ public partial class DesktopWindowHostController : Node
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the print taskbar diagnostic operation for Desktop Window Host Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private static void PrintTaskbarDiagnostic(
 		WindowsTaskbarGeometry geometry)
 	{
@@ -270,6 +318,10 @@ public partial class DesktopWindowHostController : Node
 			$"Legacy placement remains available as the fallback.");
 	}
 
+	/// <summary>
+	/// Performs the print notification area diagnostic operation for Desktop Window Host Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private static void PrintNotificationAreaDiagnostic(
 		WindowsNotificationAreaGeometry geometry)
 	{
@@ -287,6 +339,10 @@ public partial class DesktopWindowHostController : Node
 			$"Available for adaptive horizontal placement.");
 	}
 
+	/// <summary>
+	/// Performs the unhandled key input operation for Desktop Window Host Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _UnhandledKeyInput(InputEvent @event)
 	{
 		if (@event is not InputEventKey keyEvent)
@@ -336,6 +392,10 @@ public partial class DesktopWindowHostController : Node
 		GetViewport().SetInputAsHandled();
 	}
 
+	/// <summary>
+	/// Performs the toggle expanded operation for Desktop Window Host Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void ToggleExpanded()
 	{
 		_isExpanded = !_isExpanded;
@@ -352,6 +412,10 @@ public partial class DesktopWindowHostController : Node
 			$"Size={_window.Size}");
 	}
 
+	/// <summary>
+	/// Applies window placement to the relevant actor, resource, or presentation state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void ApplyWindowPlacement()
 	{
 		int screenCount = DisplayServer.GetScreenCount();
@@ -489,6 +553,10 @@ public partial class DesktopWindowHostController : Node
 			$"ActualSize={_window.Size}");
 	}
 
+	/// <summary>
+	/// Attempts to get notification area placement x without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TryGetNotificationAreaPlacementX(
 		int monitor,
 		int windowWidth,
@@ -506,6 +574,10 @@ public partial class DesktopWindowHostController : Node
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the can use notification area placement operation for Desktop Window Host Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool CanUseNotificationAreaPlacement(
 		int monitor)
 	{
@@ -536,6 +608,10 @@ public partial class DesktopWindowHostController : Node
 			&& notificationArea.ScreenIndex == monitor;
 	}
 
+	/// <summary>
+	/// Performs the configure native window operation for Desktop Window Host Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ConfigureNativeWindow()
 	{
 		_window.Mode = Window.ModeEnum.Windowed;
@@ -547,6 +623,10 @@ public partial class DesktopWindowHostController : Node
 		GetViewport().TransparentBg = true;
 	}
 
+	/// <summary>
+	/// Retrieves requested height from the current game state.
+	/// Reads the current state and returns the resulting int to the caller.
+	/// </summary>
 	private int GetRequestedHeight()
 	{
 		int collapsedHeight = Mathf.Max(
@@ -562,6 +642,10 @@ public partial class DesktopWindowHostController : Node
 			: collapsedHeight;
 	}
 
+	/// <summary>
+	/// Performs the enforce native topmost operation for Desktop Window Host Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void EnforceNativeTopmost()
 	{
 		if (!OS.HasFeature("windows"))

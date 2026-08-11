@@ -80,11 +80,19 @@ public static class WindowsTaskbarButtonGeometryReader
 		"user32.dll",
 		CharSet = CharSet.Unicode,
 		ExactSpelling = true)]
+	/// <summary>
+	/// Performs the find window w operation for Windows Taskbar Button Geometry Reader.
+	/// Uses the supplied arguments and current state and returns the resulting int ptr to the caller.
+	/// </summary>
 	private static extern IntPtr FindWindowW(
 		string? className,
 		string? windowName);
 
 	[DllImport("oleacc.dll")]
+	/// <summary>
+	/// Performs the accessible object from window operation for Windows Taskbar Button Geometry Reader.
+	/// Uses the supplied arguments and current state and returns the resulting int to the caller.
+	/// </summary>
 	private static extern int AccessibleObjectFromWindow(
 		IntPtr windowHandle,
 		uint objectId,
@@ -93,6 +101,10 @@ public static class WindowsTaskbarButtonGeometryReader
 		out IAccessible accessibleObject);
 
 	[DllImport("oleacc.dll")]
+	/// <summary>
+	/// Performs the accessible children operation for Windows Taskbar Button Geometry Reader.
+	/// Uses the supplied arguments and current state and returns the resulting int to the caller.
+	/// </summary>
 	private static extern int AccessibleChildren(
 		[MarshalAs(UnmanagedType.Interface)]
 		IAccessible container,
@@ -101,6 +113,10 @@ public static class WindowsTaskbarButtonGeometryReader
 		[Out] object[] children,
 		out int obtainedCount);
 
+	/// <summary>
+	/// Attempts to read without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public static bool TryRead(
 		WindowsTaskbarGeometry taskbarGeometry,
 		WindowsNotificationAreaGeometry? notificationAreaGeometry,
@@ -209,6 +225,10 @@ public static class WindowsTaskbarButtonGeometryReader
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the traverse accessible tree operation for Windows Taskbar Button Geometry Reader.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private static void TraverseAccessibleTree(
 		IAccessible accessible,
 		int depth,
@@ -304,6 +324,10 @@ public static class WindowsTaskbarButtonGeometryReader
 		}
 	}
 
+	/// <summary>
+	/// Attempts to get accessible object without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool TryGetAccessibleObject(
 		object? value,
 		out IAccessible accessible)
@@ -333,6 +357,10 @@ public static class WindowsTaskbarButtonGeometryReader
 		}
 	}
 
+	/// <summary>
+	/// Attempts to convert to int32 without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool TryConvertToInt32(
 		object? value,
 		out int convertedValue)
@@ -356,6 +384,10 @@ public static class WindowsTaskbarButtonGeometryReader
 		}
 	}
 
+	/// <summary>
+	/// Performs the is interactive role operation for Windows Taskbar Button Geometry Reader.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool IsInteractiveRole(int role)
 	{
 		return role == RoleSystemMenuItem
@@ -371,6 +403,10 @@ public static class WindowsTaskbarButtonGeometryReader
 			|| role == RoleSystemOutlineButton;
 	}
 
+	/// <summary>
+	/// Retrieves native to godot coordinate offset from the current game state.
+	/// Reads the current state and returns the resulting vector2 i to the caller.
+	/// </summary>
 	private static Vector2I
 		GetNativeToGodotCoordinateOffset()
 	{
@@ -385,6 +421,10 @@ public static class WindowsTaskbarButtonGeometryReader
 		return DisplayServer.ScreenGetPosition(primaryScreen);
 	}
 
+	/// <summary>
+	/// Retrieves intersection area from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting long to the caller.
+	/// </summary>
 	private static long GetIntersectionArea(
 		Rect2I first,
 		Rect2I second)
@@ -411,6 +451,10 @@ public static class WindowsTaskbarButtonGeometryReader
 		return width * height;
 	}
 
+	/// <summary>
+	/// Performs the release com object operation for Windows Taskbar Button Geometry Reader.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private static void ReleaseComObject(object? value)
 	{
 		if (value is null || !Marshal.IsComObject(value))
@@ -442,6 +486,10 @@ public static class WindowsTaskbarButtonGeometryReader
 		private readonly Vector2I _nativeToGodotOffset =
 			GetNativeToGodotCoordinateOffset();
 
+		/// <summary>
+		/// Performs the traversal context operation for Traversal Context.
+		/// Uses the supplied arguments and current state and returns the resulting traversal context to the caller.
+		/// </summary>
 		public TraversalContext(
 			WindowsTaskbarGeometry taskbarGeometry,
 			WindowsNotificationAreaGeometry? notificationAreaGeometry)
@@ -459,6 +507,10 @@ public static class WindowsTaskbarButtonGeometryReader
 		private int NotificationAreaCount { get; set; }
 		private int NonInteractiveRoleCount { get; set; }
 
+		/// <summary>
+		/// Performs the inspect operation for Traversal Context.
+		/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+		/// </summary>
 		public void Inspect(
 			IAccessible accessible,
 			int childId)
@@ -574,6 +626,10 @@ public static class WindowsTaskbarButtonGeometryReader
 			}
 		}
 
+		/// <summary>
+		/// Retrieves filter diagnostic from the current game state.
+		/// Reads the current state and returns the resulting string to the caller.
+		/// </summary>
 		public string GetFilterDiagnostic()
 		{
 			return
@@ -593,6 +649,10 @@ public static class WindowsTaskbarButtonGeometryReader
 				$"{GetSampleSummary(_outsideTaskbarSamples)}.";
 		}
 
+		/// <summary>
+		/// Performs the record visible taskbar element operation for Traversal Context.
+		/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+		/// </summary>
 		private void RecordVisibleTaskbarElement(
 			int role,
 			int state,
@@ -617,6 +677,10 @@ public static class WindowsTaskbarButtonGeometryReader
 				$"H={bounds.Size.Y})");
 		}
 
+		/// <summary>
+		/// Retrieves visible role summary from the current game state.
+		/// Reads the current state and returns the resulting string to the caller.
+		/// </summary>
 		private string GetVisibleRoleSummary()
 		{
 			if (_visibleRoleCounts.Count == 0)
@@ -664,6 +728,10 @@ public static class WindowsTaskbarButtonGeometryReader
 			return summary.ToString();
 		}
 
+		/// <summary>
+		/// Retrieves sample summary from the current game state.
+		/// Uses the supplied arguments and current state and returns the resulting string to the caller.
+		/// </summary>
 		private static string GetSampleSummary(
 			List<string> samples)
 		{
@@ -672,6 +740,10 @@ public static class WindowsTaskbarButtonGeometryReader
 				: $"[{string.Join("; ", samples)}]";
 		}
 
+		/// <summary>
+		/// Performs the sanitize for diagnostic operation for Traversal Context.
+		/// Uses the supplied arguments and current state and returns the resulting string to the caller.
+		/// </summary>
 		private static string SanitizeForDiagnostic(string value)
 		{
 			if (string.IsNullOrWhiteSpace(value))
@@ -685,6 +757,10 @@ public static class WindowsTaskbarButtonGeometryReader
 				.Replace(";", ",", StringComparison.Ordinal);
 		}
 
+		/// <summary>
+		/// Retrieves accessibility role name from the current game state.
+		/// Uses the supplied arguments and current state and returns the resulting string to the caller.
+		/// </summary>
 		private static string GetAccessibilityRoleName(int role)
 		{
 			return role switch
@@ -722,6 +798,10 @@ public static class WindowsTaskbarButtonGeometryReader
 			};
 		}
 
+		/// <summary>
+		/// Attempts to read role without throwing when the operation cannot be completed.
+		/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+		/// </summary>
 		private bool TryReadRole(
 			IAccessible accessible,
 			int childId,
@@ -756,6 +836,10 @@ public static class WindowsTaskbarButtonGeometryReader
 			return false;
 		}
 
+		/// <summary>
+		/// Retrieves ordered buttons from the current game state.
+		/// Reads the current state and returns the resulting windows taskbar button geometry to the caller.
+		/// </summary>
 		public WindowsTaskbarButtonGeometry[] GetOrderedButtons()
 		{
 			WindowsTaskbarButtonGeometry[] buttons =
@@ -780,6 +864,10 @@ public static class WindowsTaskbarButtonGeometryReader
 			return buttons;
 		}
 
+		/// <summary>
+		/// Attempts to read bounds without throwing when the operation cannot be completed.
+		/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+		/// </summary>
 		private bool TryReadBounds(
 			IAccessible accessible,
 			int childId,
@@ -821,6 +909,10 @@ public static class WindowsTaskbarButtonGeometryReader
 			}
 		}
 
+		/// <summary>
+		/// Attempts to read int property without throwing when the operation cannot be completed.
+		/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+		/// </summary>
 		private static bool TryReadIntProperty(
 			Func<object> readProperty,
 			out int value)
@@ -839,6 +931,10 @@ public static class WindowsTaskbarButtonGeometryReader
 			}
 		}
 
+		/// <summary>
+		/// Attempts to read name without throwing when the operation cannot be completed.
+		/// Uses the supplied arguments and current state and returns the resulting string to the caller.
+		/// </summary>
 		private static string TryReadName(
 			IAccessible accessible,
 			int childId)
@@ -854,6 +950,10 @@ public static class WindowsTaskbarButtonGeometryReader
 			}
 		}
 
+		/// <summary>
+		/// Performs the is contained within operation for Traversal Context.
+		/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+		/// </summary>
 		private static bool IsContainedWithin(
 			Rect2I candidate,
 			Rect2I container)

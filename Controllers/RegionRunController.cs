@@ -5,18 +5,38 @@ using System.Linq;
 public partial class RegionRunController : Node
 {
 	[ExportCategory("Dependencies")]
+	/// <summary>
+	/// Inspector reference used by this component for its encounter dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public EncounterController Encounter { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its combat dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public CombatController Combat { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its journey state dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public JourneyStateService JourneyState { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its reward ledger dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public RewardLedgerService RewardLedger { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its region presentation dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public RegionPresentationController RegionPresentation
 	{
@@ -25,12 +45,24 @@ public partial class RegionRunController : Node
 	} = null!;
 
 	[ExportCategory("Region Run")]
+	/// <summary>
+	/// Inspector reference used by this component for its active region dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public RegionDefinition ActiveRegion { get; set; } = null!;
 
+	/// <summary>
+	/// Controls travel seconds between groups, measured as seconds.
+	/// For example, changing 5 to 10 makes the affected action wait twice as long between uses.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,300,0.1")]
 	public float TravelSecondsBetweenGroups { get; set; } = 5.0f;
 
+	/// <summary>
+	/// Enables or disables auto start.
+	/// For example, turn this on to enable auto start, or off to suppress that behavior.
+	/// </summary>
 	[Export]
 	public bool AutoStart { get; set; } = true;
 
@@ -54,6 +86,10 @@ public partial class RegionRunController : Node
 		_pendingIncapacitationChoices = new();
 	private HeroActorController? _currentIncapacitatedHero;
 
+	/// <summary>
+	/// Runs Godot setup for Region Run Controller when the node enters the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Ready()
 	{
 		if (!ValidateReferences())
@@ -70,12 +106,20 @@ public partial class RegionRunController : Node
 			CallDeferred(MethodName.StartRun);
 	}
 
+	/// <summary>
+	/// Cleans up Region Run Controller when the node leaves the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _ExitTree()
 	{
 		if (GodotObject.IsInstanceValid(Combat))
 			Combat.CombatResolved -= OnCombatResolved;
 	}
 
+	/// <summary>
+	/// Updates Region Run Controller every rendered frame using the supplied frame delta.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Process(double delta)
 	{
 		if (_waitingForSurvivorsToRegroup)
@@ -101,6 +145,10 @@ public partial class RegionRunController : Node
 		StartNextGroup();
 	}
 
+	/// <summary>
+	/// Performs the start run operation for Region Run Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void StartRun()
 	{
 		if (IsRunActive)
@@ -138,6 +186,10 @@ public partial class RegionRunController : Node
 			$"{TravelSecondsBetweenGroups:0.0}s.");
 	}
 
+	/// <summary>
+	/// Performs the start next group operation for Region Run Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void StartNextGroup()
 	{
 		int groupNumber = CompletedGroupCount + 1;
@@ -156,6 +208,10 @@ public partial class RegionRunController : Node
 			$"{groupNumber}/{GroupCount}: {result}");
 	}
 
+	/// <summary>
+	/// Handles the combat resolved event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnCombatResolved(CombatOutcome outcome)
 	{
 		if (!IsRunActive)
@@ -199,6 +255,10 @@ public partial class RegionRunController : Node
 			"before the next group.");
 	}
 
+	/// <summary>
+	/// Performs the begin incapacitation pause operation for Region Run Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void BeginIncapacitationPause()
 	{
 		if (!IsRunActive)
@@ -214,6 +274,10 @@ public partial class RegionRunController : Node
 			"the surviving party returns to formation.");
 	}
 
+	/// <summary>
+	/// Recalculates survivor regroup from the latest runtime state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateSurvivorRegroup()
 	{
 		bool survivorsInFormation =
@@ -251,6 +315,10 @@ public partial class RegionRunController : Node
 		RequestNextIncapacitationChoice();
 	}
 
+	/// <summary>
+	/// Performs the resolve current incapacitation choice operation for Region Run Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void ResolveCurrentIncapacitationChoice(bool revive)
 	{
 		if (!IsAwaitingIncapacitationChoice
@@ -279,6 +347,10 @@ public partial class RegionRunController : Node
 		RequestNextIncapacitationChoice();
 	}
 
+	/// <summary>
+	/// Performs the request next incapacitation choice operation for Region Run Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void RequestNextIncapacitationChoice()
 	{
 		while (_pendingIncapacitationChoices.Count > 0)
@@ -304,6 +376,10 @@ public partial class RegionRunController : Node
 		FinishIncapacitationChoices();
 	}
 
+	/// <summary>
+	/// Performs the finish incapacitation choices operation for Region Run Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void FinishIncapacitationChoices()
 	{
 		IsAwaitingIncapacitationChoice = false;
@@ -323,6 +399,10 @@ public partial class RegionRunController : Node
 			$"{TravelSecondsBetweenGroups:0.0}s before the next group.");
 	}
 
+	/// <summary>
+	/// Performs the complete run operation for Region Run Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void CompleteRun()
 	{
 		IsRunActive = false;
@@ -352,6 +432,10 @@ public partial class RegionRunController : Node
 		RegionCompleted?.Invoke(LastCompletionResult);
 	}
 
+	/// <summary>
+	/// Performs the stop run operation for Region Run Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void StopRun(string message)
 	{
 		IsRunActive = false;
@@ -360,6 +444,10 @@ public partial class RegionRunController : Node
 		DebugLog.Print(message);
 	}
 
+	/// <summary>
+	/// Performs the validate references operation for Region Run Controller.
+	/// Reads the current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool ValidateReferences()
 	{
 		bool valid = true;
@@ -387,6 +475,10 @@ public partial class RegionRunController : Node
 		return valid && regionErrors.Count == 0;
 	}
 
+	/// <summary>
+	/// Performs the require operation for Region Run Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool Require(
 		GodotObject value,
 		string propertyName)

@@ -3,13 +3,25 @@ using Godot;
 public partial class RegionPresentationController : Node2D
 {
 	[ExportCategory("Background Tiles")]
+	/// <summary>
+	/// Inspector reference used by this component for its region tile a dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Node2D RegionTileA { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its region tile b dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Node2D RegionTileB { get; set; } = null!;
 
 	[ExportCategory("Region Visuals")]
+	/// <summary>
+	/// Inspector reference used by this component for its background presentation dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public BackgroundPresentationController BackgroundPresentation
 	{
@@ -17,27 +29,55 @@ public partial class RegionPresentationController : Node2D
 		set;
 	} = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its traveling ground dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Parallax2D TravelingGround { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its ground sprite dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Sprite2D GroundSprite { get; set; } = null!;
 
 	[ExportCategory("Travel")]
+	/// <summary>
+	/// Controls travel speed, measured as pixels per second.
+	/// For example, changing 60 to 120 makes the affected movement or animation run about twice as fast.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float TravelSpeed { get; set; } = 60.0f;
 
+	/// <summary>
+	/// Controls ground travel speed, measured as pixels per second.
+	/// For example, changing 90 to 180 makes the affected movement or animation run about twice as fast.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float GroundTravelSpeed { get; set; } = 90.0f;
 
 	[ExportCategory("Logical Stage")]
+	/// <summary>
+	/// Controls tile width, measured as pixels.
+	/// For example, changing 800 to 1600 doubles the configured tile width.
+	/// </summary>
 	[Export(PropertyHint.Range, "1,7680,1")]
 	public float TileWidth { get; set; } = 800.0f;
 
 	[ExportCategory("Dependencies")]
+	/// <summary>
+	/// Inspector reference used by this component for its journey state dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public JourneyStateService JourneyState { get; set; } = null!;
 
+	/// <summary>
+	/// Runs Godot setup for Region Presentation Controller when the node enters the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Ready()
 	{
 		if (!ValidateReferences())
@@ -56,12 +96,20 @@ public partial class RegionPresentationController : Node2D
 			$"JourneyState={JourneyState.CurrentState}");
 	}
 
+	/// <summary>
+	/// Cleans up Region Presentation Controller when the node leaves the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _ExitTree()
 	{
 		if (GodotObject.IsInstanceValid(JourneyState))
 			JourneyState.StateChanged -= OnJourneyStateChanged;
 	}
 
+	/// <summary>
+	/// Updates Region Presentation Controller every rendered frame using the supplied frame delta.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Process(double delta)
 	{
 		if (!_isTravelPresentationActive)
@@ -78,6 +126,10 @@ public partial class RegionPresentationController : Node2D
 			Vector2.Right * GroundTravelSpeed * (float)delta;
 	}
 
+	/// <summary>
+	/// Applies region to the relevant actor, resource, or presentation state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void ApplyRegion(RegionDefinition region)
 	{
 		if (!GodotObject.IsInstanceValid(region))
@@ -113,6 +165,10 @@ public partial class RegionPresentationController : Node2D
 			$"GroundRepeatWidth={renderedGroundWidth:0.###}.");
 	}
 
+	/// <summary>
+	/// Handles the journey state changed event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnJourneyStateChanged(
 		JourneyStateService.JourneyState previousState,
 		JourneyStateService.JourneyState currentState)
@@ -120,6 +176,10 @@ public partial class RegionPresentationController : Node2D
 		ApplyJourneyState(currentState);
 	}
 
+	/// <summary>
+	/// Applies journey state to the relevant actor, resource, or presentation state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ApplyJourneyState(
 		JourneyStateService.JourneyState state)
 	{
@@ -127,6 +187,10 @@ public partial class RegionPresentationController : Node2D
 			state == JourneyStateService.JourneyState.Traveling;
 	}
 
+	/// <summary>
+	/// Performs the wrap tile if needed operation for Region Presentation Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void WrapTileIfNeeded(Node2D tile)
 	{
 		if (tile.Position.X < TileWidth)
@@ -135,6 +199,10 @@ public partial class RegionPresentationController : Node2D
 		tile.Position -= new Vector2(TileWidth * 2.0f, 0.0f);
 	}
 
+	/// <summary>
+	/// Performs the validate references operation for Region Presentation Controller.
+	/// Reads the current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool ValidateReferences()
 	{
 		bool valid = true;
@@ -149,6 +217,10 @@ public partial class RegionPresentationController : Node2D
 		return valid;
 	}
 
+	/// <summary>
+	/// Performs the require operation for Region Presentation Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool Require(
 		GodotObject value,
 		string propertyName)

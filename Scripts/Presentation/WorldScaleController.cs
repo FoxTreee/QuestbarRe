@@ -4,12 +4,24 @@ public partial class WorldScaleController : Node
 {
     [ExportCategory("Dependencies")]
 
+    /// <summary>
+    /// Inspector reference used by this component for its scalable world dependency.
+    /// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+    /// </summary>
     [Export]
     public Node2D ScalableWorld { get; set; } = null!;
 
+    /// <summary>
+    /// Inspector reference used by this component for its background layer dependency.
+    /// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+    /// </summary>
     [Export]
     public Node2D BackgroundLayer { get; set; } = null!;
 
+    /// <summary>
+    /// Inspector reference used by this component for its window host dependency.
+    /// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+    /// </summary>
     [Export]
     public DesktopWindowHostController WindowHost
     {
@@ -21,6 +33,10 @@ public partial class WorldScaleController : Node
     private Vector2 _expandedWorldPosition;
 
 
+    /// <summary>
+    /// Runs Godot setup for World Scale Controller when the node enters the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _Ready()
     {
         if (!ValidateReferences())
@@ -37,6 +53,10 @@ public partial class WorldScaleController : Node
     }
 
 
+    /// <summary>
+    /// Cleans up World Scale Controller when the node leaves the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _ExitTree()
     {
         if (GodotObject.IsInstanceValid(WindowHost))
@@ -47,6 +67,10 @@ public partial class WorldScaleController : Node
     }
 
 
+    /// <summary>
+    /// Handles the expanded changed event and updates the related game state.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void OnExpandedChanged(
         bool isExpanded)
     {
@@ -55,6 +79,10 @@ public partial class WorldScaleController : Node
     }
 
 
+    /// <summary>
+    /// Applies presentation state to the relevant actor, resource, or presentation state.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void ApplyPresentationState(
     bool isExpanded)
     {
@@ -81,6 +109,10 @@ public partial class WorldScaleController : Node
     }
 
 
+    /// <summary>
+    /// Retrieves collapsed scale from the current game state.
+    /// Reads the current state and returns the resulting float to the caller.
+    /// </summary>
     private float GetCollapsedScale()
     {
         float expandedHeight =
@@ -103,6 +135,10 @@ public partial class WorldScaleController : Node
     }
 
 
+    /// <summary>
+    /// Performs the validate references operation for World Scale Controller.
+    /// Reads the current state and returns the resulting bool to the caller.
+    /// </summary>
     private bool ValidateReferences()
     {
         bool valid = true;
@@ -123,6 +159,10 @@ public partial class WorldScaleController : Node
     }
 
 
+    /// <summary>
+    /// Performs the require operation for World Scale Controller.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     private static bool Require(
         GodotObject value,
         string propertyName)

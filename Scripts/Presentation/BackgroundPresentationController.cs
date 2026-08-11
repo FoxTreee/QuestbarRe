@@ -3,6 +3,10 @@ using Godot;
 public partial class BackgroundPresentationController : Node2D
 {
 	[ExportCategory("Dependencies")]
+	/// <summary>
+	/// Inspector reference used by this component for its window host dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public DesktopWindowHostController WindowHost
 	{
@@ -10,6 +14,10 @@ public partial class BackgroundPresentationController : Node2D
 		set;
 	} = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its cloud background dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Sprite2D CloudBackground
 	{
@@ -17,6 +25,10 @@ public partial class BackgroundPresentationController : Node2D
 		set;
 	} = null!;
 
+	/// <summary>
+	/// Runs Godot setup for Background Presentation Controller when the node enters the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Ready()
 	{
 		if (!GodotObject.IsInstanceValid(WindowHost))
@@ -32,6 +44,10 @@ public partial class BackgroundPresentationController : Node2D
 		ApplyBottomAnchor();
 	}
 
+	/// <summary>
+	/// Cleans up Background Presentation Controller when the node leaves the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _ExitTree()
 	{
 		if (GodotObject.IsInstanceValid(WindowHost))
@@ -41,6 +57,10 @@ public partial class BackgroundPresentationController : Node2D
 		}
 	}
 
+	/// <summary>
+	/// Applies texture to the relevant actor, resource, or presentation state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void ApplyTexture(Texture2D texture)
 	{
 		if (!GodotObject.IsInstanceValid(texture))
@@ -54,11 +74,19 @@ public partial class BackgroundPresentationController : Node2D
 		ApplyBottomAnchor();
 	}
 
+	/// <summary>
+	/// Handles the window placement applied event and updates the related game state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnWindowPlacementApplied()
 	{
 		ApplyBottomAnchor();
 	}
 
+	/// <summary>
+	/// Applies bottom anchor to the relevant actor, resource, or presentation state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ApplyBottomAnchor()
 	{
 		int currentHeight = GetWindow().Size.Y;

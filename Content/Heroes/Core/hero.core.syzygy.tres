@@ -11,6 +11,7 @@ DisplayName = "Syzygy"
 ClassDefinition = ExtResource("2_4qlw8")
 ActorScene = ExtResource("1_2g8sy")
 CombatTagMask = 81
+StartingCombatStance = 2
 MaximumHealth = 225.0
 AttackDamage = 35.0
 AttackInterval = 1.3

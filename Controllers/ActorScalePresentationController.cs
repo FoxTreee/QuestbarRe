@@ -4,9 +4,17 @@ using Godot;
 public partial class ActorScalePresentationController : Node
 {
     [ExportCategory("Dependencies")]
+    /// <summary>
+    /// Inspector reference used by this component for its actor layer dependency.
+    /// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+    /// </summary>
     [Export]
     public Node2D ActorLayer { get; set; } = null!;
 
+    /// <summary>
+    /// Inspector reference used by this component for its window host dependency.
+    /// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+    /// </summary>
     [Export]
     public DesktopWindowHostController WindowHost
     {
@@ -15,6 +23,10 @@ public partial class ActorScalePresentationController : Node
     } = null!;
 
     [ExportCategory("Collapsed Presentation")]
+    /// <summary>
+    /// Controls collapsed actor scale, measured as a ratio or multiplier.
+    /// For example, changing 0.4 to 0.8 doubles this setting's configured contribution to the system.
+    /// </summary>
     [Export(PropertyHint.Range, "0.05,1,0.05")]
     public float CollapsedActorScale { get; set; } = 0.4f;
 
@@ -24,6 +36,10 @@ public partial class ActorScalePresentationController : Node
     private float _appliedPresentationScale = 1.0f;
     private bool _hasAppliedPresentationScale;
 
+    /// <summary>
+    /// Runs Godot setup for Actor Scale Presentation Controller when the node enters the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _Ready()
     {
         if (!ValidateReferences())
@@ -46,6 +62,10 @@ public partial class ActorScalePresentationController : Node
             .CallDeferred();
     }
 
+    /// <summary>
+    /// Cleans up Actor Scale Presentation Controller when the node leaves the scene tree.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public override void _ExitTree()
     {
         if (GodotObject.IsInstanceValid(ActorLayer))
@@ -66,12 +86,20 @@ public partial class ActorScalePresentationController : Node
         _authoredVisualScales.Clear();
     }
 
+    /// <summary>
+    /// Performs the register existing actors operation for Actor Scale Presentation Controller.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void RegisterExistingActors()
     {
         foreach (Node actor in ActorLayer.GetChildren())
             RegisterActor(actor);
     }
 
+    /// <summary>
+    /// Handles the actor entered tree event and updates the related game state.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void OnActorEnteredTree(Node actor)
     {
         Callable.From(
@@ -79,6 +107,10 @@ public partial class ActorScalePresentationController : Node
             .CallDeferred();
     }
 
+    /// <summary>
+    /// Handles the actor exiting tree event and updates the related game state.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void OnActorExitingTree(Node actor)
     {
         Node2D? visualRoot = GetVisualRoot(actor);
@@ -87,6 +119,10 @@ public partial class ActorScalePresentationController : Node
             _authoredVisualScales.Remove(visualRoot);
     }
 
+    /// <summary>
+    /// Performs the register and scale actor operation for Actor Scale Presentation Controller.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void RegisterAndScaleActor(Node actor)
     {
         if (!GodotObject.IsInstanceValid(actor)
@@ -99,6 +135,10 @@ public partial class ActorScalePresentationController : Node
         ApplyScaleToActor(actor);
     }
 
+    /// <summary>
+    /// Performs the register actor operation for Actor Scale Presentation Controller.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void RegisterActor(Node actor)
     {
         Node2D? visualRoot = GetVisualRoot(actor);
@@ -115,18 +155,30 @@ public partial class ActorScalePresentationController : Node
             visualRoot.Scale);
     }
 
+    /// <summary>
+    /// Handles the expanded changed event and updates the related game state.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void OnExpandedChanged(bool isExpanded)
     {
         ApplyCurrentScale(
             remapEngagedFormations: true);
     }
 
+    /// <summary>
+    /// Applies current scale to the relevant actor, resource, or presentation state.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void ApplyCurrentScale()
     {
         ApplyCurrentScale(
             remapEngagedFormations: false);
     }
 
+    /// <summary>
+    /// Applies current scale to the relevant actor, resource, or presentation state.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void ApplyCurrentScale(
         bool remapEngagedFormations)
     {
@@ -175,6 +227,10 @@ public partial class ActorScalePresentationController : Node
             $"SkippedGroups={skippedGroups}");
     }
 
+    /// <summary>
+    /// Applies scale to actor to the relevant actor, resource, or presentation state.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void ApplyScaleToActor(Node actor)
     {
         ApplyScaleToActor(
@@ -182,6 +238,10 @@ public partial class ActorScalePresentationController : Node
             GetCurrentPresentationScale());
     }
 
+    /// <summary>
+    /// Applies scale to actor to the relevant actor, resource, or presentation state.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void ApplyScaleToActor(
         Node actor,
         float presentationScale)
@@ -205,6 +265,10 @@ public partial class ActorScalePresentationController : Node
             presentationScale);
     }
 
+    /// <summary>
+    /// Performs the remap engaged formations operation for Actor Scale Presentation Controller.
+    /// Uses the supplied arguments and current state and returns the resulting int to the caller.
+    /// </summary>
     private int RemapEngagedFormations(
         float scaleRatio,
         out int remappedActorCount,
@@ -276,6 +340,10 @@ public partial class ActorScalePresentationController : Node
         return remappedGroupCount;
     }
 
+    /// <summary>
+    /// Retrieves visible battlefield rect from the current game state.
+    /// Reads the current state and returns the resulting rect2 to the caller.
+    /// </summary>
     private Rect2 GetVisibleBattlefieldRect()
     {
         Viewport viewport = ActorLayer.GetViewport();
@@ -295,6 +363,10 @@ public partial class ActorScalePresentationController : Node
         return visibleRect;
     }
 
+    /// <summary>
+    /// Performs the would fit horizontally operation for Actor Scale Presentation Controller.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     private static bool WouldFitHorizontally(
         IReadOnlyList<Node2D> group,
         Vector2 groupCenter,
@@ -371,6 +443,10 @@ public partial class ActorScalePresentationController : Node
         return engagements;
     }
 
+    /// <summary>
+    /// Performs the add engagement operation for Actor Scale Presentation Controller.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private static void AddEngagement(
         Node2D actor,
         Node2D target,
@@ -383,6 +459,10 @@ public partial class ActorScalePresentationController : Node
             engagements[target].Add(actor);
     }
 
+    /// <summary>
+    /// Performs the collect engagement group operation for Actor Scale Presentation Controller.
+    /// Uses the supplied arguments and current state and returns the resulting list node2 d to the caller.
+    /// </summary>
     private static List<Node2D> CollectEngagementGroup(
         Node2D firstActor,
         Dictionary<Node2D, List<Node2D>> engagements,
@@ -411,6 +491,10 @@ public partial class ActorScalePresentationController : Node
         return group;
     }
 
+    /// <summary>
+    /// Performs the calculate group center operation for Actor Scale Presentation Controller.
+    /// Uses the supplied arguments and current state and returns the resulting vector2 to the caller.
+    /// </summary>
     private static Vector2 CalculateGroupCenter(
         IReadOnlyList<Node2D> group)
     {
@@ -423,6 +507,10 @@ public partial class ActorScalePresentationController : Node
             / Mathf.Max(group.Count, 1);
     }
 
+    /// <summary>
+    /// Performs the is active combat actor operation for Actor Scale Presentation Controller.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     private static bool IsActiveCombatActor(Node actor)
     {
         return actor switch
@@ -441,6 +529,10 @@ public partial class ActorScalePresentationController : Node
         };
     }
 
+    /// <summary>
+    /// Updates combat presentation scale and applies the new value to the owning system.
+    /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private static void SetCombatPresentationScale(
         Node actor,
         float presentationScale)
@@ -459,6 +551,10 @@ public partial class ActorScalePresentationController : Node
         }
     }
 
+    /// <summary>
+    /// Retrieves current presentation scale from the current game state.
+    /// Reads the current state and returns the resulting float to the caller.
+    /// </summary>
     private float GetCurrentPresentationScale()
     {
         if (WindowHost.IsExpanded)
@@ -470,6 +566,10 @@ public partial class ActorScalePresentationController : Node
             1.0f);
     }
 
+    /// <summary>
+    /// Retrieves visual root from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting node2 d to the caller.
+    /// </summary>
     private static Node2D? GetVisualRoot(Node actor)
     {
         return actor switch
@@ -484,6 +584,10 @@ public partial class ActorScalePresentationController : Node
         };
     }
 
+    /// <summary>
+    /// Performs the validate references operation for Actor Scale Presentation Controller.
+    /// Reads the current state and returns the resulting bool to the caller.
+    /// </summary>
     private bool ValidateReferences()
     {
         bool valid = true;
@@ -499,6 +603,10 @@ public partial class ActorScalePresentationController : Node
         return valid;
     }
 
+    /// <summary>
+    /// Performs the require operation for Actor Scale Presentation Controller.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     private static bool Require(
         GodotObject value,
         string propertyName)

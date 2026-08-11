@@ -17,34 +17,78 @@ public partial class DebugConsoleController : Window
 	};
 
 	[ExportCategory("Dependencies")]
+	/// <summary>
+	/// Inspector reference used by this component for its commands dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public DebugCommandService Commands { get; set; } = null!;
+	/// <summary>
+	/// Inspector reference used by this component for its combat dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public CombatController Combat { get; set; } = null!;
+	/// <summary>
+	/// Inspector reference used by this component for its journey state dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public JourneyStateService JourneyState { get; set; } = null!;
+	/// <summary>
+	/// Inspector reference used by this component for its encounter dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public EncounterController Encounter { get; set; } = null!;
 
 	[ExportCategory("Controls")]
+	/// <summary>
+	/// Controls debug output.
+	/// For example, selecting a different value changes which debug output behavior or content the owning system uses.
+	/// </summary>
 	[Export]
 	public RichTextLabel DebugOutput { get; set; } = null!;
 
+	/// <summary>
+	/// Controls command input.
+	/// For example, selecting a different value changes which command input behavior or content the owning system uses.
+	/// </summary>
 	[Export]
 	public LineEdit CommandInput { get; set; } = null!;
 
+	/// <summary>
+	/// Controls filter tabs.
+	/// For example, selecting a different value changes which filter tabs behavior or content the owning system uses.
+	/// </summary>
 	[Export]
 	public TabBar FilterTabs { get; set; } = null!;
 
+	/// <summary>
+	/// Controls search input.
+	/// For example, selecting a different value changes which search input behavior or content the owning system uses.
+	/// </summary>
 	[Export]
 	public LineEdit SearchInput { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its pause button dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Button PauseButton { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its auto scroll button dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Button AutoScrollButton { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its clear button dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Button ClearButton { get; set; } = null!;
 
@@ -96,6 +140,10 @@ public partial class DebugConsoleController : Window
 		Ids
 	}
 
+	/// <summary>
+	/// Runs Godot setup for Debug Console Controller when the node enters the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Ready()
 	{
 		DebugLog.Print(
@@ -140,6 +188,10 @@ public partial class DebugConsoleController : Window
 		Hide();
 	}
 
+	/// <summary>
+	/// Cleans up Debug Console Controller when the node leaves the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _ExitTree()
 	{
 		DebugLog.Unsubscribe(OnDebugLogMessage);
@@ -202,6 +254,10 @@ public partial class DebugConsoleController : Window
 			HideConsole;
 	}
 
+	/// <summary>
+	/// Performs the toggle console operation for Debug Console Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void ToggleConsole()
 	{
 		if (Visible)
@@ -216,11 +272,19 @@ public partial class DebugConsoleController : Window
 		CommandInput.GrabFocus();
 	}
 
+	/// <summary>
+	/// Performs the hide console operation for Debug Console Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void HideConsole()
 	{
 		Hide();
 	}
 
+	/// <summary>
+	/// Performs the input operation for Debug Console Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Input(InputEvent @event)
 	{
 		if (!Visible
@@ -240,6 +304,10 @@ public partial class DebugConsoleController : Window
 		GetViewport().SetInputAsHandled();
 	}
 
+	/// <summary>
+	/// Handles the command submitted event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnCommandSubmitted(string commandText)
 	{
 		ResetCompletionCycle();
@@ -265,6 +333,10 @@ public partial class DebugConsoleController : Window
 		CommandInput.GrabFocus();
 	}
 
+	/// <summary>
+	/// Performs the execute command chain operation for Debug Console Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ExecuteCommandChain(string commandText)
 	{
 		string[] commands =
@@ -290,6 +362,10 @@ public partial class DebugConsoleController : Window
 		}
 	}
 
+	/// <summary>
+	/// Performs the execute single command operation for Debug Console Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ExecuteSingleCommand(string commandText)
 	{
 		if (commandText.Equals(
@@ -312,6 +388,10 @@ public partial class DebugConsoleController : Window
 		}
 	}
 
+	/// <summary>
+	/// Performs the append output operation for Debug Console Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void AppendOutput(
 		string message,
 		DebugLogCategory category = DebugLogCategory.General)
@@ -336,6 +416,10 @@ public partial class DebugConsoleController : Window
 		}
 	}
 
+	/// <summary>
+	/// Performs the trim output history operation for Debug Console Controller.
+	/// Reads the current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TrimOutputHistory()
 	{
 		if (_outputHistory.Count
@@ -390,6 +474,10 @@ public partial class DebugConsoleController : Window
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the validate references operation for Debug Console Controller.
+	/// Reads the current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool ValidateReferences()
 	{
 		bool valid = true;
@@ -409,6 +497,10 @@ public partial class DebugConsoleController : Window
 		return valid;
 	}
 
+	/// <summary>
+	/// Performs the require operation for Debug Console Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool Require(GodotObject value, string propertyName)
 	{
 		if (GodotObject.IsInstanceValid(value))
@@ -421,6 +513,10 @@ public partial class DebugConsoleController : Window
 		return false;
 	}
 
+	/// <summary>
+	/// Handles the combat event occurred event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnCombatEventOccurred(CombatEvent combatEvent)
 	{
 		(string message, DebugLogCategory category) =
@@ -442,6 +538,10 @@ public partial class DebugConsoleController : Window
 		AppendTimestampedOutput(message, category);
 	}
 
+	/// <summary>
+	/// Handles the journey state changed event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnJourneyStateChanged(JourneyStateService.JourneyState previousState, JourneyStateService.JourneyState currentState)
 	{
 		AppendTimestampedOutput(
@@ -449,6 +549,10 @@ public partial class DebugConsoleController : Window
 			DebugLogCategory.Encounter);
 	}
 
+	/// <summary>
+	/// Handles the encounter started event and updates the related game state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnEncounterStarted()
 	{
 		AppendTimestampedOutput(
@@ -456,6 +560,10 @@ public partial class DebugConsoleController : Window
 			DebugLogCategory.Encounter);
 	}
 
+	/// <summary>
+	/// Handles the encounter completed event and updates the related game state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnEncounterCompleted()
 	{
 		AppendTimestampedOutput(
@@ -463,6 +571,10 @@ public partial class DebugConsoleController : Window
 			DebugLogCategory.Encounter);
 	}
 
+	/// <summary>
+	/// Handles the monster roster changed event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnMonsterRosterChanged(int activeMonsterCount)
 	{
 		AppendTimestampedOutput(
@@ -470,6 +582,10 @@ public partial class DebugConsoleController : Window
 			DebugLogCategory.Encounter);
 	}
 
+	/// <summary>
+	/// Performs the add command to history operation for Debug Console Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void AddCommandToHistory( string command)
 	{
 		if (_commandHistory.Count > 0
@@ -490,6 +606,10 @@ public partial class DebugConsoleController : Window
 			_commandHistory.Count;
 	}
 
+	/// <summary>
+	/// Performs the show history command operation for Debug Console Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ShowHistoryCommand()
 	{
 		if (_historyIndex < 0
@@ -506,6 +626,10 @@ public partial class DebugConsoleController : Window
 			CommandInput.Text.Length;
 	}
 
+	/// <summary>
+	/// Performs the show next command operation for Debug Console Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ShowNextCommand()
 	{
 		ResetCompletionCycle();
@@ -528,6 +652,10 @@ public partial class DebugConsoleController : Window
 		ShowHistoryCommand();
 	}
 
+	/// <summary>
+	/// Performs the show previous command operation for Debug Console Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ShowPreviousCommand()
 	{
 		ResetCompletionCycle();
@@ -543,6 +671,10 @@ public partial class DebugConsoleController : Window
 		ShowHistoryCommand();
 	}
 
+	/// <summary>
+	/// Handles the command input gui input event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnCommandInputGuiInput( InputEvent @event)
 	{
 		if (@event is not InputEventKey keyEvent)
@@ -580,6 +712,10 @@ public partial class DebugConsoleController : Window
 		CommandInput.AcceptEvent();
 	}
 
+	/// <summary>
+	/// Applies command completion to the relevant actor, resource, or presentation state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ApplyCommandCompletion(bool reverse)
 	{
 		bool canContinueExistingCycle =
@@ -633,6 +769,10 @@ public partial class DebugConsoleController : Window
 		}
 	}
 
+	/// <summary>
+	/// Performs the start completion cycle operation for Debug Console Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void StartCompletionCycle(bool reverse)
 	{
 		ResetCompletionCycle();
@@ -664,6 +804,10 @@ public partial class DebugConsoleController : Window
 			: 0;
 	}
 
+	/// <summary>
+	/// Resets completion cycle so the system can begin from a clean state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ResetCompletionCycle()
 	{
 		_completionCandidates.Clear();
@@ -674,6 +818,10 @@ public partial class DebugConsoleController : Window
 		_completionAppliedText = string.Empty;
 	}
 
+	/// <summary>
+	/// Creates damage message from the supplied configuration and current dependencies.
+	/// Uses the supplied arguments and current state and returns the resulting string to the caller.
+	/// </summary>
 	private static string BuildDamageMessage(CombatEvent combatEvent)
 	{
 		return
@@ -684,6 +832,10 @@ public partial class DebugConsoleController : Window
 			$"{combatEvent.Damage.RemainingHealth} remaining";
 	}
 
+	/// <summary>
+	/// Creates death message from the supplied configuration and current dependencies.
+	/// Uses the supplied arguments and current state and returns the resulting string to the caller.
+	/// </summary>
 	private static string BuildDeathMessage(CombatEvent combatEvent)
 		{
 			return
@@ -691,6 +843,10 @@ public partial class DebugConsoleController : Window
 				$"final hit by {combatEvent.Attacker.Name}";
 		}
 
+	/// <summary>
+	/// Creates incapacitation message from the supplied configuration and current dependencies.
+	/// Uses the supplied arguments and current state and returns the resulting string to the caller.
+	/// </summary>
 	private static string BuildIncapacitationMessage(CombatEvent combatEvent)
 	{
 		return
@@ -698,6 +854,10 @@ public partial class DebugConsoleController : Window
 			$"final hit by {combatEvent.Attacker.Name}";
 	}
 	
+	/// <summary>
+	/// Handles the debug log message event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnDebugLogMessage(
 		DateTime timestamp,
 		DebugLogCategory category,
@@ -709,6 +869,10 @@ public partial class DebugConsoleController : Window
 			category);
 	}
 
+	/// <summary>
+	/// Performs the append timestamped output operation for Debug Console Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void AppendTimestampedOutput(
 		string message,
 		DebugLogCategory category)
@@ -721,6 +885,10 @@ public partial class DebugConsoleController : Window
 			category);
 	}
 
+	/// <summary>
+	/// Handles the filter tab changed event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnFilterTabChanged(long tabIndex)
 	{
 		_activeFilter =
@@ -731,6 +899,10 @@ public partial class DebugConsoleController : Window
 		RebuildVisibleOutput();
 	}
 
+	/// <summary>
+	/// Handles the search text changed event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnSearchTextChanged(string searchText)
 	{
 		_searchText =
@@ -739,6 +911,10 @@ public partial class DebugConsoleController : Window
 		RebuildVisibleOutput();
 	}
 
+	/// <summary>
+	/// Performs the toggle display pause operation for Debug Console Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ToggleDisplayPause()
 	{
 		if (_isDisplayPaused)
@@ -757,6 +933,10 @@ public partial class DebugConsoleController : Window
 		RebuildVisibleOutput();
 	}
 
+	/// <summary>
+	/// Recalculates pause button text from the latest runtime state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdatePauseButtonText()
 	{
 		PauseButton.Text =
@@ -765,6 +945,10 @@ public partial class DebugConsoleController : Window
 				: "Pause";
 	}
 
+	/// <summary>
+	/// Performs the toggle auto scroll operation for Debug Console Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ToggleAutoScroll()
 	{
 		_isAutoScrollEnabled =
@@ -773,6 +957,10 @@ public partial class DebugConsoleController : Window
 		ApplyAutoScrollSetting();
 	}
 
+	/// <summary>
+	/// Applies auto scroll setting to the relevant actor, resource, or presentation state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ApplyAutoScrollSetting()
 	{
 		DebugOutput.ScrollFollowing =
@@ -789,6 +977,10 @@ public partial class DebugConsoleController : Window
 		}
 	}
 
+	/// <summary>
+	/// Performs the scroll to latest line operation for Debug Console Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ScrollToLatestLine()
 	{
 		int lastLine =
@@ -800,6 +992,10 @@ public partial class DebugConsoleController : Window
 		}
 	}
 
+	/// <summary>
+	/// Retrieves filter for tab from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting console filter to the caller.
+	/// </summary>
 	private ConsoleFilter GetFilterForTab(int tabIndex)
 	{
 		string title =
@@ -829,6 +1025,10 @@ public partial class DebugConsoleController : Window
 		};
 	}
 
+	/// <summary>
+	/// Performs the track unread entry operation for Debug Console Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void TrackUnreadEntry(ConsoleEntry entry)
 	{
 		ConsoleFilter? filter =
@@ -853,6 +1053,10 @@ public partial class DebugConsoleController : Window
 		UpdateUnreadTabTitle(filter.Value);
 	}
 
+	/// <summary>
+	/// Performs the remove expired unread entry operation for Debug Console Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool RemoveExpiredUnreadEntry(ConsoleEntry entry)
 	{
 		ConsoleFilter? filter =
@@ -871,6 +1075,10 @@ public partial class DebugConsoleController : Window
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the mark filter read operation for Debug Console Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void MarkFilterRead(ConsoleFilter filter)
 	{
 		if (!_unreadCounts.ContainsKey(filter))
@@ -886,6 +1094,10 @@ public partial class DebugConsoleController : Window
 		UpdateUnreadTabTitle(filter);
 	}
 
+	/// <summary>
+	/// Resets unread counts so the system can begin from a clean state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ResetUnreadCounts()
 	{
 		foreach (ConsoleFilter filter in CountedFilters)
@@ -898,6 +1110,10 @@ public partial class DebugConsoleController : Window
 		}
 	}
 
+	/// <summary>
+	/// Recalculates unread tab title from the latest runtime state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void UpdateUnreadTabTitle(ConsoleFilter filter)
 	{
 		int tabIndex = FindTabIndex(filter);
@@ -918,6 +1134,10 @@ public partial class DebugConsoleController : Window
 				: baseTitle);
 	}
 
+	/// <summary>
+	/// Performs the find tab index operation for Debug Console Controller.
+	/// Uses the supplied arguments and current state and returns the resulting int to the caller.
+	/// </summary>
 	private int FindTabIndex(ConsoleFilter filter)
 	{
 		for (int tabIndex = 0;
@@ -931,6 +1151,10 @@ public partial class DebugConsoleController : Window
 		return -1;
 	}
 
+	/// <summary>
+	/// Retrieves filter for category from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting console filter to the caller.
+	/// </summary>
 	private static ConsoleFilter? GetFilterForCategory(
 		DebugLogCategory category)
 	{
@@ -945,6 +1169,10 @@ public partial class DebugConsoleController : Window
 		};
 	}
 
+	/// <summary>
+	/// Retrieves filter title from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting string to the caller.
+	/// </summary>
 	private static string GetFilterTitle(ConsoleFilter filter)
 	{
 		return filter switch
@@ -959,6 +1187,10 @@ public partial class DebugConsoleController : Window
 		};
 	}
 
+	/// <summary>
+	/// Performs the rebuild visible output operation for Debug Console Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void RebuildVisibleOutput()
 	{
 		DebugOutput.Clear();
@@ -1007,6 +1239,10 @@ public partial class DebugConsoleController : Window
 		}
 	}
 
+	/// <summary>
+	/// Performs the should display operation for Debug Console Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool ShouldDisplay(
 		DebugLogCategory category,
 		string message)
@@ -1033,6 +1269,10 @@ public partial class DebugConsoleController : Window
 				StringComparison.OrdinalIgnoreCase);
 	}
 
+	/// <summary>
+	/// Resets output so the system can begin from a clean state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ClearOutput()
 	{
 		_outputHistory.Clear();
@@ -1041,6 +1281,10 @@ public partial class DebugConsoleController : Window
 		RebuildVisibleOutput();
 	}
 
+	/// <summary>
+	/// Performs the append reference output operation for Debug Console Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void AppendReferenceOutput()
 	{
 		string referenceText =
@@ -1067,6 +1311,10 @@ public partial class DebugConsoleController : Window
 		}
 	}
 
+	/// <summary>
+	/// Retrieves category label from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting string to the caller.
+	/// </summary>
 	private static string GetCategoryLabel(DebugLogCategory category)
 	{
 		return category switch

@@ -9,50 +9,106 @@ public partial class EncounterController : Node
 	int activeMonsterCount);
 	
 	[ExportCategory("Dependencies")]
+	/// <summary>
+	/// Inspector reference used by this component for its journey state dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public JourneyStateService JourneyState { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its actor layer dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Node2D ActorLayer { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its monster spawn anchor dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public Node2D MonsterSpawnAnchor { get; set; } = null!;
 
+	/// <summary>
+	/// Controls monster factory.
+	/// For example, selecting a different value changes which monster factory behavior or content the owning system uses.
+	/// </summary>
 	[Export]
 	public MonsterFactory MonsterFactory { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its encounter registry dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public EncounterContentRegistry EncounterRegistry { get; set; } = null!;
 
+	/// <summary>
+	/// Inspector reference used by this component for its encounter pool registry dependency.
+	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
+	/// </summary>
 	[Export]
 	public EncounterPoolContentRegistry EncounterPoolRegistry { get; set; } = null!;
 
 	[ExportCategory("Monster Spawn Formation")]
 
+	/// <summary>
+	/// Controls spawn rows.
+	/// For example, changing 4 to 8 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "1,10,1")]
 	public int SpawnRows { get; set; } = 4;
 
+	/// <summary>
+	/// Controls starting spawn columns.
+	/// For example, changing 2 to 4 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "1,20,1")]
 	public int StartingSpawnColumns { get; set; } = 2;
 
+	/// <summary>
+	/// Controls spawns per column expansion.
+	/// For example, changing 6 to 12 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "1,100,1")]
 	public int SpawnsPerColumnExpansion { get; set; } = 6;
 
+	/// <summary>
+	/// Controls vertical spawn spacing, measured as pixels.
+	/// For example, changing 24 to 48 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,200,1")]
 	public float VerticalSpawnSpacing { get; set; } = 24.0f;
 
+	/// <summary>
+	/// Controls horizontal spawn spacing, measured as pixels.
+	/// For example, changing 48 to 96 doubles this setting's configured contribution to the system.
+	/// </summary>
 	[Export(PropertyHint.Range, "0,500,1")]
 	public float HorizontalSpawnSpacing { get; set; } = 48.0f;
 
 	[ExportCategory("Encounter Content")]
+	/// <summary>
+	/// Stable content identifier for default encounter pool; other systems use this value to find the same game data.
+	/// For example, changing this ID makes the owning resource resolve a different registered default encounter pool.
+	/// </summary>
 	[Export]
 	public string DefaultEncounterPoolContentId { get; set; } =
 		"encounter_pool.core.training_region";
 
+	/// <summary>
+	/// Stable content identifier for default encounter; other systems use this value to find the same game data.
+	/// For example, changing this ID makes the owning resource resolve a different registered default encounter.
+	/// </summary>
 	[Export]
 	public string DefaultEncounterContentId { get; set; } =
 		"encounter.core.training_mix";
 
+	/// <summary>
+	/// Stable content identifier for default monster; other systems use this value to find the same game data.
+	/// For example, changing this ID makes the owning resource resolve a different registered default monster.
+	/// </summary>
 	[Export]
 	public string DefaultMonsterContentId { get; set; } =
 		"monster.core.training_monster";
@@ -75,6 +131,10 @@ public partial class EncounterController : Node
 	public int ActiveMonsterCount => _activeMonsters.Count;
 
 	// Start a registered encounter definition -- DEBUG ONLY
+	/// <summary>
+	/// Attempts to debug start encounter without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool TryDebugStartEncounter(
 		string contentId,
 		out string result)
@@ -145,6 +205,10 @@ public partial class EncounterController : Node
 
 
 	// Start a registered encounter pool -- DEBUG ONLY
+	/// <summary>
+	/// Attempts to debug start encounter pool without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool TryDebugStartEncounterPool(
 		string poolContentId,
 		out string result)
@@ -152,6 +216,10 @@ public partial class EncounterController : Node
 		return TryStartEncounterPool(poolContentId, out result);
 	}
 
+	/// <summary>
+	/// Attempts to start encounter pool without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public bool TryStartEncounterPool(
 		string poolContentId,
 		out string result)
@@ -253,6 +321,10 @@ public partial class EncounterController : Node
 		return true;
 	}
 
+	/// <summary>
+	/// Attempts to roll encounter composition without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TryRollEncounterComposition(
 		EncounterDefinition definition,
 		out List<(EncounterMonsterEntry Entry, int Count)> rolledComposition,
@@ -297,6 +369,10 @@ public partial class EncounterController : Node
 		return true;
 	}
 
+	/// <summary>
+	/// Attempts to spawn rolled composition without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TrySpawnRolledComposition(
 		EncounterDefinition definition,
 		IReadOnlyList<(EncounterMonsterEntry Entry, int Count)> rolledComposition,
@@ -335,6 +411,10 @@ public partial class EncounterController : Node
 	}
 
 	// Spawn monsters -- DEBUG ONLY
+	/// <summary>
+	/// Performs the debug spawn monsters operation for Encounter Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void DebugSpawnMonsters(int count)
 	{
 		int validCount =
@@ -363,6 +443,10 @@ public partial class EncounterController : Node
 			$"Active monsters={_activeMonsters.Count}");
 	}
 
+	/// <summary>
+	/// Performs the debug add monsters operation for Encounter Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void DebugAddMonsters(int count)
 	{
 		int validCount =
@@ -397,6 +481,10 @@ public partial class EncounterController : Node
 	}
 
 	//DEBUG ONLY
+	/// <summary>
+	/// Performs the debug add monsters operation for Encounter Controller.
+	/// Uses the supplied arguments and current state and returns the resulting int to the caller.
+	/// </summary>
 	public int DebugAddMonsters(
 	string contentId,
 	int count)
@@ -433,6 +521,10 @@ public partial class EncounterController : Node
 		return successfullySpawned;
 	}
 
+	/// <summary>
+	/// Runs Godot setup for Encounter Controller when the node enters the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _Ready()
 	{
 		if (!ValidateReferences())
@@ -445,6 +537,10 @@ public partial class EncounterController : Node
 		ApplyJourneyState(JourneyState.CurrentState);
 	}
 
+	/// <summary>
+	/// Cleans up Encounter Controller when the node leaves the scene tree.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public override void _ExitTree()
 	{
 		if (GodotObject.IsInstanceValid(JourneyState))
@@ -454,6 +550,10 @@ public partial class EncounterController : Node
 		}
 	}
 
+	/// <summary>
+	/// Handles the journey state changed event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnJourneyStateChanged(
 		JourneyStateService.JourneyState previousState,
 		JourneyStateService.JourneyState currentState)
@@ -461,6 +561,10 @@ public partial class EncounterController : Node
 		ApplyJourneyState(currentState);
 	}
 
+	/// <summary>
+	/// Applies journey state to the relevant actor, resource, or presentation state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ApplyJourneyState(
 		JourneyStateService.JourneyState state)
 	{
@@ -474,6 +578,10 @@ public partial class EncounterController : Node
 		EndEncounterPresentation();
 	}
 
+	/// <summary>
+	/// Resets spawn formation so the system can begin from a clean state.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void ResetSpawnFormation()
 	{
 		_spawnSequenceCount = 0;
@@ -483,6 +591,10 @@ public partial class EncounterController : Node
 			"Monster spawn formation reset.");
 	}
 
+	/// <summary>
+	/// Performs the begin encounter presentation operation for Encounter Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void BeginEncounterPresentation()
 	{
 		RemoveInvalidMonsterReferences();
@@ -500,6 +612,10 @@ public partial class EncounterController : Node
 		EncounterStarted?.Invoke();
 	}
 
+	/// <summary>
+	/// Performs the start default journey encounter operation for Encounter Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void StartDefaultJourneyEncounter()
 	{
 		EncounterDefinition? selectedDefinition = null;
@@ -580,6 +696,10 @@ public partial class EncounterController : Node
 		StartJourneyEncounterDefinition(fallbackDefinition);
 	}
 
+	/// <summary>
+	/// Attempts to select encounter from pool without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool TrySelectEncounterFromPool(
 		EncounterPoolDefinition pool,
 		out EncounterPoolEntry selectedEntry,
@@ -628,6 +748,10 @@ public partial class EncounterController : Node
 		return false;
 	}
 
+	/// <summary>
+	/// Performs the start journey encounter definition operation for Encounter Controller.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void StartJourneyEncounterDefinition(
 		EncounterDefinition definition)
 	{
@@ -662,6 +786,10 @@ public partial class EncounterController : Node
 			$"Active monsters={successfullySpawned}");
 	}
 
+	/// <summary>
+	/// Retrieves next random grid spawn position from the current game state.
+	/// Reads the current state and returns the resulting vector2 to the caller.
+	/// </summary>
 	private Vector2 GetNextRandomGridSpawnPosition()
 	{
 		_spawnSequenceCount++;
@@ -767,6 +895,10 @@ public partial class EncounterController : Node
 		return spawnPosition;
 	}
 
+	/// <summary>
+	/// Performs the spawn monster operation for Encounter Controller.
+	/// Uses the supplied arguments and current state and returns the resulting monster actor controller to the caller.
+	/// </summary>
 	private MonsterActorController? SpawnMonster(string contentId)
 	{
 		if (!MonsterFactory.TryCreate(
@@ -802,6 +934,10 @@ public partial class EncounterController : Node
 		return monster;
 	}
 
+	/// <summary>
+	/// Performs the end encounter presentation operation for Encounter Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void EndEncounterPresentation()
 	{
 		RemoveInvalidMonsterReferences();
@@ -826,6 +962,10 @@ public partial class EncounterController : Node
 			"Active monsters=0");
 	}
 
+	/// <summary>
+	/// Performs the complete encounter operation for Encounter Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void CompleteEncounter()
 	{
 		DebugLog.Print(
@@ -835,6 +975,10 @@ public partial class EncounterController : Node
 		JourneyState.EndEncounter();
 	}
 
+	/// <summary>
+	/// Performs the end encounter as defeat operation for Encounter Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	public void EndEncounterAsDefeat()
 	{
 		if (JourneyState.CurrentState
@@ -850,6 +994,10 @@ public partial class EncounterController : Node
 		JourneyState.EndEncounter();
 	}
 
+	/// <summary>
+	/// Handles the monster died event and updates the related game state.
+	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void OnMonsterDied(
 	MonsterActorController monster)
 	{
@@ -879,6 +1027,10 @@ public partial class EncounterController : Node
 		}
 	}
 
+	/// <summary>
+	/// Performs the remove invalid monster references operation for Encounter Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void RemoveInvalidMonsterReferences()
 	{
 		_activeMonsters.RemoveAll(
@@ -886,6 +1038,10 @@ public partial class EncounterController : Node
 				!GodotObject.IsInstanceValid(monster));
 	}
 
+	/// <summary>
+	/// Performs the validate references operation for Encounter Controller.
+	/// Reads the current state and returns the resulting bool to the caller.
+	/// </summary>
 	private bool ValidateReferences()
 	{
 		bool valid = true;
@@ -1017,6 +1173,10 @@ public partial class EncounterController : Node
 		return valid;
 	}
 
+	/// <summary>
+	/// Performs the emit active monster count changed operation for Encounter Controller.
+	/// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+	/// </summary>
 	private void EmitActiveMonsterCountChanged()
 	{
 		EmitSignal(
@@ -1027,6 +1187,10 @@ public partial class EncounterController : Node
 			_activeMonsters.Count);
 	}
 
+	/// <summary>
+	/// Performs the require operation for Encounter Controller.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	private static bool Require(
 		GodotObject value,
 		string propertyName)

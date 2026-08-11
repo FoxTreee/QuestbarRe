@@ -20,6 +20,10 @@ public partial class WindowPlacementSettings : Resource
     private bool _startExpanded;
 
     [ExportCategory("Monitor")]
+    /// <summary>
+    /// Controls selected monitor.
+    /// For example, selecting a different value changes which selected monitor behavior or content the owning system uses.
+    /// </summary>
     [Export(PropertyHint.Range, "0,8,1")]
     public int SelectedMonitor
     {
@@ -28,6 +32,10 @@ public partial class WindowPlacementSettings : Resource
     }
 
     [ExportCategory("Placement")]
+    /// <summary>
+    /// Controls screen anchor.
+    /// For example, selecting a different value changes which screen anchor behavior or content the owning system uses.
+    /// </summary>
     [Export]
     public PhysicalScreenAnchor ScreenAnchor
     {
@@ -35,6 +43,10 @@ public partial class WindowPlacementSettings : Resource
         set => SetValue(ref _screenAnchor, value);
     }
 
+    /// <summary>
+    /// Controls window width, measured as pixels.
+    /// For example, selecting a different value changes which window width behavior or content the owning system uses.
+    /// </summary>
     [Export(PropertyHint.Range, "1,7680,1")]
     public int WindowWidth
     {
@@ -42,6 +54,10 @@ public partial class WindowPlacementSettings : Resource
         set => SetValue(ref _windowWidth, value);
     }
 
+    /// <summary>
+    /// Controls horizontal offset, measured as pixels.
+    /// For example, selecting a different value changes which horizontal offset behavior or content the owning system uses.
+    /// </summary>
     [Export(PropertyHint.Range, "0,7680,1")]
     public int HorizontalOffset
     {
@@ -49,6 +65,10 @@ public partial class WindowPlacementSettings : Resource
         set => SetValue(ref _horizontalOffset, value);
     }
 
+    /// <summary>
+    /// Controls bottom offset, measured as pixels.
+    /// For example, selecting a different value changes which bottom offset behavior or content the owning system uses.
+    /// </summary>
     [Export(PropertyHint.Range, "0,4320,1")]
     public int BottomOffset
     {
@@ -57,6 +77,10 @@ public partial class WindowPlacementSettings : Resource
     }
 
     [ExportCategory("Height")]
+    /// <summary>
+    /// Controls collapsed height, measured as pixels.
+    /// For example, selecting a different value changes which collapsed height behavior or content the owning system uses.
+    /// </summary>
     [Export(PropertyHint.Range, "1,2160,1")]
     public int CollapsedHeight
     {
@@ -64,6 +88,10 @@ public partial class WindowPlacementSettings : Resource
         set => SetValue(ref _collapsedHeight, value);
     }
 
+    /// <summary>
+    /// Controls expanded height, measured as pixels.
+    /// For example, selecting a different value changes which expanded height behavior or content the owning system uses.
+    /// </summary>
     [Export(PropertyHint.Range, "1,4320,1")]
     public int ExpandedHeight
     {
@@ -71,6 +99,10 @@ public partial class WindowPlacementSettings : Resource
         set => SetValue(ref _expandedHeight, value);
     }
 
+    /// <summary>
+    /// Enables or disables start expanded.
+    /// For example, turn this on to enable start expanded, or off to suppress that behavior.
+    /// </summary>
     [Export]
     public bool StartExpanded
     {

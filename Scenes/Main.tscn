@@ -99,9 +99,7 @@ z_index = -100
 
 [node name="ScalableWorld" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1379885866]
 
-[node name="RegionPresentation" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=1090747989 node_paths=PackedStringArray("RegionTileA", "RegionTileB", "BackgroundPresentation", "TravelingGround", "GroundSprite", "JourneyState")]
-visible = false
-z_index = -40
+[node name="RegionPresentation" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=1114696346 node_paths=PackedStringArray("RegionTileA", "RegionTileB", "BackgroundPresentation", "TravelingGround", "GroundSprite", "JourneyState")]
 script = ExtResource("1_v1gob")
 RegionTileA = NodePath("RegionTileA")
 RegionTileB = NodePath("RegionTileB")

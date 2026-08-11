@@ -42,10 +42,18 @@ public static class WindowsTaskbarGeometryReader
 	}
 
 	[DllImport("shell32.dll", ExactSpelling = true)]
+	/// <summary>
+	/// Performs the sh app bar message operation for Windows Taskbar Geometry Reader.
+	/// Uses the supplied arguments and current state and returns the resulting u int ptr to the caller.
+	/// </summary>
 	private static extern UIntPtr SHAppBarMessage(
 		uint message,
 		ref AppBarData data);
 
+	/// <summary>
+	/// Attempts to read without throwing when the operation cannot be completed.
+	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// </summary>
 	public static bool TryRead(
 		out WindowsTaskbarGeometry geometry)
 	{
@@ -112,6 +120,10 @@ public static class WindowsTaskbarGeometryReader
 		return true;
 	}
 
+	/// <summary>
+	/// Retrieves native to godot coordinate offset from the current game state.
+	/// Reads the current state and returns the resulting vector2 i to the caller.
+	/// </summary>
 	private static Vector2I
 		GetNativeToGodotCoordinateOffset()
 	{
@@ -126,6 +138,10 @@ public static class WindowsTaskbarGeometryReader
 		return DisplayServer.ScreenGetPosition(primaryScreen);
 	}
 
+	/// <summary>
+	/// Performs the find containing screen operation for Windows Taskbar Geometry Reader.
+	/// Uses the supplied arguments and current state and returns the resulting int to the caller.
+	/// </summary>
 	private static int FindContainingScreen(
 		Rect2I taskbarBounds,
 		out Rect2I screenBounds)
@@ -157,6 +173,10 @@ public static class WindowsTaskbarGeometryReader
 		return bestScreen;
 	}
 
+	/// <summary>
+	/// Retrieves intersection area from the current game state.
+	/// Uses the supplied arguments and current state and returns the resulting long to the caller.
+	/// </summary>
 	private static long GetIntersectionArea(
 		Rect2I first,
 		Rect2I second)
@@ -183,6 +203,10 @@ public static class WindowsTaskbarGeometryReader
 		return width * height;
 	}
 
+	/// <summary>
+	/// Performs the detect edge operation for Windows Taskbar Geometry Reader.
+	/// Uses the supplied arguments and current state and returns the resulting windows taskbar edge to the caller.
+	/// </summary>
 	private static WindowsTaskbarEdge DetectEdge(
 		Rect2I taskbarBounds,
 		Rect2I screenBounds)

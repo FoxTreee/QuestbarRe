@@ -33,6 +33,10 @@ public sealed class MeleeEngagementSlotSet
         }
     }
 
+    /// <summary>
+    /// Attempts to reserve closest without throwing when the operation cannot be completed.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool TryReserveClosest(
         Node2D attacker,
         Vector2 targetPosition,
@@ -90,6 +94,10 @@ public sealed class MeleeEngagementSlotSet
         return true;
     }
 
+    /// <summary>
+    /// Attempts to get reservation without throwing when the operation cannot be completed.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool TryGetReservation(
         Node2D attacker,
         out MeleeEngagementSlot slot)
@@ -115,6 +123,10 @@ public sealed class MeleeEngagementSlotSet
         return false;
     }
 
+    /// <summary>
+    /// Performs the release operation for Melee Engagement Slot Set.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     public bool Release(Node2D attacker)
     {
         if (!GodotObject.IsInstanceValid(attacker))
@@ -134,6 +146,10 @@ public sealed class MeleeEngagementSlotSet
         return false;
     }
 
+    /// <summary>
+    /// Resets  so the system can begin from a clean state.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     public void Clear()
     {
         for (int slotIndex = 0;
@@ -144,6 +160,10 @@ public sealed class MeleeEngagementSlotSet
         }
     }
 
+    /// <summary>
+    /// Retrieves world position from the current game state.
+    /// Uses the supplied arguments and current state and returns the resulting vector2 to the caller.
+    /// </summary>
     public static Vector2 GetWorldPosition(
         MeleeEngagementSlot slot,
         Vector2 targetPosition,
@@ -174,6 +194,10 @@ public sealed class MeleeEngagementSlotSet
                 verticalDirection * safeVerticalDistance);
     }
 
+    /// <summary>
+    /// Performs the remove invalid reservations operation for Melee Engagement Slot Set.
+    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
+    /// </summary>
     private void RemoveInvalidReservations()
     {
         for (int slotIndex = 0;
@@ -187,6 +211,10 @@ public sealed class MeleeEngagementSlotSet
         }
     }
 
+    /// <summary>
+    /// Performs the is valid occupant operation for Melee Engagement Slot Set.
+    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+    /// </summary>
     private static bool IsValidOccupant(Node2D? occupant)
     {
         return occupant is not null
