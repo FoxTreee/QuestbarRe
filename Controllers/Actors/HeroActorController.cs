@@ -11,7 +11,7 @@ public partial class HeroActorController : Node2D
 	[Signal]
 	public delegate void AbilityReleasedEventHandler(
 	HeroActorController caster,
-	HeroActorController target,
+	Node2D target,
 	AbilityDefinition ability);
 
 	[Signal]
@@ -37,11 +37,12 @@ public partial class HeroActorController : Node2D
 	private double _attackTimeRemaining;
 	private bool _attackReleaseEmitted;
 	private ActorHealthBarController _healthBar = null!;
+	private HeroResourceDefinition? _debugResourceDefinition;
 	private readonly List<AbilityDefinition> _abilities = new();
 	private readonly HeroAbilityCooldownState
 		_abilityCooldowns = new();
 	private AbilityDefinition? _activeAbility;
-	private HeroActorController? _activeAbilityTarget;
+	private Node2D? _activeAbilityTarget;
 	private double _abilityCastTimeRemaining;
 	private double _targetCommitmentRemainingSeconds;
 	private double _targetReassessmentRemainingSeconds;
@@ -49,6 +50,8 @@ public partial class HeroActorController : Node2D
 	private HeroActorController? _defensiveRescueAlly;
 	private IReadOnlyList<HeroActorController> _partyMembers =
 		System.Array.Empty<HeroActorController>();
+	private System.Func<HeroActorController, bool>?
+		_tryUsePriorityAbilityBeforeBasicAttack;
 
 	public HeroCombatProfile CombatProfile { get; } = new();
 	public float CombatPresentationScale { get; private set; } = 1.0f;
@@ -111,6 +114,59 @@ public partial class HeroActorController : Node2D
 		_abilities;
 
 	public HeroResourceState Resource { get; } = new();
+	public HeroComboPointState ComboPoints { get; } = new();
+	public bool UsesComboPoints =>
+		Definition?.ClassDefinition.ContentId
+			.Equals(
+				"class.core.rogue",
+				System.StringComparison.OrdinalIgnoreCase)
+			== true;
+
+	/// <summary>
+	/// Adds one combo point for a rogue after a basic attack deals real damage.
+	/// Non-rogues and zero-damage outcomes cannot change combo state.
+	/// </summary>
+	public bool TryAddComboPointFromDamage(float appliedDamage)
+	{
+		return UsesComboPoints
+			&& appliedDamage > 0.0f
+			&& ComboPoints.TryAddPoint();
+	}
+
+	/// <summary>
+	/// Temporarily assigns a standard 100-point resource pool for UI testing.
+	/// It regenerates ten points every two seconds and does not alter class data.
+	/// </summary>
+	public void DebugConfigureResource(HeroResourceType resourceType)
+	{
+		if (resourceType == HeroResourceType.None)
+		{
+			_debugResourceDefinition = null;
+			Resource.Configure(
+				Definition?.ClassDefinition.ResourceDefinition);
+			return;
+		}
+
+		_debugResourceDefinition = new HeroResourceDefinition
+		{
+			ResourceType = resourceType,
+			MaximumAmount = 100.0f,
+			StartFull = true,
+			RegenerationAmount = 10.0f,
+			RegenerationIntervalSeconds = 2.0f
+		};
+
+		Resource.Configure(_debugResourceDefinition);
+	}
+
+	/// <summary>
+	/// Spends resource through the normal atomic runtime API for UI testing.
+	/// Returns false without changing the pool when the cost is unaffordable.
+	/// </summary>
+	public bool DebugTrySpendResource(float amount)
+	{
+		return Resource.TrySpend(amount);
+	}
 
 	/// <summary>
 	/// Retrieves ability cooldown remaining from the current game state.
@@ -134,17 +190,103 @@ public partial class HeroActorController : Node2D
 	}
 
 	/// <summary>
-	/// Attempts to start ability cooldown without throwing when the operation cannot be completed.
-	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// Returns whether this hero can pay the ability's configured resource
+	/// cost. Zero-cost abilities remain usable by heroes with no resource.
 	/// </summary>
-	public bool TryStartAbilityCooldown(
-		AbilityDefinition ability)
+	public bool CanAffordAbility(AbilityDefinition ability)
 	{
-		return _abilityCooldowns.TryStart(ability);
+		return GodotObject.IsInstanceValid(ability)
+			&& (ability.ResourceCost <= 0.0f
+				|| (Resource.HasResource
+					&& Resource.CurrentAmount
+						>= ability.ResourceCost));
+	}
+
+	/// <summary>
+	/// Returns whether this hero currently has enough combo points for the
+	/// ability's authored combo-point cost. Abilities with no combo cost always
+	/// pass this check.
+	/// </summary>
+	public bool HasRequiredComboPoints(AbilityDefinition ability)
+	{
+		return GodotObject.IsInstanceValid(ability)
+			&& ComboPoints.CanSpend(
+				Mathf.Max(ability.ComboPointCost, 0));
+	}
+
+	/// <summary>
+	/// Commits an ability after its target and cast/windup have already been
+	/// validated. Commit is the authoritative point where resource is spent and
+	/// cooldown begins. If either side cannot complete, neither cost is kept.
+	/// </summary>
+	public bool TryCommitAbility(AbilityDefinition ability)
+	{
+		if (!GodotObject.IsInstanceValid(ability)
+			|| !TryGetAbility(ability.ContentId, out _)
+			|| !IsAbilityReady(ability.ContentId)
+			|| !CanAffordAbility(ability)
+			|| !HasRequiredComboPoints(ability))
+		{
+			return false;
+		}
+
+		float resourceCost = Mathf.Max(ability.ResourceCost, 0.0f);
+		int comboPointCost = Mathf.Max(ability.ComboPointCost, 0);
+
+		if (resourceCost > 0.0f
+			&& !Resource.TrySpend(resourceCost))
+		{
+			return false;
+		}
+
+		if (comboPointCost > 0
+			&& !ComboPoints.TrySpend(comboPointCost))
+		{
+			if (resourceCost > 0.0f)
+				Resource.Restore(resourceCost);
+
+			return false;
+		}
+
+		if (!_abilityCooldowns.TryStart(ability))
+		{
+			if (resourceCost > 0.0f)
+				Resource.Restore(resourceCost);
+
+			if (comboPointCost > 0)
+				ComboPoints.Restore(comboPointCost);
+
+			return false;
+		}
+
+		DebugLog.Print(
+			$"{Name} committed ability " +
+			$"'{ability.DisplayName}'. " +
+			$"ResourceCost={resourceCost:0.##}; " +
+			$"ComboPointCost={comboPointCost}; " +
+			$"Cooldown={ability.CooldownSeconds:0.##}s.",
+			DebugLogCategory.Ability);
+
+		return true;
 	}
 
 	public bool IsUsingAbility =>
 		_activeAbility is not null;
+
+	public bool IsPerformingBasicAttack =>
+		_state == HeroState.Attacking;
+
+	/// <summary>
+	/// Injects CombatController's automatic-ability decision before this hero
+	/// begins a new basic attack. The actor owns execution; CombatController
+	/// remains the authority for whether an ability's additional auto-use rules
+	/// are currently satisfied.
+	/// </summary>
+	public void SetAutomaticAbilityPriorityResolver(
+		System.Func<HeroActorController, bool>? resolver)
+	{
+		_tryUsePriorityAbilityBeforeBasicAttack = resolver;
+	}
 
 	/// <summary>
 	/// Attempts to begin ability without throwing when the operation cannot be completed.
@@ -152,15 +294,18 @@ public partial class HeroActorController : Node2D
 	/// </summary>
 	public bool TryBeginAbility(
 		AbilityDefinition ability,
-		HeroActorController target)
+		Node2D target)
 	{
 		if (!GodotObject.IsInstanceValid(ability)
 			|| !GodotObject.IsInstanceValid(target)
 			|| IsIncapacitated
 			|| !Health.IsAlive
 			|| IsUsingAbility
+			|| IsPerformingBasicAttack
 			|| !TryGetAbility(ability.ContentId, out _)
 			|| !IsAbilityReady(ability.ContentId)
+			|| !CanAffordAbility(ability)
+			|| !HasRequiredComboPoints(ability)
 			|| !IsValidAbilityTarget(ability, target))
 		{
 			return false;
@@ -201,6 +346,7 @@ public partial class HeroActorController : Node2D
 		}
 
 		Definition = definition;
+		ComboPoints.Reset();
 		CombatTagMask = definition.CombatTagMask;
 		CombatProfile.CombatStance =
 			definition.StartingCombatStance;
@@ -215,6 +361,7 @@ public partial class HeroActorController : Node2D
 			definition.AttackLungeDistance;
 		TemporaryAttackDelivery = definition.AttackDelivery;
 		CombatMoveSpeed = definition.CombatMoveSpeed;
+		_debugResourceDefinition = null;
 		Resource.Configure(
 			definition.ClassDefinition.ResourceDefinition);
 
@@ -295,18 +442,146 @@ public partial class HeroActorController : Node2D
 	/// </summary>
 	private bool IsValidAbilityTarget(
 		AbilityDefinition ability,
-		HeroActorController target)
+		Node2D target)
 	{
-		return ability.EffectType switch
+		return ability.TargetMode switch
 		{
-			AbilityEffectType.DirectHealing =>
-				IsLivingPartyMember(target),
+			AbilityTargetMode.CurrentTarget =>
+				target is MonsterActorController currentMonster
+				&& currentMonster == CurrentTarget
+				&& Targeting.IsValidMonsterTarget(currentMonster)
+				&& IsWithinAbilityRange(ability, currentMonster),
 
-			AbilityEffectType.AreaTaunt =>
+			AbilityTargetMode.Self =>
 				target == this,
+
+			AbilityTargetMode.Ally =>
+				target is HeroActorController ally
+				&& IsLivingPartyMember(ally)
+				&& IsWithinAbilityRange(ability, ally),
+
+			AbilityTargetMode.Monster =>
+				target is MonsterActorController monster
+				&& Targeting.IsValidMonsterTarget(monster)
+				&& IsWithinAbilityRange(ability, monster),
+
+			AbilityTargetMode.AreaOfEffect =>
+				IsValidAreaAnchor(ability, target),
 
 			_ => false
 		};
+	}
+
+	/// <summary>
+	/// Validates the anchor point for an AOE without resolving the effect.
+	/// Self-centered areas anchor on the caster. Target-centered areas anchor
+	/// on a living actor from the configured target group.
+	/// </summary>
+	private bool IsValidAreaAnchor(
+		AbilityDefinition ability,
+		Node2D target)
+	{
+		if (ability.AreaOrigin == AbilityAreaOrigin.Self)
+			return target == this;
+
+		return ability.AreaTargetGroup switch
+		{
+			AbilityTargetGroup.Allies =>
+				target is HeroActorController ally
+				&& IsLivingPartyMember(ally)
+				&& IsWithinAbilityRange(ability, ally),
+
+			AbilityTargetGroup.Enemies =>
+				target is MonsterActorController monster
+				&& Targeting.IsValidMonsterTarget(monster)
+				&& IsWithinAbilityRange(ability, monster),
+
+			AbilityTargetGroup.Everyone =>
+				(target is HeroActorController hero
+					&& IsLivingPartyMember(hero)
+					&& IsWithinAbilityRange(ability, hero))
+				|| (target is MonsterActorController enemy
+					&& Targeting.IsValidMonsterTarget(enemy)
+					&& IsWithinAbilityRange(ability, enemy)),
+
+			_ => false
+		};
+	}
+
+	/// <summary>
+	/// Determines whether a resolved ability target is currently within the
+	/// ability's authored range semantics. Fixed range uses logical gameplay
+	/// distance. BasicAttackRange delegates to the same spatial rules the hero
+	/// uses for normal attacks so melee finishers do not disagree with combat
+	/// spacing or engagement slots.
+	/// </summary>
+	public bool IsWithinAbilityRange(
+		AbilityDefinition ability,
+		Node2D target)
+	{
+		if (ability is null
+			|| target is null
+			|| !GodotObject.IsInstanceValid(target))
+		{
+			return false;
+		}
+
+		if (target == this)
+			return true;
+
+		return ability.RangeMode switch
+		{
+			AbilityRangeMode.Fixed =>
+				IsWithinFixedAbilityRange(ability, target),
+
+			AbilityRangeMode.BasicAttackRange =>
+				target is MonsterActorController monster
+				&& IsWithinBasicAttackRange(monster),
+
+			_ => false
+		};
+	}
+
+	private bool IsWithinFixedAbilityRange(
+		AbilityDefinition ability,
+		Node2D target)
+	{
+		float range = Mathf.Max(ability.Range, 0.0f);
+
+		if (range <= 0.0f)
+			return true;
+
+		return GlobalPosition.DistanceSquaredTo(
+			target.GlobalPosition) <= range * range;
+	}
+
+	/// <summary>
+	/// Reports whether this hero is in a legal normal-attack position against
+	/// the supplied monster. Melee heroes with an engagement reservation use
+	/// the reservation-aware distance; other attacks use the same horizontal
+	/// reach and vertical alignment rules as the normal attack state machine.
+	/// </summary>
+	public bool IsWithinBasicAttackRange(
+		MonsterActorController target)
+	{
+		if (!Targeting.IsValidMonsterTarget(target))
+			return false;
+
+		if (HasMeleeEngagementReservation(target))
+		{
+			return IsTargetWithinMeleeEngagementRange(target);
+		}
+
+		bool targetWithinRange =
+			IsTargetWithinAttackRange(target);
+
+		bool verticallyAligned =
+			Mathf.Abs(
+				GlobalPosition.Y
+				- target.GlobalPosition.Y)
+			<= GetNonMeleeVerticalAlignmentTolerance();
+
+		return targetWithinRange && verticallyAligned;
 	}
 
 	/// <summary>
@@ -386,6 +661,22 @@ public partial class HeroActorController : Node2D
 	[Export]
 	public HeroAbilityCooldownIndicatorController
 		AbilityCooldownIndicator { get; set; } = null!;
+
+	/// <summary>
+	/// Inspector reference to the reusable Mana, Energy, or Rage bar beneath
+	/// this hero's health bar. Assign VisualRoot/HeroResourceBar.
+	/// </summary>
+	[Export]
+	public HeroResourceBarController ResourceBar
+	{ get; set; } = null!;
+
+	/// <summary>
+	/// Five-square rogue combo display beneath the resource bar. Assign the
+	/// instantiated VisualRoot/HeroComboPointDisplay scene.
+	/// </summary>
+	[Export]
+	public HeroComboPointDisplayController ComboPointDisplay
+	{ get; set; } = null!;
 
 	[ExportCategory("Travel Animation")]
 	/// <summary>
@@ -687,6 +978,8 @@ public partial class HeroActorController : Node2D
 
 		JourneyState.StateChanged += OnJourneyStateChanged;
 		_healthBar.Bind(Health);
+		ResourceBar.Bind(Resource);
+		ComboPointDisplay.Bind(ComboPoints, UsesComboPoints);
 		AbilityCooldownIndicator.Bind(this);
 		ApplyJourneyState(JourneyState.CurrentState);
 		SnapToFormation();
@@ -730,7 +1023,8 @@ public partial class HeroActorController : Node2D
 		_abilityCooldowns.Update(delta);
 		Resource.Update(
 			delta,
-			Definition?.ClassDefinition.ResourceDefinition);
+			_debugResourceDefinition
+				?? Definition?.ClassDefinition.ResourceDefinition);
 		UpdatePassiveRecovery(delta);
 		UpdateTargetDecisionTimers(delta);
 		_movedThisFrame = false;
@@ -1653,9 +1947,22 @@ public partial class HeroActorController : Node2D
 	/// </summary>
 	private void BeginAttack()
 	{
-
 		if (!Targeting.IsValidMonsterTarget(CurrentTarget))
 			return;
+
+		// Abilities have universal priority over BEGINNING a new basic attack.
+		// The current attack is never interrupted; this gate only runs at the
+		// moment a new basic attack would otherwise start.
+		if (_tryUsePriorityAbilityBeforeBasicAttack?.Invoke(this)
+			== true)
+		{
+			DebugLog.Print(
+				$"{Name} deferred a basic attack because a " +
+				"higher-priority ability began.",
+				DebugLogCategory.Ability);
+
+			return;
+		}
 
 		_state = HeroState.Attacking;
 		_attackTimeRemaining = CombatProfile.AttackDuration;
@@ -1687,15 +1994,20 @@ public partial class HeroActorController : Node2D
 		}
 
 		AbilityDefinition ability = _activeAbility;
-		HeroActorController target = _activeAbilityTarget;
+		Node2D target = _activeAbilityTarget;
 
 		_abilityCastTimeRemaining -= delta;
 
 		if (_abilityCastTimeRemaining > 0.0)
 			return;
 
-		if (!TryStartAbilityCooldown(ability))
+		if (!TryCommitAbility(ability))
 		{
+			DebugLog.Print(
+				$"{Name} could not commit ability " +
+				$"'{ability.DisplayName}'. Cast cancelled before release.",
+				DebugLogCategory.Ability);
+
 			ClearAbilityCast();
 			ResumeAfterAbility();
 			return;
@@ -1885,6 +2197,7 @@ public partial class HeroActorController : Node2D
 			return;
 
 		_state = HeroState.Incapacitated;
+		ComboPoints.Reset();
 		ReleaseMeleeEngagementSlot(CurrentTarget);
 		MeleeEngagementSlots.Clear();
 		CurrentTarget = null;
@@ -2053,6 +2366,10 @@ public partial class HeroActorController : Node2D
 		valid &= Require(
 			AbilityCooldownIndicator,
 			nameof(AbilityCooldownIndicator));
+		valid &= Require(ResourceBar, nameof(ResourceBar));
+		valid &= Require(
+			ComboPointDisplay,
+			nameof(ComboPointDisplay));
 
 		if (GodotObject.IsInstanceValid(VisualRoot))
 		{

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://i0takopxv3o2"]
+
+[ext_resource type="Script" uid="uid://bus4x5fmyodi8" path="res://Scripts/Content/Definitions/AbilityDefinition.cs" id="1_7u4ej"]
+
+[resource]
+script = ExtResource("1_7u4ej")
+ContentId = "ability.core.sinister_strike"
+DisplayName = "Sinister Strike"
+Description = "A Rogue finishing strike powered by five combo points."
+CooldownSeconds = 5.0
+CastTimeSeconds = 0.0
+ResourceCost = 25.0
+ComboPointCost = 5
+RangeMode = 1
+Range = 28.0
+DamageCalculationMode = 1
+BasicAttackDamageMultiplier = 2.0
+AutoCastHealthThresholdPercent = 1.0
+metadata/_custom_type_script = "uid://bus4x5fmyodi8"

@@ -1,9 +1,17 @@
 [gd_resource type="Resource" script_class="HeroClassDefinition" format=3 uid="uid://hvqeum2sq2xp"]
 
 [ext_resource type="Script" uid="uid://djb803f4i720b" path="res://Scripts/Content/Definitions/HeroClassDefinition.cs" id="1_xpwx3"]
+[ext_resource type="Script" uid="uid://cm3p1sud8p6q4" path="res://Scripts/Content/Definitions/HeroResourceDefinition.cs" id="2_resource"]
+
+[sub_resource type="Resource" id="HeroResourceDefinition_rogue"]
+script = ExtResource("2_resource")
+ResourceType = 2
+RegenerationAmount = 10.0
 
 [resource]
 script = ExtResource("1_xpwx3")
 ContentId = "class.core.rogue"
 DisplayName = "Rogue"
+ResourceDefinition = SubResource("HeroResourceDefinition_rogue")
+AbilityContentIds = Array[String](["ability.core.sinister_strike"])
 metadata/_custom_type_script = "uid://djb803f4i720b"

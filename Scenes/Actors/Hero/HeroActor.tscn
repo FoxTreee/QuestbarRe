@@ -4,6 +4,8 @@
 [ext_resource type="Script" uid="uid://cl6hid01monyl" path="res://Controllers/Actors/BodyBounds2D.cs" id="1_vrpdx"]
 [ext_resource type="PackedScene" uid="uid://b8j8ii2jqo33s" path="res://ActorHealthBar.tscn" id="3_d8mty"]
 [ext_resource type="Script" uid="uid://bm43aglk74odj" path="res://Controllers/Actors/HeroAbilityCooldownIndicatorController.cs" id="4_d8mty"]
+[ext_resource type="PackedScene" uid="uid://b2o6pgg63qw4c" path="res://Scenes/UI/HeroComboPointDisplay.tscn" id="4_eh30r"]
+[ext_resource type="PackedScene" uid="uid://bfnc0qm24xd1v" path="res://HeroResourceBar.tscn" id="5_4ebpt"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d8mty"]
 bg_color = Color(0.31174156, 0.33386132, 0.38903552, 1)
@@ -26,18 +28,26 @@ corner_radius_top_right = 1
 corner_radius_bottom_right = 1
 corner_radius_bottom_left = 1
 
-[node name="HeroActor" type="Node2D" unique_id=162660220 node_paths=PackedStringArray("VisualRoot", "BodyBounds", "ProjectileOrigin", "AbilityCooldownIndicator")]
+[node name="HeroActor" type="Node2D" unique_id=162660220 node_paths=PackedStringArray("VisualRoot", "BodyBounds", "ProjectileOrigin", "AbilityCooldownIndicator", "ResourceBar", "ComboPointDisplay")]
 script = ExtResource("1_nd8h6")
 VisualRoot = NodePath("VisualRoot")
 BodyBounds = NodePath("VisualRoot/BodyBounds")
 ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 AbilityCooldownIndicator = NodePath("VisualRoot/HeroAbilityCooldownIndicator")
+ResourceBar = NodePath("VisualRoot/HeroResourceBar")
+ComboPointDisplay = NodePath("VisualRoot/HeroComboPointDisplay")
 MeleeSlotVerticalSpacingMultiplier = 0.6
 
 [node name="VisualRoot" type="Node2D" parent="." unique_id=18405630]
 
 [node name="ActorHealthBar" parent="VisualRoot" unique_id=1290293826 instance=ExtResource("3_d8mty")]
 position = Vector2(0, -48)
+
+[node name="HeroResourceBar" parent="VisualRoot" unique_id=1366571141 instance=ExtResource("5_4ebpt")]
+position = Vector2(0, -41)
+
+[node name="HeroComboPointDisplay" parent="VisualRoot" unique_id=1540390464 instance=ExtResource("4_eh30r")]
+position = Vector2(0, -36)
 
 [node name="HeroBody" type="Polygon2D" parent="VisualRoot" unique_id=1886110105]
 scale = Vector2(-1.4151518, 0.78945625)
@@ -68,62 +78,6 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_d8mty")
 
 [node name="CooldownProgress" type="ProgressBar" parent="VisualRoot/HeroAbilityCooldownIndicator" unique_id=610945823]
-offset_left = -4.0
-offset_top = -4.0
-offset_right = 4.0
-offset_bottom = 4.0
-theme_override_styles/background = SubResource("StyleBoxFlat_4ebpt")
-theme_override_styles/fill = SubResource("StyleBoxFlat_eh30r")
-max_value = 1.0
-step = 0.001
-value = 1.0
-fill_mode = 3
-show_percentage = false
-
-[node name="HeroAbilityCooldownIndicator2" type="Node2D" parent="VisualRoot" unique_id=788796589]
-visible = false
-z_index = 6
-position = Vector2(0, -62.000004)
-scale = Vector2(1.3370678, 1.3863667)
-
-[node name="Outline" type="Panel" parent="VisualRoot/HeroAbilityCooldownIndicator2" unique_id=372538455]
-visible = false
-offset_left = -5.0
-offset_top = -5.0
-offset_right = 5.0
-offset_bottom = 5.0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_d8mty")
-
-[node name="CooldownProgress" type="ProgressBar" parent="VisualRoot/HeroAbilityCooldownIndicator2" unique_id=1627656841]
-offset_left = -4.0
-offset_top = -4.0
-offset_right = 4.0
-offset_bottom = 4.0
-theme_override_styles/background = SubResource("StyleBoxFlat_4ebpt")
-theme_override_styles/fill = SubResource("StyleBoxFlat_eh30r")
-max_value = 1.0
-step = 0.001
-value = 1.0
-fill_mode = 3
-show_percentage = false
-
-[node name="HeroAbilityCooldownIndicator3" type="Node2D" parent="VisualRoot" unique_id=529883971]
-visible = false
-z_index = 6
-position = Vector2(14.999999, -62.000004)
-scale = Vector2(1.3370678, 1.3863667)
-
-[node name="Outline" type="Panel" parent="VisualRoot/HeroAbilityCooldownIndicator3" unique_id=698572317]
-visible = false
-offset_left = -5.0
-offset_top = -5.0
-offset_right = 5.0
-offset_bottom = 5.0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_d8mty")
-
-[node name="CooldownProgress" type="ProgressBar" parent="VisualRoot/HeroAbilityCooldownIndicator3" unique_id=683194982]
 offset_left = -4.0
 offset_top = -4.0
 offset_right = 4.0

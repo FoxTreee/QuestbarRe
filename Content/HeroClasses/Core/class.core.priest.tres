@@ -1,10 +1,16 @@
 [gd_resource type="Resource" script_class="HeroClassDefinition" format=3 uid="uid://dshs5bil76hq2"]
 
 [ext_resource type="Script" uid="uid://djb803f4i720b" path="res://Scripts/Content/Definitions/HeroClassDefinition.cs" id="1_hg2ve"]
+[ext_resource type="Script" uid="uid://cm3p1sud8p6q4" path="res://Scripts/Content/Definitions/HeroResourceDefinition.cs" id="2_resource"]
+
+[sub_resource type="Resource" id="HeroResourceDefinition_priest"]
+script = ExtResource("2_resource")
+ResourceType = 1
 
 [resource]
 script = ExtResource("1_hg2ve")
 ContentId = "class.core.priest"
 DisplayName = "Priest"
+ResourceDefinition = SubResource("HeroResourceDefinition_priest")
 AbilityContentIds = Array[String](["ability.core.heal"])
 metadata/_custom_type_script = "uid://djb803f4i720b"

@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://bfnc0qm24xd1v"]
+
+[ext_resource type="Script" uid="uid://b0tk32vvod8d4" path="res://Controllers/Actors/HeroResourceBarController.cs" id="1_yghuc"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d6g1g"]
+bg_color = Color(0.03137255, 0.03137255, 0.03137255, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_crbv8"]
+bg_color = Color(0.03137255, 0.03137255, 0.03137255, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="HeroResourceBar" type="Node2D" unique_id=1366571141]
+z_index = 5
+position = Vector2(113, 208)
+script = ExtResource("1_yghuc")
+
+[node name="Outline" type="Panel" parent="." unique_id=1198707551]
+anchors_preset = -1
+offset_left = -19.0
+offset_top = -3.0
+offset_right = 19.0
+offset_bottom = 3.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_d6g1g")
+metadata/_edit_use_anchors_ = true
+
+[node name="ResourceProgress" type="ProgressBar" parent="." unique_id=858826937]
+anchors_preset = -1
+offset_left = -18.0
+offset_top = -2.0
+offset_right = 18.0
+offset_bottom = 2.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_crbv8")
+step = 0.1
+show_percentage = false
+metadata/_edit_use_anchors_ = true

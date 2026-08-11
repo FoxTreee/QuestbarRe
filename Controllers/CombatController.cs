@@ -7,6 +7,12 @@ public partial class CombatController : Node
 	private const float DirectDamageThreatMultiplier = 1.15f;
 	private const float IndirectDamageThreatMultiplier = 1.0f;
 
+	private enum HeroDamageOrigin
+	{
+		BasicAttack,
+		Ability
+	}
+
 	[Signal]
 	public delegate void ParticipantsChangedEventHandler(
 		int heroCount,
@@ -293,6 +299,26 @@ public partial class CombatController : Node
 			return false;
 		}
 
+		if (!hero.CanAffordAbility(ability))
+		{
+			result =
+				$"{hero.Name} needs {ability.ResourceCost:0.##} " +
+				$"{hero.Resource.ResourceType} to use " +
+				$"{ability.DisplayName}.";
+
+			return false;
+		}
+
+		if (!hero.HasRequiredComboPoints(ability))
+		{
+			result =
+				$"{hero.Name} needs {ability.ComboPointCost} combo point(s) " +
+				$"to use {ability.DisplayName}. Current=" +
+				$"{hero.ComboPoints.CurrentPoints}.";
+
+			return false;
+		}
+
 		if (ability.EffectType != AbilityEffectType.DirectHealing
 			&& !IsCombatActive)
 		{
@@ -303,33 +329,85 @@ public partial class CombatController : Node
 			return false;
 		}
 
+		if (ability.EffectType != AbilityEffectType.AreaTaunt
+			&& ability.EffectType != AbilityEffectType.DirectHealing
+			&& ability.EffectType != AbilityEffectType.DirectDamage)
+		{
+			return FailUnsupportedHeroAbility(
+				ability,
+				out result);
+		}
+
+		Node2D? target = ability.EffectType switch
+		{
+			AbilityEffectType.AreaTaunt =>
+				ResolveAbilityTarget(hero, ability),
+
+			AbilityEffectType.DirectHealing =>
+				ResolveAutomaticHealingTarget(hero, ability),
+
+			AbilityEffectType.DirectDamage =>
+				ResolveAbilityTarget(hero, ability),
+
+			_ => null
+		};
+
+		if (target is null)
+		{
+			result = ability.EffectType
+				== AbilityEffectType.DirectHealing
+					? $"No living party member is below " +
+						$"{ability.AutoCastHealthThresholdPercent:0.#}% health."
+					: $"{ability.DisplayName} could not resolve a valid target.";
+
+			return false;
+		}
+
+		// Debug/manual use skips the normal cast animation, but it still uses
+		// the exact same authoritative commit operation as automatic abilities.
+		if (!hero.TryCommitAbility(ability))
+		{
+			result =
+				$"{hero.Name} could not commit {ability.DisplayName}. " +
+				"Resource and cooldown were left unchanged.";
+
+			return false;
+		}
+
 		bool abilityApplied = ability.EffectType switch
 		{
 			AbilityEffectType.AreaTaunt =>
 				TryApplyAreaTaunt(
 					hero,
+					target,
 					ability,
 					out result),
 
-			AbilityEffectType.DirectHealing =>
-				TryApplyAutomaticDirectHealing(
+			AbilityEffectType.DirectHealing
+				when target is HeroActorController healingTarget =>
+				TryApplyDirectHealing(
 					hero,
+					healingTarget,
 					ability,
 					out result),
 
-			_ => FailUnsupportedHeroAbility(
-				ability,
-				out result)
+			AbilityEffectType.DirectDamage
+				when target is MonsterActorController damageTarget =>
+				TryApplyDirectDamageAbility(
+					hero,
+					damageTarget,
+					ability,
+					out result),
+
+			_ => false
 		};
 
 		if (!abilityApplied)
-			return false;
-
-		if (!hero.TryStartAbilityCooldown(ability))
 		{
-			result =
-				$"{hero.Name}'s {ability.DisplayName} could not " +
-				"start its cooldown.";
+			result = string.IsNullOrWhiteSpace(result)
+				? $"{hero.Name}'s {ability.DisplayName} committed but " +
+					"did not apply an effect."
+				: result;
 
 			return false;
 		}
@@ -345,31 +423,77 @@ public partial class CombatController : Node
 	}
 
 	/// <summary>
-	/// Attempts to apply automatic direct healing without throwing when the operation cannot be completed.
-	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
+	/// Applies one committed direct-damage hero ability. Ability damage uses
+	/// authored calculation data and never awards a basic-attack combo point.
 	/// </summary>
-	private bool TryApplyAutomaticDirectHealing(
+	private bool TryApplyDirectDamageAbility(
 		HeroActorController caster,
+		MonsterActorController target,
 		AbilityDefinition ability,
 		out string result)
 	{
-		HeroActorController? target =
-			FindLowestHealthAllyBelowThreshold(ability);
+		result = string.Empty;
 
-		if (target is null)
+		if (!GodotObject.IsInstanceValid(ability))
 		{
-			result =
-				$"No living party member is below " +
-				$"{ability.AutoCastHealthThresholdPercent:0.#}% health.";
-
+			result = "The direct-damage ability is invalid.";
 			return false;
 		}
 
-		return TryApplyDirectHealing(
+		if (!GodotObject.IsInstanceValid(caster)
+			|| !Targeting.IsValidMonsterTarget(target))
+		{
+			result = $"{ability.DisplayName} has no valid living monster target.";
+			return false;
+		}
+
+		float requestedDamage = CalculateHeroAbilityDamage(
+			caster,
+			ability);
+
+		if (!float.IsFinite(requestedDamage)
+			|| requestedDamage <= 0.0f)
+		{
+			result =
+				$"{ability.DisplayName} resolved invalid damage " +
+				$"({requestedDamage:0.##}).";
+			return false;
+		}
+
+		DamageResult damage = ApplyHeroDamage(
 			caster,
 			target,
-			ability,
-			out result);
+			requestedDamage,
+			HeroDamageOrigin.Ability);
+
+		DebugLog.Print(
+			$"{caster.Name} used '{ability.DisplayName}' on {target.Name}. " +
+			$"RequestedDamage={requestedDamage:0.##}; " +
+			$"AppliedDamage={damage.AppliedDamage:0.##}.",
+			DebugLogCategory.Ability);
+
+		result =
+			$"{caster.Name} used {ability.DisplayName} on {target.Name} " +
+			$"for {damage.AppliedDamage:0.##} damage.";
+
+		return true;
+	}
+
+	private static float CalculateHeroAbilityDamage(
+		HeroActorController caster,
+		AbilityDefinition ability)
+	{
+		return ability.DamageCalculationMode switch
+		{
+			AbilityDamageCalculationMode.Fixed =>
+				Mathf.Max(ability.BaseDamage, 0.0f),
+
+			AbilityDamageCalculationMode.BasicAttackMultiplier =>
+				Mathf.Max(caster.CombatProfile.AttackDamage, 0.0f)
+				* Mathf.Max(ability.BasicAttackDamageMultiplier, 0.0f),
+
+			_ => 0.0f
+		};
 	}
 
 	/// <summary>
@@ -415,12 +539,24 @@ public partial class CombatController : Node
 	/// </summary>
 	private bool TryApplyAreaTaunt(
 		HeroActorController caster,
+		Node2D areaAnchor,
 		AbilityDefinition ability,
 		out string result)
 	{
+		if (ability.TargetMode != AbilityTargetMode.AreaOfEffect
+			|| ability.AreaTargetGroup != AbilityTargetGroup.Enemies
+			|| (ability.AreaOrigin == AbilityAreaOrigin.Self
+				&& areaAnchor != caster))
+		{
+			result =
+				$"{ability.DisplayName} has invalid AOE targeting data.";
+
+			return false;
+		}
+
 		float radiusSquared =
-			ability.EffectRadius
-			* ability.EffectRadius;
+			ability.AreaRadius
+			* ability.AreaRadius;
 
 		int affectedCount = 0;
 
@@ -435,7 +571,7 @@ public partial class CombatController : Node
 			}
 
 			float distanceSquared =
-				caster.GlobalPosition.DistanceSquaredTo(
+				areaAnchor.GlobalPosition.DistanceSquaredTo(
 					monster.GlobalPosition);
 
 			if (distanceSquared > radiusSquared)
@@ -466,13 +602,13 @@ public partial class CombatController : Node
 		DebugLog.Print(
 			$"{caster.Name} used '{ability.DisplayName}'. " +
 			$"Affected monsters={affectedCount}; " +
-			$"Radius={ability.EffectRadius:0.##}; " +
+			$"Radius={ability.AreaRadius:0.##}; " +
 			$"Duration={ability.EffectDurationSeconds:0.##}s.");
 
 		result =
 			$"{caster.Name} used {ability.DisplayName}. " +
 			$"Taunted {affectedCount} monster(s) within " +
-			$"{ability.EffectRadius:0.##} units for " +
+			$"{ability.AreaRadius:0.##} units for " +
 			$"{ability.EffectDurationSeconds:0.##} seconds.";
 
 		return true;
@@ -507,6 +643,8 @@ public partial class CombatController : Node
 		{
 			if (!GodotObject.IsInstanceValid(hero))
 				continue;
+
+			hero.SetAutomaticAbilityPriorityResolver(null);
 
 			hero.AttackReleased -=
 				OnHeroAttackReleased;
@@ -617,6 +755,9 @@ public partial class CombatController : Node
 
 			_heroParticipants.Add(hero);
 
+			hero.SetAutomaticAbilityPriorityResolver(
+				TryBeginPriorityAutomaticHeroAbility);
+
 			hero.AttackReleased += OnHeroAttackReleased;
 
 			hero.AbilityReleased += OnHeroAbilityReleased;
@@ -723,7 +864,7 @@ public partial class CombatController : Node
 	/// </summary>
 	private void OnHeroAbilityReleased(
 		HeroActorController caster,
-		HeroActorController target,
+		Node2D target,
 		AbilityDefinition ability)
 	{
 		if (!GodotObject.IsInstanceValid(caster)
@@ -738,13 +879,23 @@ public partial class CombatController : Node
 			AbilityEffectType.AreaTaunt =>
 				TryApplyAreaTaunt(
 					caster,
+					target,
 					ability,
 					out _),
 
-			AbilityEffectType.DirectHealing =>
+			AbilityEffectType.DirectHealing
+				when target is HeroActorController healingTarget =>
 				TryApplyDirectHealing(
 					caster,
-					target,
+					healingTarget,
+					ability,
+					out _),
+
+			AbilityEffectType.DirectDamage
+				when target is MonsterActorController damageTarget =>
+				TryApplyDirectDamageAbility(
+					caster,
+					damageTarget,
 					ability,
 					out _),
 
@@ -764,8 +915,8 @@ public partial class CombatController : Node
 	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
 	/// </summary>
 	private void ConfirmHeroImpact(
-	HeroActorController attacker,
-	MonsterActorController target)
+		HeroActorController attacker,
+		MonsterActorController target)
 	{
 		if (!GodotObject.IsInstanceValid(attacker)
 			|| !GodotObject.IsInstanceValid(target))
@@ -777,12 +928,42 @@ public partial class CombatController : Node
 			$"Hero impact confirmed: " +
 			$"{attacker.Name} → {target.Name}");
 
+		ApplyHeroDamage(
+			attacker,
+			target,
+			attacker.CombatProfile.AttackDamage,
+			HeroDamageOrigin.BasicAttack);
+	}
+
+	/// <summary>
+	/// Resolves hero damage through one shared path while preserving its origin.
+	/// Only confirmed basic attacks are allowed to generate rogue combo points;
+	/// direct-damage abilities use the same damage/threat/death flow without
+	/// masquerading as basic attacks.
+	/// </summary>
+	private DamageResult ApplyHeroDamage(
+		HeroActorController attacker,
+		MonsterActorController target,
+		float requestedDamage,
+		HeroDamageOrigin origin)
+	{
 		DamageResult result = DamageResolver.Resolve(
 			new DamageRequest(
 				attacker,
 				target,
-				attacker.CombatProfile.AttackDamage),
+				requestedDamage),
 			target.Health);
+
+		if (origin == HeroDamageOrigin.BasicAttack
+			&& attacker.TryAddComboPointFromDamage(
+				result.AppliedDamage))
+		{
+			DebugLog.Print(
+				$"{attacker.Name} gained a combo point. " +
+				$"Combo={attacker.ComboPoints.CurrentPoints}/" +
+				$"{HeroComboPointState.MaximumPoints}.",
+				DebugLogCategory.Ability);
+		}
 
 		BroadcastHeroDamageThreat(
 			attacker,
@@ -790,13 +971,13 @@ public partial class CombatController : Node
 			result.AppliedDamage);
 
 		RaiseCombatEvent(
-	new CombatEvent
-	{
-		Type = CombatEventType.DamageApplied,
-		Attacker = attacker,
-		Target = target,
-		Damage = result
-	});
+			new CombatEvent
+			{
+				Type = CombatEventType.DamageApplied,
+				Attacker = attacker,
+				Target = target,
+				Damage = result
+			});
 
 		PrintDamageResult(
 			attacker.Name,
@@ -816,6 +997,8 @@ public partial class CombatController : Node
 					Damage = result
 				});
 		}
+
+		return result;
 	}
 
 	/// <summary>
@@ -931,7 +1114,8 @@ public partial class CombatController : Node
 					!= AbilityTargetMode.CurrentTarget
 				|| !attacker.IsAbilityReady(
 					ability.ContentId)
-				|| !attacker.TryStartAbilityCooldown(ability))
+				|| !attacker.CanAffordAbility(ability)
+				|| !attacker.TryCommitAbility(ability))
 			{
 				continue;
 			}
@@ -1455,66 +1639,115 @@ public partial class CombatController : Node
 		foreach (HeroActorController hero
 			in _heroParticipants)
 		{
-			if (!GodotObject.IsInstanceValid(hero)
-				|| hero.IsIncapacitated
-				|| !hero.Health.IsAlive
-				|| hero.IsUsingAbility)
+			TryBeginAutomaticHeroAbility(
+				hero,
+				delta);
+		}
+	}
+
+	/// <summary>
+	/// Gives automatic abilities one final priority check at the exact moment a
+	/// hero would otherwise begin a new basic attack. Passing zero delta avoids
+	/// advancing time-based triggers twice in the same frame; those timers are
+	/// advanced by UpdateAutomaticHeroAbilities.
+	/// </summary>
+	private bool TryBeginPriorityAutomaticHeroAbility(
+		HeroActorController hero)
+	{
+		return TryBeginAutomaticHeroAbility(
+			hero,
+			0.0);
+	}
+
+	/// <summary>
+	/// Resolves and begins the first automatic ability whose normal readiness,
+	/// targeting, and effect-specific use rules are all satisfied. Ability list
+	/// order remains the tie-breaker between multiple simultaneously valid
+	/// abilities. A basic attack already in progress is never interrupted;
+	/// HeroActorController rejects that transition and the ability is retried
+	/// before the next basic attack can begin.
+	/// </summary>
+	private bool TryBeginAutomaticHeroAbility(
+		HeroActorController hero,
+		double delta)
+	{
+		if (!GodotObject.IsInstanceValid(hero)
+			|| hero.IsIncapacitated
+			|| !hero.Health.IsAlive
+			|| hero.IsUsingAbility)
+		{
+			return false;
+		}
+
+		foreach (AbilityDefinition ability
+			in hero.Abilities)
+		{
+			if (!GodotObject.IsInstanceValid(ability))
+				continue;
+
+			bool abilityReady =
+				hero.IsAbilityReady(ability.ContentId)
+				&& hero.CanAffordAbility(ability)
+				&& hero.HasRequiredComboPoints(ability);
+
+			Node2D? abilityTarget = null;
+
+			switch (ability.EffectType)
+			{
+				case AbilityEffectType.DirectHealing
+					when abilityReady:
+					abilityTarget =
+						ResolveAutomaticHealingTarget(
+							hero,
+							ability);
+					break;
+
+				case AbilityEffectType.DirectDamage
+					when abilityReady:
+					abilityTarget =
+						ResolveAbilityTarget(
+							hero,
+							ability);
+					break;
+
+				case AbilityEffectType.AreaTaunt:
+					bool shouldTaunt =
+						ShouldUseAutomaticTaunt(
+							hero,
+							ability,
+							delta);
+
+					if (abilityReady && shouldTaunt)
+					{
+						abilityTarget =
+							ResolveAbilityTarget(
+								hero,
+								ability);
+					}
+
+					break;
+			}
+
+			if (abilityTarget is null)
+				continue;
+
+			if (!hero.TryBeginAbility(
+				ability,
+				abilityTarget))
 			{
 				continue;
 			}
 
-			foreach (AbilityDefinition ability
-				in hero.Abilities)
+			if (ability.EffectType
+				== AbilityEffectType.AreaTaunt)
 			{
-				if (!GodotObject.IsInstanceValid(ability))
-				{
-					continue;
-				}
-
-				bool abilityReady =
-					hero.IsAbilityReady(ability.ContentId);
-
-				HeroActorController? abilityTarget = null;
-
-				switch (ability.EffectType)
-				{
-					case AbilityEffectType.DirectHealing
-						when abilityReady:
-						abilityTarget =
-							FindLowestHealthAllyBelowThreshold(
-								ability);
-						break;
-
-					case AbilityEffectType.AreaTaunt:
-						bool shouldTaunt =
-							ShouldUseAutomaticTaunt(
-								hero,
-								ability,
-								delta);
-
-						if (abilityReady && shouldTaunt)
-							abilityTarget = hero;
-
-						break;
-				}
-
-				if (abilityTarget is null)
-					continue;
-
-				if (hero.TryBeginAbility(
-					ability,
-					abilityTarget))
-				{
-					if (ability.EffectType
-						== AbilityEffectType.AreaTaunt)
-					{
-						ConsumeAutomaticTauntTrigger(hero);
-					}
-
-					break;
-				}
+				ConsumeAutomaticTauntTrigger(hero);
 			}
+
+			return true;
 		}
+
+		return false;
 	}
 
 	/// <summary>
@@ -1635,7 +1868,9 @@ public partial class CombatController : Node
 		{
 			if (GodotObject.IsInstanceValid(ability)
 				&& ability.EffectType
-					== AbilityEffectType.AreaTaunt)
+					== AbilityEffectType.AreaTaunt
+				&& ability.TargetMode
+					== AbilityTargetMode.AreaOfEffect)
 			{
 				return true;
 			}
@@ -1667,47 +1902,192 @@ public partial class CombatController : Node
 	}
 
 	/// <summary>
-	/// Performs the find lowest health ally below threshold operation for Active Damage Over Time Effect.
-	/// Uses the supplied arguments and current state and returns the resulting hero actor controller to the caller.
+	/// Resolves the target for an automatically used healing ability. The
+	/// ability says what kind of target it wants; TargetingService decides
+	/// which eligible ally wins when selection is required.
 	/// </summary>
-	private HeroActorController?
-		FindLowestHealthAllyBelowThreshold(
-			AbilityDefinition ability)
+	private HeroActorController? ResolveAutomaticHealingTarget(
+		HeroActorController caster,
+		AbilityDefinition ability)
 	{
-		float threshold = Mathf.Clamp(
-			ability.AutoCastHealthThresholdPercent
-				/ 100.0f,
-			0.0f,
-			1.0f);
+		if (ability.TargetMode == AbilityTargetMode.Self)
+		{
+			return IsBelowAutomaticHealthThreshold(
+				caster,
+				ability)
+				? ResolveAbilityTarget(caster, ability)
+					as HeroActorController
+				: null;
+		}
 
-		HeroActorController? lowestHealthAlly = null;
-		float lowestHealthPercent = float.MaxValue;
+		if (ability.TargetMode != AbilityTargetMode.Ally)
+			return null;
+
+		List<HeroActorController> eligibleAllies = new();
 
 		foreach (HeroActorController candidate
 			in Party.SpawnedHeroes)
 		{
-			if (!GodotObject.IsInstanceValid(candidate)
-				|| candidate.IsIncapacitated
-				|| !candidate.Health.IsAlive)
+			if (!TargetingService.IsValidHeroTarget(candidate)
+				|| !IsBelowAutomaticHealthThreshold(
+					candidate,
+					ability))
 			{
 				continue;
 			}
 
-			float healthPercent =
-				candidate.Health.CurrentHealth
-				/ candidate.Health.MaximumHealth;
-
-			if (healthPercent >= threshold
-				|| healthPercent >= lowestHealthPercent)
-			{
-				continue;
-			}
-
-			lowestHealthAlly = candidate;
-			lowestHealthPercent = healthPercent;
+			eligibleAllies.Add(candidate);
 		}
 
-		return lowestHealthAlly;
+		return ResolveAbilityTarget(
+			caster,
+			ability,
+			eligibleAllies)
+			as HeroActorController;
+	}
+
+	/// <summary>
+	/// Resolves the authored target independently from the ability effect. This
+	/// is the shared path for self, ally, monster, current-target, and AOE
+	/// abilities. Callers may provide a pre-filtered candidate set when AI
+	/// rules such as a healing threshold define eligibility.
+	/// </summary>
+	private Node2D? ResolveAbilityTarget(
+		HeroActorController caster,
+		AbilityDefinition ability,
+		IReadOnlyList<HeroActorController>? allyCandidates = null,
+		IReadOnlyList<MonsterActorController>? monsterCandidates = null)
+	{
+		allyCandidates ??= Party.SpawnedHeroes;
+		monsterCandidates ??= _monsterParticipants;
+
+		return ability.TargetMode switch
+		{
+			AbilityTargetMode.CurrentTarget =>
+				Targeting.IsValidMonsterTarget(caster.CurrentTarget)
+				&& caster.IsWithinAbilityRange(
+					ability,
+					caster.CurrentTarget!)
+					? caster.CurrentTarget
+					: null,
+
+			AbilityTargetMode.Self => caster,
+
+			AbilityTargetMode.Ally =>
+				SelectAbilityAllyTargetInRange(
+					caster,
+					ability,
+					allyCandidates),
+
+			AbilityTargetMode.Monster =>
+				SelectAbilityMonsterTargetInRange(
+					caster,
+					ability,
+					monsterCandidates),
+
+			AbilityTargetMode.AreaOfEffect =>
+				ResolveAreaAnchor(
+					caster,
+					ability,
+					allyCandidates,
+					monsterCandidates),
+
+			_ => null
+		};
+	}
+
+	private Node2D? ResolveAreaAnchor(
+		HeroActorController caster,
+		AbilityDefinition ability,
+		IReadOnlyList<HeroActorController> allyCandidates,
+		IReadOnlyList<MonsterActorController> monsterCandidates)
+	{
+		if (ability.AreaOrigin == AbilityAreaOrigin.Self)
+			return caster;
+
+		return ability.AreaTargetGroup switch
+		{
+			AbilityTargetGroup.Allies =>
+				SelectAbilityAllyTargetInRange(
+					caster,
+					ability,
+					allyCandidates),
+
+			AbilityTargetGroup.Enemies =>
+				SelectAbilityMonsterTargetInRange(
+					caster,
+					ability,
+					monsterCandidates),
+
+			_ => null
+		};
+	}
+
+	private HeroActorController? SelectAbilityAllyTargetInRange(
+		HeroActorController caster,
+		AbilityDefinition ability,
+		IReadOnlyList<HeroActorController> candidates)
+	{
+		List<HeroActorController> inRange = new();
+
+		foreach (HeroActorController hero in candidates)
+		{
+			if (TargetingService.IsValidHeroTarget(hero)
+				&& caster.IsWithinAbilityRange(ability, hero))
+			{
+				inRange.Add(hero);
+			}
+		}
+
+		return Targeting.SelectAbilityAllyTarget(
+			caster,
+			inRange,
+			ability.TargetSelectionStyle);
+	}
+
+	private MonsterActorController? SelectAbilityMonsterTargetInRange(
+		HeroActorController caster,
+		AbilityDefinition ability,
+		IReadOnlyList<MonsterActorController> candidates)
+	{
+		List<MonsterActorController> inRange = new();
+
+		foreach (MonsterActorController monster in candidates)
+		{
+			if (Targeting.IsValidMonsterTarget(monster)
+				&& caster.IsWithinAbilityRange(ability, monster))
+			{
+				inRange.Add(monster);
+			}
+		}
+
+		return Targeting.SelectAbilityMonsterTarget(
+			caster,
+			inRange,
+			ability.TargetSelectionStyle);
+	}
+
+
+	private static bool IsBelowAutomaticHealthThreshold(
+		HeroActorController hero,
+		AbilityDefinition ability)
+	{
+		if (!TargetingService.IsValidHeroTarget(hero)
+			|| hero.Health.MaximumHealth <= 0.0f)
+		{
+			return false;
+		}
+
+		float threshold = Mathf.Clamp(
+			ability.AutoCastHealthThresholdPercent / 100.0f,
+			0.0f,
+			1.0f);
+
+		float healthPercent =
+			hero.Health.CurrentHealth
+			/ hero.Health.MaximumHealth;
+
+		return healthPercent < threshold;
 	}
 
 	/// <summary>
@@ -1719,7 +2099,7 @@ public partial class CombatController : Node
 		AbilityDefinition ability)
 	{
 		float radius = Mathf.Max(
-			ability.EffectRadius,
+			ability.AreaRadius,
 			0.0f);
 
 		float radiusSquared = radius * radius;
@@ -2051,6 +2431,8 @@ public partial class CombatController : Node
 
 		if (!wasRemoved)
 			return;
+
+		hero.SetAutomaticAbilityPriorityResolver(null);
 
 		hero.AttackReleased -= OnHeroAttackReleased;
 

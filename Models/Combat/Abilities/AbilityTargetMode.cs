@@ -2,5 +2,7 @@ public enum AbilityTargetMode
 {
     CurrentTarget = 0,
     Self = 1,
-    LowestHealthAlly = 2
+    Ally = 2,
+    Monster = 3,
+    AreaOfEffect = 4
 }

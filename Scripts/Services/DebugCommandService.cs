@@ -15,6 +15,7 @@ public partial class DebugCommandService : Node
 		".reviveAll",
 		".kill <hero_id>",
 		".kill partySlot <1-5>",
+		".testResource <hero_id> <mana|energy|rage|none> [spend]",
 		".useAbility <hero_id> <ability_id>",
 		".spawnMonster <monster_id> [count]",
 		".addMonsters <count>",
@@ -595,6 +596,12 @@ public partial class DebugCommandService : Node
 
 				".kill" when argumentIndex == 0 =>
 					GetCurrentHeroSelectors(),
+
+				".testresource" when argumentIndex == 0 =>
+					GetCurrentHeroSelectors(),
+
+				".testresource" when argumentIndex == 1 =>
+					new[] { "mana", "energy", "rage", "none" },
 
 				".kill" when argumentIndex == 1
 					&& completedTokens.Length > 1
@@ -1217,6 +1224,15 @@ public partial class DebugCommandService : Node
 			"      .kill partySlot 1\n" +
 			"      .kill partySlot(1)\n\n" +
 
+			".testResource <hero_id> <mana|energy|rage|none> [spend]\n" +
+			"    Temporarily assign a 100-point resource without changing class data.\n" +
+			"    The optional spend amount defaults to 50; the pool regenerates 10 every 2s.\n" +
+			"    Use none to remove the test override and hide the bar again.\n" +
+			"    Examples:\n" +
+			"      .testResource PartySlot1Hero energy\n" +
+			"      .testResource PartySlot2Hero mana 75\n" +
+			"      .testResource PartySlot1Hero none\n\n" +
+
 			".useAbility <hero_id> <ability_id>\n" +
 			"    Execute one equipped hero ability through normal cooldown enforcement.\n" +
 			"    Use .status to inspect whether the ability is ready or cooling down.\n" +
@@ -1484,6 +1500,9 @@ public partial class DebugCommandService : Node
 			".kill" =>
 				ExecuteKillHero(parts),
 
+			".testresource" =>
+				ExecuteTestResource(parts),
+
 			".useability" =>
 				ExecuteUseAbility(parts),
 
@@ -1515,8 +1534,100 @@ public partial class DebugCommandService : Node
 	}
 
 	/// <summary>
-	/// Performs the execute use ability operation for assigned.
-	/// Uses the supplied arguments and current state and returns the resulting string to the caller.
+	/// Assigns a temporary resource to one hero and immediately spends part of
+	/// it so the bar color, fill, and timed regeneration can be verified.
+	/// </summary>
+	private string ExecuteTestResource(string[] parts)
+	{
+		if (parts.Length < 3 || parts.Length > 4)
+		{
+			return
+				"Usage: .testResource <hero_id> " +
+				"<mana|energy|rage|none> [spend]\n" +
+				"Example: .testResource PartySlot1Hero energy 50";
+		}
+
+		if (!System.Enum.TryParse(
+			parts[2],
+			true,
+			out HeroResourceType resourceType)
+			|| !System.Enum.IsDefined(
+				typeof(HeroResourceType),
+				resourceType))
+		{
+			return "Resource type must be mana, energy, rage, or none.";
+		}
+
+		float spendAmount = 50.0f;
+
+		if (parts.Length == 4
+			&& (!float.TryParse(
+				parts[3],
+				NumberStyles.Float,
+				CultureInfo.InvariantCulture,
+				out spendAmount)
+				|| spendAmount < 0.0f
+				|| spendAmount > 100.0f))
+		{
+			return "Spend amount must be a number from 0 to 100.";
+		}
+
+		string requestedHeroId = parts[1];
+		List<HeroActorController> matches = new();
+
+		foreach (HeroActorController hero in Party.SpawnedHeroes)
+		{
+			if (!GodotObject.IsInstanceValid(hero))
+				continue;
+
+			if (hero.Name.ToString().Equals(
+					requestedHeroId,
+					StringComparison.OrdinalIgnoreCase)
+				|| GetHeroContentId(hero).Equals(
+					requestedHeroId,
+					StringComparison.OrdinalIgnoreCase))
+			{
+				matches.Add(hero);
+			}
+		}
+
+		if (matches.Count == 0)
+		{
+			return
+				$"Unknown hero ID '{requestedHeroId}'.\n" +
+				BuildAvailableHeroIdsText();
+		}
+
+		if (matches.Count > 1)
+		{
+			return
+				$"Hero ID '{requestedHeroId}' matches multiple " +
+				"party members. Use a runtime PartySlotNHero name.";
+		}
+
+		HeroActorController selectedHero = matches[0];
+		selectedHero.DebugConfigureResource(resourceType);
+
+		if (resourceType == HeroResourceType.None)
+		{
+			return
+				$"Removed the temporary resource from " +
+				$"{selectedHero.Name}.";
+		}
+
+		selectedHero.DebugTrySpendResource(spendAmount);
+
+		return
+			$"{selectedHero.Name} now has a temporary " +
+			$"{resourceType} pool. Current=" +
+			$"{selectedHero.Resource.CurrentAmount:0.##}/" +
+			$"{selectedHero.Resource.MaximumAmount:0.##}; " +
+			"regeneration=10 every 2 seconds.";
+	}
+
+	/// <summary>
+	/// Executes one equipped hero ability through the normal targeting and
+	/// cooldown path, returning a readable result to the debug console.
 	/// </summary>
 	private string ExecuteUseAbility(string[] parts)
 	{

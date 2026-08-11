@@ -49,6 +49,7 @@
 [ext_resource type="Script" uid="uid://yaghcenkkidu" path="res://Scripts/Services/CombatDamageResolver.cs" id="30_4yxf6"]
 [ext_resource type="Resource" uid="uid://c3kbgs46muogb" path="res://Content/Abilities/Core/ability.core.heal.tres" id="30_5psol"]
 [ext_resource type="Resource" path="res://Content/Abilities/Core/ability.core.serpent_shot.tres" id="31_m4llh"]
+[ext_resource type="Resource" uid="uid://i0takopxv3o2" path="res://Content/Abilities/Core/ability.core.sinister_strike.tres" id="36_js5gh"]
 [ext_resource type="Script" uid="uid://bgv0cmtivgfi7" path="res://Controllers/PartyController.cs" id="40_6ehlx"]
 [ext_resource type="Script" uid="uid://dwnavkiixraok" path="res://Scripts/Services/RewardLedgerService.cs" id="40_ep8v8"]
 [ext_resource type="Script" uid="uid://dphwrvuij0an5" path="res://Controllers/RegionRunController.cs" id="51_7sj7i"]
@@ -351,7 +352,7 @@ Registry = NodePath("../MonsterContentRegistry")
 
 [node name="AbilityContentRegistry" type="Node" parent="Services" unique_id=801032179]
 script = ExtResource("25_vvnwx")
-Definitions = Array[ExtResource("26_btbly")]([ExtResource("27_vs04g"), ExtResource("29_d8m2u"), ExtResource("30_5psol"), ExtResource("31_m4llh")])
+Definitions = Array[ExtResource("26_btbly")]([ExtResource("27_vs04g"), ExtResource("29_d8m2u"), ExtResource("30_5psol"), ExtResource("31_m4llh"), ExtResource("36_js5gh")])
 
 [node name="EncounterPoolContentRegistry" type="Node" parent="Services" unique_id=297296029 node_paths=PackedStringArray("EncounterRegistry")]
 script = ExtResource("21_u7mjy")
@@ -372,8 +373,6 @@ script = ExtResource("40_ep8v8")
 
 [node name="DesktopWindowHostController" type="Node" parent="Controllers" unique_id=1521543708]
 script = ExtResource("1_r150o")
-
-[node name="HeroScalePresentationController" type="Node" parent="Controllers" unique_id=1746513910]
 
 [node name="WindowSettingsPanelController" type="Node" parent="Controllers" unique_id=334099255 node_paths=PackedStringArray("WidthSlider", "WidthValue", "CollapsedHeightSlider", "CollapsedHeightValue", "ExpandedHeightSlider", "ExpandedHeightValue", "HorizontalAdjustmentSlider", "HorizontalAdjustmentValue")]
 script = ExtResource("3_kln2b")
@@ -415,8 +414,6 @@ ProjectileScene = ExtResource("14_1p5hy")
 [node name="CombatDamageResolver" type="Node" parent="Controllers" unique_id=1803014460]
 script = ExtResource("30_4yxf6")
 
-[node name="WorldScaleController" type="Node" parent="Controllers" unique_id=190385101]
-
 [node name="PresentationFrameController" type="Node" parent="Controllers" unique_id=1525423310 node_paths=PackedStringArray("PresentationFrame", "RegionViewport", "Ground", "WindowHost")]
 script = ExtResource("23_jyqft")
 PresentationFrame = NodePath("../../RegionViewportContainer")
@@ -424,7 +421,7 @@ RegionViewport = NodePath("../../RegionViewportContainer/RegionViewport")
 Ground = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer/GroundPlaceholder")
 WindowHost = NodePath("../DesktopWindowHostController")
 
-[node name="ActoreScalePresentationController" type="Node" parent="Controllers" unique_id=234683437 node_paths=PackedStringArray("ActorLayer", "WindowHost")]
+[node name="ActorScalePresentationController" type="Node" parent="Controllers" unique_id=234683437 node_paths=PackedStringArray("ActorLayer", "WindowHost")]
 script = ExtResource("23_3tgeq")
 ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer")
 WindowHost = NodePath("../DesktopWindowHostController")

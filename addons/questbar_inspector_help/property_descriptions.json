@@ -46,6 +46,8 @@
     "BodyBounds": "Controls body bounds. For example, selecting a different value changes which body bounds behavior or content the owning system uses.",
     "ProjectileOrigin": "Inspector reference used by this component for its projectile origin dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
     "AbilityCooldownIndicator": "Inspector reference used by this component for its ability cooldown indicator dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "ResourceBar": "Reusable hero resource display beneath the health bar. Assign VisualRoot/HeroResourceBar; it hides for None and automatically shows Mana in blue, Energy in yellow, or Rage in red.",
+    "ComboPointDisplay": "Five-square rogue combo display beneath the resource bar. Assign VisualRoot/HeroComboPointDisplay; it stays hidden for non-rogues and fills one square for each confirmed damaging basic attack.",
     "BobHeight": "Controls bob height, measured as pixels. For example, changing 4 to 8 doubles the configured bob height.",
     "BobSpeed": "Controls bob speed, measured as pixels per second. For example, changing 7 to 14 makes the affected movement or animation run about twice as fast.",
     "BobPhaseOffset": "Controls bob phase offset, measured as pixels. For example, changing 0 to 1 doubles this setting's configured contribution to the system.",
@@ -106,14 +108,6 @@
     "PauseButton": "Inspector reference used by this component for its pause button dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
     "AutoScrollButton": "Inspector reference used by this component for its auto scroll button dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
     "ClearButton": "Inspector reference used by this component for its clear button dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
-  },
-  "res://Controllers/Debug/HeroFactorySpawnProbe.cs": {
-    "HeroContentId": "Stable content identifier for hero; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered hero.",
-    "Factory": "Controls factory. For example, selecting a different value changes which factory behavior or content the owning system uses.",
-    "ActorLayer": "Inspector reference used by this component for its actor layer dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
-    "FormationAnchor": "Inspector reference used by this component for its formation anchor dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
-    "JourneyState": "Inspector reference used by this component for its journey state dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
-    "Targeting": "Inspector reference used by this component for its targeting dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
   },
   "res://Controllers/DesktopWindowHostController.cs": {
     "PlacementSettings": "Controls placement settings. For example, selecting a different value changes which placement settings behavior or content the owning system uses.",
@@ -206,17 +200,25 @@
     "Description": "Controls description. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
     "CooldownSeconds": "Controls cooldown seconds, measured as seconds. For example, changing 6 to 12 makes the affected action wait twice as long between uses.",
     "CastTimeSeconds": "Controls cast time seconds, measured as seconds. For example, changing 1 to 2 doubles this setting's configured contribution to the system.",
-    "TargetMode": "Controls target mode. For example, selecting a different value changes which target mode behavior or content the owning system uses.",
-    "Range": "Controls range, measured as pixels. For example, changing 45 to 90 doubles the configured range.",
+    "ResourceCost": "Resource consumed each time the ability successfully begins or is directly activated. The caster must be able to pay the full amount. For example, changing Taunt from 25 to 40 Rage allows fewer uses before the Warrior must regenerate.",
+    "TargetMode": "Defines the ability target shape. CurrentTarget uses the caster's locked target; Self uses only the caster; Ally and Monster choose one candidate; AreaOfEffect affects a radius around an authored area origin.",
+    "Range": "Maximum distance to a selected target or target-centered AOE anchor in logical gameplay pixels when RangeMode is Fixed. A value of 0 means unlimited. Ignored when RangeMode is BasicAttackRange.",
     "EffectType": "Controls effect type. For example, selecting a different value changes which effect type behavior or content the owning system uses.",
     "BaseDamage": "Controls base damage, measured as damage points. For example, changing 0 to 1 doubles the configured base damage.",
     "BaseHealing": "Controls base healing. For example, changing 0 to 1 doubles this setting's configured contribution to the system.",
-    "EffectRadius": "Controls effect radius, measured as pixels. For example, changing 0 to 1 doubles the configured effect radius.",
     "EffectDurationSeconds": "Controls effect duration seconds, measured as seconds. For example, changing 0 to 1 doubles this setting's configured contribution to the system.",
     "EffectTickIntervalSeconds": "Controls effect tick interval seconds, measured as seconds. For example, changing 1 to 2 makes the affected action wait twice as long between uses.",
     "AutoCastDelaySeconds": "Controls auto cast delay seconds, measured as seconds. For example, changing 0 to 1 makes the affected action wait twice as long between uses.",
     "AutoCastHealthThresholdPercent": "Controls auto cast health threshold percent, measured as a ratio or multiplier. For example, changing 50 to 100 doubles the configured auto cast health threshold percent.",
-    "DesignerNotes": "Controls designer notes. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system."
+    "DesignerNotes": "Controls designer notes. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
+    "TargetSelectionStyle": "Chooses one eligible Ally or Monster, and can choose the anchor for a target-centered AOE. LowestHealth compares health percentage; Nearest uses gameplay distance; Random chooses any valid candidate.",
+    "AreaTargetGroup": "For AreaOfEffect abilities, controls which side can receive the effect: Allies, Enemies, or Everyone. Ignored by non-AOE abilities.",
+    "AreaOrigin": "For AreaOfEffect abilities, controls where the area is centered. Self centers on the caster; Target centers on a selected ally or monster. Ignored by non-AOE abilities.",
+    "AreaRadius": "Radius of an AreaOfEffect in logical gameplay pixels. AOE abilities require a value greater than zero; Taunt currently uses 140.",
+    "ComboPointCost": "Combo points required and consumed when the ability commits. Sinister Strike uses 5. A value of 0 means the ability does not use combo points.",
+    "DamageCalculationMode": "Defines how DirectDamage calculates requested damage. Fixed uses BaseDamage. BasicAttackMultiplier scales the caster's normal basic attack damage.",
+    "BasicAttackDamageMultiplier": "Multiplier used when DamageCalculationMode is BasicAttackMultiplier. A value of 2.0 means exactly 200% of the caster's current basic attack damage.",
+    "RangeMode": "Defines how target range is evaluated. Fixed uses the authored Range value. BasicAttackRange inherits the caster's real basic-attack reach, including combat spacing, body radii, lunge distance, presentation scale, and melee engagement positioning."
   },
   "res://Scripts/Content/Definitions/EncounterDefinition.cs": {
     "ContentId": "Stable content identifier for content; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered content.",
@@ -335,11 +337,6 @@
     "PresentationFrame": "Controls presentation frame. For example, selecting a different value changes which presentation frame behavior or content the owning system uses.",
     "RegionViewport": "Controls region viewport. For example, selecting a different value changes which region viewport behavior or content the owning system uses.",
     "Ground": "Controls ground. For example, selecting a different value changes which ground behavior or content the owning system uses.",
-    "WindowHost": "Inspector reference used by this component for its window host dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
-  },
-  "res://Scripts/Presentation/WorldScaleController.cs": {
-    "ScalableWorld": "Inspector reference used by this component for its scalable world dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
-    "BackgroundLayer": "Inspector reference used by this component for its background layer dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
     "WindowHost": "Inspector reference used by this component for its window host dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
   },
   "res://Scripts/Services/DebugCommandService.cs": {

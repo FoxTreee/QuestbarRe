@@ -10,6 +10,7 @@ Description = "Restore health to the living party member with the lowest health 
 CooldownSeconds = 8.0
 CastTimeSeconds = 1.5
 TargetMode = 2
+TargetSelectionStyle = 0
 Range = 0.0
 EffectType = 2
 BaseHealing = 300.0

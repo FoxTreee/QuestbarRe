@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://b2o6pgg63qw4c"]
+
+[ext_resource type="Script" uid="uid://bgigkc6q1mhyy" path="res://Controllers/Actors/HeroComboPointDisplayController.cs" id="1_ecxue"]
+
+[node name="HeroComboPointDisplay" type="Node2D" unique_id=1540390464]
+z_index = 5
+script = ExtResource("1_ecxue")
+
+[node name="Point1" type="ColorRect" parent="." unique_id=1144785256]
+anchors_preset = -1
+offset_left = -19.0
+offset_top = -2.0
+offset_right = -13.0
+offset_bottom = 2.0
+mouse_filter = 2
+color = Color(0.50980395, 0.50980395, 0.50980395, 1)
+
+[node name="Point2" type="ColorRect" parent="." unique_id=1476868727]
+anchors_preset = -1
+offset_left = -11.0
+offset_top = -2.0
+offset_right = -5.0
+offset_bottom = 2.0
+mouse_filter = 2
+color = Color(0.50980395, 0.50980395, 0.50980395, 1)
+
+[node name="Point3" type="ColorRect" parent="." unique_id=2144092526]
+anchors_preset = -1
+offset_left = -3.0
+offset_top = -2.0
+offset_right = 3.0
+offset_bottom = 2.0
+mouse_filter = 2
+color = Color(0.50980395, 0.50980395, 0.50980395, 1)
+
+[node name="Point4" type="ColorRect" parent="." unique_id=1358825374]
+anchors_preset = -1
+offset_left = 5.0
+offset_top = -2.0
+offset_right = 11.0
+offset_bottom = 2.0
+mouse_filter = 2
+color = Color(0.50980395, 0.50980395, 0.50980395, 1)
+
+[node name="Point5" type="ColorRect" parent="." unique_id=611398940]
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 13.0
+offset_top = -2.0
+offset_right = 19.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.50980395, 0.50980395, 0.50980395, 1)

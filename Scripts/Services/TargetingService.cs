@@ -92,6 +92,175 @@ public partial class TargetingService : Node
 
 
     /// <summary>
+    /// Selects one living ally for an ability using the authored selection
+    /// style. TargetMode decides that the ability wants an ally; this method
+    /// only decides which eligible ally wins.
+    /// </summary>
+    public HeroActorController? SelectAbilityAllyTarget(
+        HeroActorController caster,
+        IReadOnlyList<HeroActorController> candidates,
+        AbilityTargetSelectionStyle selectionStyle)
+    {
+        if (!IsValidHeroTarget(caster))
+            return null;
+
+        return selectionStyle switch
+        {
+            AbilityTargetSelectionStyle.LowestHealth =>
+                SelectLowestHealthPercentHero(candidates),
+
+            AbilityTargetSelectionStyle.Nearest =>
+                SelectNearestAbilityHero(
+                    caster.GlobalPosition,
+                    candidates),
+
+            AbilityTargetSelectionStyle.Random =>
+                SelectRandomLivingHero(candidates),
+
+            _ => null
+        };
+    }
+
+
+    /// <summary>
+    /// Selects one living monster for an ability using the same authored
+    /// selection styles used by ally-targeted abilities. Effect resolution is
+    /// deliberately separate from this choice.
+    /// </summary>
+    public MonsterActorController? SelectAbilityMonsterTarget(
+        HeroActorController caster,
+        IReadOnlyList<MonsterActorController> candidates,
+        AbilityTargetSelectionStyle selectionStyle)
+    {
+        if (!IsValidHeroTarget(caster))
+            return null;
+
+        MonsterActorController? selected = null;
+
+        if (selectionStyle == AbilityTargetSelectionStyle.Random)
+        {
+            List<MonsterActorController> validMonsters = new();
+
+            foreach (MonsterActorController monster in candidates)
+            {
+                if (IsValidMonsterTarget(monster))
+                    validMonsters.Add(monster);
+            }
+
+            if (validMonsters.Count == 0)
+                return null;
+
+            return validMonsters[_random.RandiRange(
+                0,
+                validMonsters.Count - 1)];
+        }
+
+        float selectedValue = float.MaxValue;
+
+        foreach (MonsterActorController monster in candidates)
+        {
+            if (!IsValidMonsterTarget(monster))
+                continue;
+
+            float candidateValue = selectionStyle switch
+            {
+                AbilityTargetSelectionStyle.LowestHealth =>
+                    GetHealthPercent(monster.Health),
+
+                AbilityTargetSelectionStyle.Nearest =>
+                    caster.GlobalPosition.DistanceSquaredTo(
+                        monster.GlobalPosition),
+
+                _ => float.MaxValue
+            };
+
+            if (selected is not null
+                && candidateValue >= selectedValue)
+            {
+                continue;
+            }
+
+            selected = monster;
+            selectedValue = candidateValue;
+        }
+
+        return selected;
+    }
+
+
+    /// <summary>
+    /// Selects the living hero with the lowest current health percentage.
+    /// Percent is used instead of raw hit points so tanks and fragile heroes
+    /// are compared on the same scale.
+    /// </summary>
+    private static HeroActorController? SelectLowestHealthPercentHero(
+        IReadOnlyList<HeroActorController> candidates)
+    {
+        HeroActorController? selected = null;
+        float selectedPercent = float.MaxValue;
+
+        foreach (HeroActorController hero in candidates)
+        {
+            if (!IsValidHeroTarget(hero))
+                continue;
+
+            float healthPercent = GetHealthPercent(hero.Health);
+
+            if (selected is not null
+                && healthPercent >= selectedPercent)
+            {
+                continue;
+            }
+
+            selected = hero;
+            selectedPercent = healthPercent;
+        }
+
+        return selected;
+    }
+
+
+    /// <summary>
+    /// Selects the nearest living hero to an arbitrary gameplay position.
+    /// </summary>
+    private static HeroActorController? SelectNearestAbilityHero(
+        Vector2 origin,
+        IReadOnlyList<HeroActorController> candidates)
+    {
+        HeroActorController? selected = null;
+        float selectedDistanceSquared = float.MaxValue;
+
+        foreach (HeroActorController hero in candidates)
+        {
+            if (!IsValidHeroTarget(hero))
+                continue;
+
+            float distanceSquared =
+                origin.DistanceSquaredTo(hero.GlobalPosition);
+
+            if (selected is not null
+                && distanceSquared >= selectedDistanceSquared)
+            {
+                continue;
+            }
+
+            selected = hero;
+            selectedDistanceSquared = distanceSquared;
+        }
+
+        return selected;
+    }
+
+
+    private static float GetHealthPercent(CombatHealthState health)
+    {
+        return health.MaximumHealth > 0.0f
+            ? health.CurrentHealth / health.MaximumHealth
+            : 0.0f;
+    }
+
+
+    /// <summary>
     /// Performs the select priority monster operation for Targeting Service.
     /// Uses the supplied arguments and current state and returns the resulting monster actor controller to the caller.
     /// </summary>

@@ -1,10 +1,17 @@
 [gd_resource type="Resource" script_class="HeroClassDefinition" format=3 uid="uid://jlb3tvqx2ype"]
 
 [ext_resource type="Script" uid="uid://djb803f4i720b" path="res://Scripts/Content/Definitions/HeroClassDefinition.cs" id="1_6icaq"]
+[ext_resource type="Script" uid="uid://cm3p1sud8p6q4" path="res://Scripts/Content/Definitions/HeroResourceDefinition.cs" id="2_resource"]
+
+[sub_resource type="Resource" id="HeroResourceDefinition_warrior"]
+script = ExtResource("2_resource")
+ResourceType = 3
+RegenerationAmount = 10.0
 
 [resource]
 script = ExtResource("1_6icaq")
 ContentId = "class.core.warrior"
 DisplayName = "Warrior"
+ResourceDefinition = SubResource("HeroResourceDefinition_warrior")
 AbilityContentIds = Array[String](["ability.core.taunt"])
 metadata/_custom_type_script = "uid://djb803f4i720b"
