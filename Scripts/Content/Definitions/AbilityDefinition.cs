@@ -60,6 +60,10 @@ public partial class AbilityDefinition : Resource
     public float EffectDurationSeconds { get; set; } =
         0.0f;
 
+    [Export(PropertyHint.Range, "0.05,60,0.05")]
+    public float EffectTickIntervalSeconds { get; set; } =
+        1.0f;
+
     [ExportCategory("Automatic Use")]
 
     [Export(PropertyHint.Range, "0,30,0.1")]
@@ -139,6 +143,13 @@ public partial class AbilityDefinition : Resource
                 "negative.");
         }
 
+        if (EffectTickIntervalSeconds <= 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: EffectTickIntervalSeconds must be " +
+                "greater than zero.");
+        }
+
         if (AutoCastDelaySeconds < 0.0f)
         {
             errors.Add(
@@ -192,6 +203,47 @@ public partial class AbilityDefinition : Resource
                 errors.Add(
                     $"{ContentId}: DirectHealing abilities require " +
                     "BaseHealing greater than zero.");
+            }
+        }
+
+        if (EffectType == AbilityEffectType.DamageOverTime)
+        {
+            if (CastTimeSeconds > 0.0f)
+            {
+                errors.Add(
+                    $"{ContentId}: DamageOverTime abilities that " +
+                    "replace a basic attack currently require a " +
+                    "zero-second CastTimeSeconds value.");
+            }
+
+            if (TargetMode != AbilityTargetMode.CurrentTarget)
+            {
+                errors.Add(
+                    $"{ContentId}: DamageOverTime abilities must " +
+                    "use the CurrentTarget target mode.");
+            }
+
+            if (BaseDamage <= 0.0f)
+            {
+                errors.Add(
+                    $"{ContentId}: DamageOverTime abilities require " +
+                    "BaseDamage greater than zero.");
+            }
+
+            if (EffectDurationSeconds <= 0.0f)
+            {
+                errors.Add(
+                    $"{ContentId}: DamageOverTime abilities require " +
+                    "EffectDurationSeconds greater than zero.");
+            }
+
+            if (EffectTickIntervalSeconds
+                > EffectDurationSeconds)
+            {
+                errors.Add(
+                    $"{ContentId}: EffectTickIntervalSeconds cannot " +
+                    "exceed EffectDurationSeconds for a " +
+                    "DamageOverTime ability.");
             }
         }
 

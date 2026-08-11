@@ -41,6 +41,19 @@ public partial class BackgroundPresentationController : Node2D
 		}
 	}
 
+	public void ApplyTexture(Texture2D texture)
+	{
+		if (!GodotObject.IsInstanceValid(texture))
+		{
+			GD.PushError(
+				"BackgroundPresentationController cannot apply a null texture.");
+			return;
+		}
+
+		CloudBackground.Texture = texture;
+		ApplyBottomAnchor();
+	}
+
 	private void OnWindowPlacementApplied()
 	{
 		ApplyBottomAnchor();
@@ -49,7 +62,6 @@ public partial class BackgroundPresentationController : Node2D
 	private void ApplyBottomAnchor()
 	{
 		int currentHeight = GetWindow().Size.Y;
-
 		int expandedHeight =
 			WindowHost.PlacementSettings.ExpandedHeight;
 
@@ -61,10 +73,9 @@ public partial class BackgroundPresentationController : Node2D
 			CloudBackground.Texture.GetHeight()
 			* CloudBackground.Scale.Y;
 
-		CloudBackground.Position =
-			new Vector2(
-				CloudBackground.Position.X,
-				expandedHeight - cloudHeight);
+		CloudBackground.Position = new Vector2(
+			CloudBackground.Position.X,
+			expandedHeight - cloudHeight);
 
 		DebugLog.Print(
 			$"Background anchored. " +

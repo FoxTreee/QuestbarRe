@@ -6,4 +6,5 @@
 script = ExtResource("1_1q8nu")
 ContentId = "class.core.hunter"
 DisplayName = "Hunter"
+AbilityContentIds = Array[String](["ability.core.serpent_shot"])
 metadata/_custom_type_script = "uid://djb803f4i720b"

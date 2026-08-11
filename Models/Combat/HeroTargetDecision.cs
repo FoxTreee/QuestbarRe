@@ -17,4 +17,19 @@ public sealed class HeroTargetDecision
 
     public HeroTargetScore? CurrentTargetScore
     { get; init; }
+
+    public HeroActorController? RescueAlly
+    { get; init; }
+
+    public float RescueAllyHealthPercent
+    { get; init; }
+
+    public int RescuePressure
+    { get; init; }
+
+    public int OtherHeroAttackerCount
+    { get; init; }
+
+    public int PreferredHeroAttackerCount
+    { get; init; }
 }

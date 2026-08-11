@@ -45,6 +45,8 @@ public partial class HeroActorController : Node2D
 	private double _abilityCastTimeRemaining;
 	private double _targetCommitmentRemainingSeconds;
 	private double _targetReassessmentRemainingSeconds;
+	private bool _isDefensiveRescueActive;
+	private HeroActorController? _defensiveRescueAlly;
 	private IReadOnlyList<HeroActorController> _partyMembers =
 		System.Array.Empty<HeroActorController>();
 
@@ -57,13 +59,15 @@ public partial class HeroActorController : Node2D
 		_targetCommitmentRemainingSeconds;
 	public double TargetReassessmentRemainingSeconds =>
 		_targetReassessmentRemainingSeconds;
+	public bool IsDefensiveRescueActive =>
+		_isDefensiveRescueActive;
+	public HeroActorController? DefensiveRescueAlly =>
+		_defensiveRescueAlly;
 	private bool UsesMeleeEngagementSlots =>
 		HasCombatTag(HeroCombatTag.Melee);
 
 	public HeroCombatStanceProfile ActiveStanceProfile =>
-		Definition?.GetStanceProfile(CombatStance)
-		?? throw new System.InvalidOperationException(
-			$"{Name} has no configured HeroDefinition.");
+		Targeting.GetStanceProfile(CombatStance);
 
 	public void SetCombatPresentationScale(float scale)
 	{
@@ -166,14 +170,6 @@ public partial class HeroActorController : Node2D
 		CombatTagMask = definition.CombatTagMask;
 		CombatProfile.CombatStance =
 			definition.StartingCombatStance;
-		CombatProfile.MinimumTargetCommitmentSeconds =
-			definition.MinimumTargetCommitmentSeconds;
-		CombatProfile.TargetReassessmentIntervalSeconds =
-			definition.TargetReassessmentIntervalSeconds;
-		CombatProfile.RequiredSwitchAdvantagePercent =
-			definition.RequiredSwitchAdvantagePercent;
-		CombatProfile.LogTargetingDecisions =
-			definition.LogTargetingDecisions;
 		TemporaryMaximumHealth = definition.MaximumHealth;
 		TemporaryAttackDamage = definition.AttackDamage;
 		TemporaryAttackRange = definition.AttackRange;
@@ -220,7 +216,7 @@ public partial class HeroActorController : Node2D
 		CombatProfile.CombatStance = stance;
 		ResetTargetDecisionTimers();
 
-		if (CombatProfile.LogTargetingDecisions)
+		if (ActiveStanceProfile.LogTargetingDecisions)
 		{
 			DebugLog.Print(
 				$"{Name} changed combat stance to " +
@@ -410,8 +406,7 @@ public partial class HeroActorController : Node2D
 			?? System.Array.Empty<HeroActorController>();
 	}
 
-	// Incapacitation Reset -- DEBUG ONLY
-	public void DebugResetFromIncapacitation()
+	public void ReviveFromIncapacitation()
 	{
 		ReleaseMeleeEngagementSlot(CurrentTarget);
 		Health.RestoreToMaximum();
@@ -438,9 +433,15 @@ public partial class HeroActorController : Node2D
 			HeroState.InFormation;
 
 		DebugLog.Print(
-			$"{Name} debug-reset with " +
+			$"{Name} revived with " +
 			$"{Health.CurrentHealth}/" +
 			$"{Health.MaximumHealth} health.");
+	}
+
+	// Incapacitation Reset -- DEBUG ONLY
+	public void DebugResetFromIncapacitation()
+	{
+		ReviveFromIncapacitation();
 	}
 	
 	public void ResumeCombatAfterDebugReset()
@@ -628,16 +629,20 @@ public partial class HeroActorController : Node2D
 				_targetReassessmentRemainingSeconds - delta);
 	}
 
-	private void BeginTargetCommitment()
+	private void BeginTargetCommitment(
+		float? commitmentSeconds = null)
 	{
 		_targetCommitmentRemainingSeconds =
 			Mathf.Max(
-				CombatProfile.MinimumTargetCommitmentSeconds,
+				commitmentSeconds
+					?? ActiveStanceProfile
+						.MinimumTargetCommitmentSeconds,
 				0.0f);
 
 		_targetReassessmentRemainingSeconds =
 			Mathf.Max(
-				CombatProfile.TargetReassessmentIntervalSeconds,
+				ActiveStanceProfile
+					.TargetReassessmentIntervalSeconds,
 				0.0f);
 	}
 
@@ -645,7 +650,8 @@ public partial class HeroActorController : Node2D
 	{
 		_targetReassessmentRemainingSeconds =
 			Mathf.Max(
-				CombatProfile.TargetReassessmentIntervalSeconds,
+				ActiveStanceProfile
+					.TargetReassessmentIntervalSeconds,
 				0.0f);
 	}
 
@@ -653,6 +659,8 @@ public partial class HeroActorController : Node2D
 	{
 		_targetCommitmentRemainingSeconds = 0.0;
 		_targetReassessmentRemainingSeconds = 0.0;
+		_isDefensiveRescueActive = false;
+		_defensiveRescueAlly = null;
 	}
 
 	private double _movementAnimationGraceRemaining;
@@ -1706,8 +1714,32 @@ public partial class HeroActorController : Node2D
 
 		if (hasValidCurrentTarget
 			&& (_state == HeroState.Attacking
-				|| _state == HeroState.UsingAbility
-				|| _targetCommitmentRemainingSeconds > 0.0
+				|| _state == HeroState.UsingAbility))
+		{
+			return;
+		}
+
+		bool wasDefensiveRescueActive =
+			_isDefensiveRescueActive;
+
+		if (TryRefreshDefensiveRescueTarget(
+			candidates,
+			hasValidCurrentTarget))
+		{
+			return;
+		}
+
+		_isDefensiveRescueActive = false;
+		_defensiveRescueAlly = null;
+
+		if (wasDefensiveRescueActive)
+		{
+			_targetCommitmentRemainingSeconds = 0.0;
+			_targetReassessmentRemainingSeconds = 0.0;
+		}
+
+		if (hasValidCurrentTarget
+			&& (_targetCommitmentRemainingSeconds > 0.0
 				|| _targetReassessmentRemainingSeconds > 0.0))
 		{
 			return;
@@ -1741,8 +1773,85 @@ public partial class HeroActorController : Node2D
 			return;
 		}
 
-		CurrentTarget = proposedTarget;
+		ApplyTargetChange(
+			proposedTarget,
+			previousTarget);
 
+		if (ActiveStanceProfile.LogTargetingDecisions)
+		{
+			PrintTargetDecision(
+				decision,
+				previousTarget,
+				requiredSwitchScore);
+		}
+		
+	}
+
+	private bool TryRefreshDefensiveRescueTarget(
+		IReadOnlyList<MonsterActorController> candidates,
+		bool hasValidCurrentTarget)
+	{
+		if (!Targeting.TrySelectDefensiveRescueTarget(
+			this,
+			candidates,
+			_partyMembers,
+			out HeroTargetDecision decision)
+			|| decision.SelectedTarget is null)
+		{
+			return false;
+		}
+
+		MonsterActorController rescueTarget =
+			decision.SelectedTarget;
+
+		bool wasAlreadyRescuingSameAlly =
+			_isDefensiveRescueActive
+			&& _defensiveRescueAlly
+				== decision.RescueAlly;
+
+		_isDefensiveRescueActive = true;
+		_defensiveRescueAlly = decision.RescueAlly;
+
+		if (hasValidCurrentTarget
+			&& CurrentTarget == rescueTarget)
+		{
+			if (!wasAlreadyRescuingSameAlly)
+			{
+				BeginTargetCommitment(
+					ActiveStanceProfile
+						.RescueTargetCommitmentSeconds);
+			}
+
+			if (!wasAlreadyRescuingSameAlly
+				&& ActiveStanceProfile.LogTargetingDecisions)
+			{
+				PrintDefensiveRescueDecision(decision);
+			}
+
+			return true;
+		}
+
+		MonsterActorController? previousTarget =
+			CurrentTarget;
+
+		ApplyTargetChange(
+			rescueTarget,
+			previousTarget,
+			ActiveStanceProfile
+				.RescueTargetCommitmentSeconds);
+
+		if (ActiveStanceProfile.LogTargetingDecisions)
+			PrintDefensiveRescueDecision(decision);
+
+		return true;
+	}
+
+	private void ApplyTargetChange(
+		MonsterActorController? proposedTarget,
+		MonsterActorController? previousTarget,
+		float? commitmentSeconds = null)
+	{
+		CurrentTarget = proposedTarget;
 		ReleaseMeleeEngagementSlot(previousTarget);
 
 		if (CurrentTarget is null)
@@ -1756,25 +1865,18 @@ public partial class HeroActorController : Node2D
 		}
 
 		_initialAttackPending = true;
-		BeginTargetCommitment();
+		BeginTargetCommitment(commitmentSeconds);
 		TryGetMeleeEngagementPosition(
-			CurrentTarget!,
+			CurrentTarget,
 			out _);
 
-		if (CombatProfile.LogTargetingDecisions)
-		{
-			PrintTargetDecision(
-				decision,
-				previousTarget,
-				requiredSwitchScore);
-		}
-		
 		DebugLog.Print(
 			$"{Name} targeted {CurrentTarget.Name} " +
 			$"at X={CurrentTarget.GlobalPosition.X}.");
 
 		if (_state != HeroState.UsingAbility
-			&& JourneyState.CurrentState == JourneyStateService.JourneyState.Encounter)
+			&& JourneyState.CurrentState
+				== JourneyStateService.JourneyState.Encounter)
 		{
 			_state = HeroState.ApproachingTarget;
 		}
@@ -1800,7 +1902,8 @@ public partial class HeroActorController : Node2D
 				Mathf.Abs(currentScore),
 				1.0f)
 			* Mathf.Max(
-				CombatProfile.RequiredSwitchAdvantagePercent,
+				ActiveStanceProfile
+					.RequiredSwitchAdvantagePercent,
 				0.0f)
 			/ 100.0f;
 
@@ -1849,7 +1952,29 @@ public partial class HeroActorController : Node2D
 			$"{score.PreferredHeroAttackerCount}; " +
 			$"SwitchRequired={switchRequirementText}; " +
 			$"Commitment=" +
-			$"{CombatProfile.MinimumTargetCommitmentSeconds:0.##}s.");
+			$"{ActiveStanceProfile.MinimumTargetCommitmentSeconds:0.##}s.");
+	}
+
+	private void PrintDefensiveRescueDecision(
+		HeroTargetDecision decision)
+	{
+		if (decision.SelectedTarget is null
+			|| decision.RescueAlly is null)
+		{
+			return;
+		}
+
+		DebugLog.Print(
+			$"{Name} [Defensive] rescue override: " +
+			$"Ally={decision.RescueAlly.Name}; " +
+			$"Health={decision.RescueAllyHealthPercent:0.##}%; " +
+			$"Pressure={decision.RescuePressure}; " +
+			$"Target={decision.SelectedTarget.Name}; " +
+			$"Danger={decision.SelectedRuleValue:0.##}; " +
+			$"Attackers={decision.OtherHeroAttackerCount + 1}/" +
+			$"{decision.PreferredHeroAttackerCount}; " +
+			$"Commitment=" +
+			$"{ActiveStanceProfile.RescueTargetCommitmentSeconds:0.##}s.");
 	}
 
 	private static bool ContainsTarget(IReadOnlyList<MonsterActorController> candidates, MonsterActorController target)

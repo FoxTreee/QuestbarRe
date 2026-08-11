@@ -19,15 +19,19 @@ public partial class ProjectileActorController : Node2D
 
 	public MonsterActorController? Target { get; private set; }
 
+	public AbilityDefinition? Ability { get; private set; }
+
 	private bool _isActive;
 
 	public void Initialize(
 		HeroActorController attacker,
 		MonsterActorController target,
-		Vector2 spawnPosition)
+		Vector2 spawnPosition,
+		AbilityDefinition? ability = null)
 	{
 		Attacker = attacker;
 		Target = target;
+		Ability = ability;
 		GlobalPosition = spawnPosition;
 		_isActive = true;
 

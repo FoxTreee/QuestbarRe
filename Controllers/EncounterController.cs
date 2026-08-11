@@ -149,6 +149,13 @@ public partial class EncounterController : Node
 		string poolContentId,
 		out string result)
 	{
+		return TryStartEncounterPool(poolContentId, out result);
+	}
+
+	public bool TryStartEncounterPool(
+		string poolContentId,
+		out string result)
+	{
 		result = string.Empty;
 
 		if (JourneyState.CurrentState

@@ -42,6 +42,25 @@ public partial class HeroCombatStanceProfile : Resource
     { get; set; } = 60.0f;
 
 
+    [ExportCategory("Target Commitment")]
+
+    [Export(PropertyHint.Range, "0,10,0.1")]
+    public float MinimumTargetCommitmentSeconds
+    { get; set; } = 2.0f;
+
+    [Export(PropertyHint.Range, "0.05,5,0.05")]
+    public float TargetReassessmentIntervalSeconds
+    { get; set; } = 0.5f;
+
+    [Export(PropertyHint.Range, "0,500,1")]
+    public float RequiredSwitchAdvantagePercent
+    { get; set; } = 25.0f;
+
+    [Export]
+    public bool LogTargetingDecisions
+    { get; set; } = true;
+
+
     [ExportCategory("Aggro Weights")]
 
     [Export(PropertyHint.Range, "0,500,1")]
@@ -53,25 +72,29 @@ public partial class HeroCombatStanceProfile : Resource
     { get; set; }
 
 
-    [ExportCategory("Emergency Support Weights")]
+    [ExportCategory("Defensive Rescue")]
 
-    [Export(PropertyHint.Range, "0,500,1")]
-    public float KitingAllyRescueBonus
+    [Export]
+    public bool RescueVulnerableAllies
     { get; set; }
+
+    [Export(PropertyHint.Range, "0,100,1")]
+    public float RescueAllyHealthThresholdPercent
+    { get; set; } = 50.0f;
+
+    [Export(PropertyHint.Range, "1,20,1")]
+    public int MinimumRescuePressure
+    { get; set; } = 1;
+
+    [Export(PropertyHint.Range, "0,10,0.1")]
+    public float RescueTargetCommitmentSeconds
+    { get; set; } = 2.0f;
+
+
+    [ExportCategory("Future Critical Support")]
 
     [Export(PropertyHint.Range, "0,500,1")]
     public float CriticalAllyRescueBonus
-    { get; set; }
-
-
-    [ExportCategory("Behavior Permissions")]
-
-    [Export]
-    public bool KiteWhenTargeted
-    { get; set; }
-
-    [Export]
-    public bool RescueKitingAllies
     { get; set; }
 
     [Export]
@@ -91,7 +114,6 @@ public partial class HeroCombatStanceProfile : Resource
             CurrentTargetBonus = 35.0f,
             AvoidAggroPenalty = 100.0f,
             CriticalAllyRescueBonus = 80.0f,
-            KiteWhenTargeted = true,
             RescueCriticalAllies = true
         };
     }
@@ -108,9 +130,8 @@ public partial class HeroCombatStanceProfile : Resource
             SaturationPenaltyPerHero = 15.0f,
             CurrentTargetBonus = 35.0f,
             SeekAggroBonus = 75.0f,
-            KitingAllyRescueBonus = 150.0f,
             CriticalAllyRescueBonus = 100.0f,
-            RescueKitingAllies = true,
+            RescueVulnerableAllies = true,
             RescueCriticalAllies = true
         };
     }
@@ -166,9 +187,6 @@ public partial class HeroCombatStanceProfile : Resource
             nameof(SeekAggroBonus),
             SeekAggroBonus);
         AddNonNegativeError(errors, profileName,
-            nameof(KitingAllyRescueBonus),
-            KitingAllyRescueBonus);
-        AddNonNegativeError(errors, profileName,
             nameof(CriticalAllyRescueBonus),
             CriticalAllyRescueBonus);
 
@@ -179,6 +197,55 @@ public partial class HeroCombatStanceProfile : Resource
                 $"{profileName}." +
                 $"{nameof(HealthyAllyMinimumHealthPercent)} " +
                 "must be between 0 and 100.");
+        }
+
+        if (MinimumTargetCommitmentSeconds < 0.0f)
+        {
+            errors.Add(
+                $"{profileName}." +
+                $"{nameof(MinimumTargetCommitmentSeconds)} " +
+                "cannot be negative.");
+        }
+
+        if (TargetReassessmentIntervalSeconds <= 0.0f)
+        {
+            errors.Add(
+                $"{profileName}." +
+                $"{nameof(TargetReassessmentIntervalSeconds)} " +
+                "must be greater than zero.");
+        }
+
+        if (RequiredSwitchAdvantagePercent < 0.0f)
+        {
+            errors.Add(
+                $"{profileName}." +
+                $"{nameof(RequiredSwitchAdvantagePercent)} " +
+                "cannot be negative.");
+        }
+
+        if (RescueAllyHealthThresholdPercent < 0.0f
+            || RescueAllyHealthThresholdPercent > 100.0f)
+        {
+            errors.Add(
+                $"{profileName}." +
+                $"{nameof(RescueAllyHealthThresholdPercent)} " +
+                "must be between 0 and 100.");
+        }
+
+        if (MinimumRescuePressure < 1)
+        {
+            errors.Add(
+                $"{profileName}." +
+                $"{nameof(MinimumRescuePressure)} " +
+                "must be at least one.");
+        }
+
+        if (RescueTargetCommitmentSeconds < 0.0f)
+        {
+            errors.Add(
+                $"{profileName}." +
+                $"{nameof(RescueTargetCommitmentSeconds)} " +
+                "cannot be negative.");
         }
 
         return errors;

@@ -7,14 +7,18 @@
 [ext_resource type="Script" uid="uid://b1u1unxjnvcqm" path="res://Controllers/RegionPresentationController.cs" id="1_v1gob"]
 [ext_resource type="Script" uid="uid://exf22iqixcxv" path="res://Scripts/Services/JourneyStateService.cs" id="3_jw32o"]
 [ext_resource type="Script" uid="uid://qtqjk5w6ybmn" path="res://Controllers/WindowSettingsPanelController.cs" id="3_kln2b"]
+[ext_resource type="Texture2D" uid="uid://c6q0hofeka2rq" path="res://Assets/Enviornment/Ground/Questbar_Cobblestone_Ground_Deep_611x51.png" id="4_lfh1j"]
 [ext_resource type="PackedScene" uid="uid://2wrinnpuj3lv" path="res://Scenes/Debug/DebugConsoleWindow.tscn" id="5_erwvk"]
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
 [ext_resource type="Script" uid="uid://ccdcfymdch8h5" path="res://Scripts/Services/TargetingService.cs" id="6_frkhe"]
 [ext_resource type="Script" uid="uid://cxklmvye8ghgt" path="res://Scripts/Services/DebugCommandService.cs" id="7_h1m7h"]
 [ext_resource type="Script" uid="uid://s3pr1p2lapds" path="res://Content/Registries/MonsterContentRegistry.cs" id="8_346fj"]
+[ext_resource type="Resource" path="res://Content/CombatStances/Core/stance.core.passive.tres" id="8_off7b"]
 [ext_resource type="Script" uid="uid://bwnluygsef150" path="res://Scripts/Content/Definitions/MonsterDefinition.cs" id="9_0sclb"]
+[ext_resource type="Resource" path="res://Content/CombatStances/Core/stance.core.defensive.tres" id="9_lfh1j"]
 [ext_resource type="Script" uid="uid://bqkrhs8lutydd" path="res://Content/Registries/HeroContentRegistry.cs" id="9_vs04g"]
 [ext_resource type="Script" uid="uid://b38xxk3rax5nx" path="res://Scripts/Content/Definitions/HeroDefinition.cs" id="10_6ehlx"]
+[ext_resource type="Resource" path="res://Content/CombatStances/Core/stance.core.aggressive.tres" id="10_7sj7i"]
 [ext_resource type="Resource" uid="uid://cnylohmad3s8r" path="res://Content/Heroes/Core/hero.core.huntard.tres" id="11_6ehlx"]
 [ext_resource type="Script" uid="uid://ccuo54036wfjb" path="res://Controllers/EncounterController.cs" id="11_grg3l"]
 [ext_resource type="Resource" uid="uid://bnb4dy32spiuv" path="res://Content/Monsters/Core/monster.core.heavy_training_monster.tres" id="11_sxkr1"]
@@ -44,7 +48,12 @@
 [ext_resource type="Resource" uid="uid://ca677bt8r4l5a" path="res://Content/Abilities/Core/ability.core.taunt.tres" id="29_d8m2u"]
 [ext_resource type="Script" uid="uid://yaghcenkkidu" path="res://Scripts/Services/CombatDamageResolver.cs" id="30_4yxf6"]
 [ext_resource type="Resource" uid="uid://c3kbgs46muogb" path="res://Content/Abilities/Core/ability.core.heal.tres" id="30_5psol"]
+[ext_resource type="Resource" path="res://Content/Abilities/Core/ability.core.serpent_shot.tres" id="31_m4llh"]
 [ext_resource type="Script" uid="uid://bgv0cmtivgfi7" path="res://Controllers/PartyController.cs" id="40_6ehlx"]
+[ext_resource type="Script" uid="uid://dwnavkiixraok" path="res://Scripts/Services/RewardLedgerService.cs" id="40_ep8v8"]
+[ext_resource type="Script" uid="uid://dphwrvuij0an5" path="res://Controllers/RegionRunController.cs" id="51_7sj7i"]
+[ext_resource type="Resource" uid="uid://fgvs1onm3prx" path="res://Resources/Regions/TrainingRegion.tres" id="52_semxg"]
+[ext_resource type="Script" uid="uid://bi3msg7aodwjr" path="res://Controllers/IncapacitationChoicePopupController.cs" id="54_3133c"]
 
 [sub_resource type="Theme" id="Theme_d8m2u"]
 
@@ -90,12 +99,15 @@ z_index = -100
 
 [node name="ScalableWorld" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1379885866]
 
-[node name="RegionPresentation" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=1090747989 node_paths=PackedStringArray("RegionTileA", "RegionTileB", "JourneyState")]
+[node name="RegionPresentation" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=1090747989 node_paths=PackedStringArray("RegionTileA", "RegionTileB", "BackgroundPresentation", "TravelingGround", "GroundSprite", "JourneyState")]
 visible = false
 z_index = -40
 script = ExtResource("1_v1gob")
 RegionTileA = NodePath("RegionTileA")
 RegionTileB = NodePath("RegionTileB")
+BackgroundPresentation = NodePath("../../../../BackgroundPresentation")
+TravelingGround = NodePath("../GroundLayer/TravelingGround")
+GroundSprite = NodePath("../GroundLayer/TravelingGround/GroundTileA")
 JourneyState = NodePath("../../../../Services/JourneyStateService")
 
 [node name="RegionTileA" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/RegionPresentation" unique_id=373288464]
@@ -118,7 +130,23 @@ default_color = Color(0.5330062, 0.7372065, 0.5126692, 1)
 [node name="GroundLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=1759177754]
 z_index = -20
 
+[node name="TravelingGround" type="Parallax2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer" unique_id=2001859222]
+repeat_size = Vector2(813.241, 0)
+repeat_times = 2
+
+[node name="GroundTileA" type="Sprite2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer/TravelingGround" unique_id=1562417800]
+position = Vector2(400, 176.296)
+scale = Vector2(1.331, 1.4)
+texture = ExtResource("4_lfh1j")
+
+[node name="GroundTileB" type="Sprite2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer/TravelingGround" unique_id=1652287856]
+visible = false
+position = Vector2(400.00003, 176.2963)
+scale = Vector2(1.331, 1.4)
+texture = ExtResource("4_lfh1j")
+
 [node name="GroundPlaceholder" type="Polygon2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer" unique_id=1761926106]
+visible = false
 position = Vector2(-40.27778, -51.259262)
 scale = Vector2(1.3946059, 1.1523297)
 color = Color(0.5177069, 0.42025474, 0.42084682, 1)
@@ -145,16 +173,16 @@ position = Vector2(725.6944, 178.96297)
 position = Vector2(-284.58334, -9.666667)
 
 [node name="PartySlot2" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=150627185]
-position = Vector2(-210.97227, -35.148148)
+position = Vector2(-209.0278, -26.370369)
 
 [node name="PartySlot3" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=232380214]
-position = Vector2(-205.41669, 13.444445)
+position = Vector2(-224.99998, 6.814815)
 
 [node name="PartySlot4" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=1328720761]
-position = Vector2(-128.33337, -34.851852)
+position = Vector2(-118.75001, -25.777779)
 
 [node name="PartySlot5" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=1641821977]
-position = Vector2(-118.61112, 11.074075)
+position = Vector2(-141.66656, 6.8147974)
 
 [node name="ForegroundLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1354326323]
 z_index = 20
@@ -238,6 +266,57 @@ text = ""
 placeholder_text = "  .help"
 keep_editing_on_text_submit = true
 
+[node name="IncapacitationChoiceWindow" type="Window" parent="PopupWindows" unique_id=1071727648]
+oversampling_override = 1.0
+title = "Hero Incapacitated"
+position = Vector2i(0, 36)
+size = Vector2i(248, 176)
+transient = true
+unresizable = true
+
+[node name="MarginContainer" type="MarginContainer" parent="PopupWindows/IncapacitationChoiceWindow" unique_id=381155555]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PopupWindows/IncapacitationChoiceWindow/MarginContainer" unique_id=190876256]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer" unique_id=183460036]
+layout_mode = 2
+text = "A Hero Has Fallen . . ."
+horizontal_alignment = 1
+
+[node name="HeroNameLabel" type="Label" parent="PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer" unique_id=1796349218]
+layout_mode = 2
+text = "Hero Name"
+horizontal_alignment = 1
+
+[node name="MessageLabel" type="Label" parent="PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer" unique_id=1005266760]
+layout_mode = 2
+size_flags_vertical = 3
+autowrap_mode = 3
+
+[node name="ButtonRow" type="HBoxContainer" parent="PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer" unique_id=821953131]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ReviveButton" type="Button" parent="PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/ButtonRow" unique_id=1477804055]
+layout_mode = 2
+text = "Revive"
+
+[node name="IncapacitateButton" type="Button" parent="PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/ButtonRow" unique_id=1261173460]
+layout_mode = 2
+text = "Incapacitate"
+
 [node name="Services" type="Node" parent="." unique_id=1409283487]
 
 [node name="JourneyStateService" type="Node" parent="Services" unique_id=2091345235]
@@ -245,6 +324,9 @@ script = ExtResource("3_jw32o")
 
 [node name="TargetingService" type="Node" parent="Services" unique_id=1900580469]
 script = ExtResource("6_frkhe")
+PassiveStanceProfile = ExtResource("8_off7b")
+DefensiveStanceProfile = ExtResource("9_lfh1j")
+AggressiveStanceProfile = ExtResource("10_7sj7i")
 
 [node name="HeroContentRegistry" type="Node" parent="Services" unique_id=2062091404 node_paths=PackedStringArray("AbilityRegistry")]
 script = ExtResource("9_vs04g")
@@ -271,7 +353,7 @@ Registry = NodePath("../MonsterContentRegistry")
 
 [node name="AbilityContentRegistry" type="Node" parent="Services" unique_id=801032179]
 script = ExtResource("25_vvnwx")
-Definitions = Array[ExtResource("26_btbly")]([ExtResource("27_vs04g"), ExtResource("29_d8m2u"), ExtResource("30_5psol")])
+Definitions = Array[ExtResource("26_btbly")]([ExtResource("27_vs04g"), ExtResource("29_d8m2u"), ExtResource("30_5psol"), ExtResource("31_m4llh")])
 
 [node name="EncounterPoolContentRegistry" type="Node" parent="Services" unique_id=297296029 node_paths=PackedStringArray("EncounterRegistry")]
 script = ExtResource("21_u7mjy")
@@ -284,6 +366,9 @@ Encounter = NodePath("../../Controllers/EncounterController")
 Combat = NodePath("../../Controllers/CombatController")
 Party = NodePath("../../Controllers/PartyController")
 Console = NodePath("../../PopupWindows/DebugConsoleWindow")
+
+[node name="RewardLedgerService" type="Node" parent="Services" unique_id=1372524594]
+script = ExtResource("40_ep8v8")
 
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 
@@ -360,6 +445,24 @@ Factory = NodePath("../../Services/HeroFactory")
 ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer")
 JourneyState = NodePath("../../Services/JourneyStateService")
 Targeting = NodePath("../../Services/TargetingService")
+
+[node name="RegionRunController" type="Node" parent="Controllers" unique_id=1309989878 node_paths=PackedStringArray("Encounter", "Combat", "JourneyState", "RewardLedger", "RegionPresentation")]
+script = ExtResource("51_7sj7i")
+Encounter = NodePath("../EncounterController")
+Combat = NodePath("../CombatController")
+JourneyState = NodePath("../../Services/JourneyStateService")
+RewardLedger = NodePath("../../Services/RewardLedgerService")
+RegionPresentation = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/RegionPresentation")
+ActiveRegion = ExtResource("52_semxg")
+
+[node name="IncapacitationChoicePopupController" type="Node" parent="Controllers" unique_id=239960428 node_paths=PackedStringArray("RegionRun", "ChoiceWindow", "HeroNameLabel", "MessageLabel", "ReviveButton", "IncapacitateButton")]
+script = ExtResource("54_3133c")
+RegionRun = NodePath("../RegionRunController")
+ChoiceWindow = NodePath("../../PopupWindows/IncapacitationChoiceWindow")
+HeroNameLabel = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/HeroNameLabel")
+MessageLabel = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/MessageLabel")
+ReviveButton = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/ButtonRow/ReviveButton")
+IncapacitateButton = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/ButtonRow/IncapacitateButton")
 
 [editable path="PopupWindows/WindowSettingsPopup"]
 [editable path="PopupWindows/DebugConsoleWindow"]

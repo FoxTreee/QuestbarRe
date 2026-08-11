@@ -6,6 +6,7 @@ public partial class JourneyStateService : Node
 	{
 		Traveling,
 		Encounter,
+		AwaitingIncapacitationChoice,
 	}
 
 	[Signal]

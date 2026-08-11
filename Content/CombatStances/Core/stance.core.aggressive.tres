@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="HeroCombatStanceProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Content/Definitions/HeroCombatStanceProfile.cs" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+HighestCurrentHealthWeight = 100.0
+MonsterDangerWeight = 15.0
+UntargetedCoverageBonus = 50.0
+SaturationPenaltyPerHero = 10.0
+CurrentTargetBonus = 50.0
+HealthyAllyMinimumHealthPercent = 60.0
+MinimumTargetCommitmentSeconds = 2.0
+TargetReassessmentIntervalSeconds = 0.5
+RequiredSwitchAdvantagePercent = 25.0
+LogTargetingDecisions = true
+SeekAggroBonus = 100.0
+RescueAllyHealthThresholdPercent = 50.0
+MinimumRescuePressure = 1
+RescueTargetCommitmentSeconds = 2.0
+CriticalAllyRescueBonus = 150.0
+RescueCriticalAllies = true

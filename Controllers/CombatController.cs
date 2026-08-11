@@ -49,6 +49,50 @@ public partial class CombatController : Node
 		<MonsterActorController, HeroActorController>
 		_forcedTauntCasters = new();
 
+	private readonly List<ActiveDamageOverTimeEffect>
+		_activeDamageOverTimeEffects = new();
+
+	private sealed class ActiveDamageOverTimeEffect
+	{
+		public HeroActorController Source { get; }
+		public MonsterActorController Target { get; }
+		public AbilityDefinition Ability { get; }
+		public int TotalTicks { get; }
+		public int RemainingTicks { get; private set; }
+		public double SecondsUntilNextTick { get; set; }
+
+		public ActiveDamageOverTimeEffect(
+			HeroActorController source,
+			MonsterActorController target,
+			AbilityDefinition ability,
+			int totalTicks)
+		{
+			Source = source;
+			Target = target;
+			Ability = ability;
+			TotalTicks = totalTicks;
+			Refresh();
+		}
+
+		public int AppliedTickCount =>
+			TotalTicks - RemainingTicks;
+
+		public void ConsumeTick()
+		{
+			RemainingTicks = Math.Max(
+				RemainingTicks - 1,
+				0);
+		}
+
+		public void Refresh()
+		{
+			RemainingTicks = TotalTicks;
+			SecondsUntilNextTick = Math.Max(
+				Ability.EffectTickIntervalSeconds,
+				0.05f);
+		}
+	}
+
 	public IReadOnlyList<HeroActorController> HeroParticipants =>
 		_heroParticipants;
 
@@ -501,6 +545,7 @@ public partial class CombatController : Node
 	{
 		CurrentOutcome = CombatOutcome.None;
 		ResetAutomaticTauntState();
+		ClearActiveDamageOverTimeEffects();
 
 		DebugLog.Print(
 			"Combat outcome reset for new encounter.");
@@ -546,6 +591,13 @@ public partial class CombatController : Node
 		DebugLog.Print(
 			$"Combat received attack release: " +
 			$"{attacker.Name} → {target.Name}");
+
+		if (TryReleaseAutomaticDamageOverTimeAbility(
+			attacker,
+			target))
+		{
+			return;
+		}
 
 		switch (attacker.CombatProfile.AttackDelivery)
 		{
@@ -734,6 +786,182 @@ public partial class CombatController : Node
 			projectile.QueueFree();
 	}
 
+	private bool TryReleaseAutomaticDamageOverTimeAbility(
+		HeroActorController attacker,
+		MonsterActorController target)
+	{
+		if (!IsCombatActive
+			|| target.IsDead
+			|| !target.Health.IsAlive)
+		{
+			return false;
+		}
+
+		foreach (AbilityDefinition ability
+			in attacker.Abilities)
+		{
+			if (!GodotObject.IsInstanceValid(ability)
+				|| ability.EffectType
+					!= AbilityEffectType.DamageOverTime
+				|| ability.TargetMode
+					!= AbilityTargetMode.CurrentTarget
+				|| !attacker.IsAbilityReady(
+					ability.ContentId)
+				|| !attacker.TryStartAbilityCooldown(ability))
+			{
+				continue;
+			}
+
+			DebugLog.Print(
+				$"{attacker.Name} began using ability " +
+				$"'{ability.DisplayName}' on {target.Name}. " +
+				"Cast=0s.",
+				DebugLogCategory.Ability);
+
+			DebugLog.Print(
+				$"{attacker.Name} released ability " +
+				$"'{ability.DisplayName}' on {target.Name}.",
+				DebugLogCategory.Ability);
+
+			switch (attacker.CombatProfile.AttackDelivery)
+			{
+				case AttackDeliveryMode.Projectile:
+					HandlePendingDamageOverTimeProjectileRelease(
+						attacker,
+						target,
+						ability);
+					break;
+
+				case AttackDeliveryMode.ImmediateImpact:
+				case AttackDeliveryMode.Hitscan:
+					TryApplyDamageOverTimeEffect(
+						attacker,
+						target,
+						ability);
+					break;
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private void HandlePendingDamageOverTimeProjectileRelease(
+		HeroActorController attacker,
+		MonsterActorController target,
+		AbilityDefinition ability)
+	{
+		ProjectileActorController projectile =
+			ProjectileScene.Instantiate
+				<ProjectileActorController>();
+
+		ActorLayer.AddChild(projectile);
+
+		projectile.Impacted +=
+			OnDamageOverTimeProjectileImpacted;
+
+		projectile.Initialize(
+			attacker,
+			target,
+			attacker.ProjectileOrigin.GlobalPosition,
+			ability);
+
+		DebugLog.Print(
+			$"Ability projectile created: " +
+			$"{attacker.Name} → {target.Name} " +
+			$"using '{ability.DisplayName}'.",
+			DebugLogCategory.Ability);
+	}
+
+	private void OnDamageOverTimeProjectileImpacted(
+		ProjectileActorController projectile,
+		HeroActorController attacker,
+		MonsterActorController target)
+	{
+		if (GodotObject.IsInstanceValid(projectile))
+		{
+			projectile.Impacted -=
+				OnDamageOverTimeProjectileImpacted;
+		}
+
+		AbilityDefinition? ability =
+			GodotObject.IsInstanceValid(projectile)
+				? projectile.Ability
+				: null;
+
+		if (GodotObject.IsInstanceValid(attacker)
+			&& GodotObject.IsInstanceValid(target)
+			&& GodotObject.IsInstanceValid(ability)
+			&& !target.IsDead
+			&& target.Health.IsAlive)
+		{
+			TryApplyDamageOverTimeEffect(
+				attacker,
+				target,
+				ability!);
+		}
+
+		if (GodotObject.IsInstanceValid(projectile))
+			projectile.QueueFree();
+	}
+
+	private void TryApplyDamageOverTimeEffect(
+		HeroActorController source,
+		MonsterActorController target,
+		AbilityDefinition ability)
+	{
+		int totalTicks = Math.Max(
+			(int)Math.Floor(
+				ability.EffectDurationSeconds
+				/ Math.Max(
+					ability.EffectTickIntervalSeconds,
+					0.05f)
+				+ 0.0001f),
+			1);
+
+		foreach (ActiveDamageOverTimeEffect activeEffect
+			in _activeDamageOverTimeEffects)
+		{
+			if (activeEffect.Source != source
+				|| activeEffect.Target != target
+				|| !activeEffect.Ability.ContentId.Equals(
+					ability.ContentId,
+					StringComparison.OrdinalIgnoreCase))
+			{
+				continue;
+			}
+
+			activeEffect.Refresh();
+
+			DebugLog.Print(
+				$"{source.Name} refreshed " +
+				$"'{ability.DisplayName}' on {target.Name}. " +
+				$"Damage={ability.BaseDamage:0.##} every " +
+				$"{ability.EffectTickIntervalSeconds:0.##}s; " +
+				$"Ticks={totalTicks}.",
+				DebugLogCategory.Ability);
+
+			return;
+		}
+
+		_activeDamageOverTimeEffects.Add(
+			new ActiveDamageOverTimeEffect(
+				source,
+				target,
+				ability,
+				totalTicks));
+
+		DebugLog.Print(
+			$"{source.Name} applied '{ability.DisplayName}' " +
+			$"to {target.Name}. " +
+			$"Damage={ability.BaseDamage:0.##} every " +
+			$"{ability.EffectTickIntervalSeconds:0.##}s; " +
+			$"Ticks={totalTicks}; " +
+			$"Duration={ability.EffectDurationSeconds:0.##}s.",
+			DebugLogCategory.Ability);
+	}
+
 	private void RefreshHeroTargets()
 	{
 		foreach (HeroActorController hero in _heroParticipants)
@@ -893,6 +1121,15 @@ public partial class CombatController : Node
 		if (!IsInitialized)
 			return;
 
+		if (IsCombatActive)
+		{
+			UpdateActiveDamageOverTimeEffects(delta);
+		}
+		else
+		{
+			ClearActiveDamageOverTimeEffects();
+		}
+
 		UpdateAutomaticHeroAbilities(delta);
 
 		if (!IsCombatActive)
@@ -900,6 +1137,145 @@ public partial class CombatController : Node
 
 		RefreshHeroTargets();
 		RefreshMonsterTargets();
+	}
+
+	private void UpdateActiveDamageOverTimeEffects(
+		double delta)
+	{
+		double elapsedSeconds = Math.Max(delta, 0.0);
+
+		for (int index =
+			_activeDamageOverTimeEffects.Count - 1;
+			index >= 0;
+			index--)
+		{
+			ActiveDamageOverTimeEffect activeEffect =
+				_activeDamageOverTimeEffects[index];
+
+			if (!IsValidDamageOverTimeEffect(activeEffect))
+			{
+				_activeDamageOverTimeEffects.RemoveAt(index);
+				continue;
+			}
+
+			activeEffect.SecondsUntilNextTick -=
+				elapsedSeconds;
+
+			while (activeEffect.RemainingTicks > 0
+				&& activeEffect.SecondsUntilNextTick <= 0.0)
+			{
+				bool targetSurvived =
+					ApplyDamageOverTimeTick(activeEffect);
+
+				activeEffect.ConsumeTick();
+
+				if (!targetSurvived)
+					break;
+
+				activeEffect.SecondsUntilNextTick +=
+					Math.Max(
+						activeEffect.Ability
+							.EffectTickIntervalSeconds,
+						0.05f);
+			}
+
+			if (activeEffect.RemainingTicks > 0
+				&& IsValidDamageOverTimeEffect(activeEffect))
+			{
+				continue;
+			}
+
+			if (activeEffect.RemainingTicks == 0
+				&& GodotObject.IsInstanceValid(
+					activeEffect.Target)
+				&& !activeEffect.Target.IsDead)
+			{
+				DebugLog.Print(
+					$"'{activeEffect.Ability.DisplayName}' " +
+					$"expired on {activeEffect.Target.Name} " +
+					$"after {activeEffect.TotalTicks} ticks.",
+					DebugLogCategory.Ability);
+			}
+
+			_activeDamageOverTimeEffects.RemoveAt(index);
+		}
+	}
+
+	private bool ApplyDamageOverTimeTick(
+		ActiveDamageOverTimeEffect activeEffect)
+	{
+		HeroActorController source = activeEffect.Source;
+		MonsterActorController target = activeEffect.Target;
+		AbilityDefinition ability = activeEffect.Ability;
+
+		DamageResult result = DamageResolver.Resolve(
+			new DamageRequest(
+				source,
+				target,
+				ability.BaseDamage),
+			target.Health);
+
+		if (!source.IsIncapacitated
+			&& source.Health.IsAlive)
+		{
+			BroadcastHeroDamageThreat(
+				source,
+				target,
+				result.AppliedDamage);
+		}
+
+		RaiseCombatEvent(
+			new CombatEvent
+			{
+				Type = CombatEventType.DamageApplied,
+				Attacker = source,
+				Target = target,
+				Damage = result
+			});
+
+		DebugLog.Print(
+			$"{source.Name}'s '{ability.DisplayName}' dealt " +
+			$"{result.AppliedDamage:0.##} poison damage to " +
+			$"{target.Name}. " +
+			$"Tick={activeEffect.AppliedTickCount + 1}/" +
+			$"{activeEffect.TotalTicks}; " +
+			$"Remaining health={result.RemainingHealth:0.##}.",
+			DebugLogCategory.Ability);
+
+		if (!result.WasLethal)
+			return true;
+
+		target.EnterDeadState();
+
+		RaiseCombatEvent(
+			new CombatEvent
+			{
+				Type = CombatEventType.ActorDied,
+				Attacker = source,
+				Target = target,
+				Damage = result
+			});
+
+		return false;
+	}
+
+	private static bool IsValidDamageOverTimeEffect(
+		ActiveDamageOverTimeEffect activeEffect)
+	{
+		return GodotObject.IsInstanceValid(activeEffect.Source)
+			&& GodotObject.IsInstanceValid(activeEffect.Target)
+			&& GodotObject.IsInstanceValid(activeEffect.Ability)
+			&& activeEffect.Target.IsInsideTree()
+			&& !activeEffect.Target.IsDead
+			&& activeEffect.Target.Health.IsAlive;
+	}
+
+	private void ClearActiveDamageOverTimeEffects()
+	{
+		if (_activeDamageOverTimeEffects.Count == 0)
+			return;
+
+		_activeDamageOverTimeEffects.Clear();
 	}
 
 	private void UpdateAutomaticHeroAbilities(double delta)

@@ -13,9 +13,61 @@ public partial class TargetingService : Node
         new();
 
 
+    [ExportCategory("Shared Hero Stance Profiles")]
+
+    [Export]
+    public HeroCombatStanceProfile PassiveStanceProfile
+    { get; set; } = null!;
+
+    [Export]
+    public HeroCombatStanceProfile DefensiveStanceProfile
+    { get; set; } = null!;
+
+    [Export]
+    public HeroCombatStanceProfile AggressiveStanceProfile
+    { get; set; } = null!;
+
+
     public override void _Ready()
     {
         _random.Randomize();
+
+        ValidateSharedStanceProfile(
+            PassiveStanceProfile,
+            "Passive");
+
+        ValidateSharedStanceProfile(
+            DefensiveStanceProfile,
+            "Defensive");
+
+        ValidateSharedStanceProfile(
+            AggressiveStanceProfile,
+            "Aggressive");
+    }
+
+
+    public HeroCombatStanceProfile GetStanceProfile(
+        HeroCombatStance stance)
+    {
+        HeroCombatStanceProfile profile = stance switch
+        {
+            HeroCombatStance.Passive =>
+                PassiveStanceProfile,
+
+            HeroCombatStance.Aggressive =>
+                AggressiveStanceProfile,
+
+            _ =>
+                DefensiveStanceProfile
+        };
+
+        if (!GodotObject.IsInstanceValid(profile))
+        {
+            throw new System.InvalidOperationException(
+                $"The shared {stance} stance profile is missing.");
+        }
+
+        return profile;
     }
 
 
@@ -130,6 +182,186 @@ public partial class TargetingService : Node
     }
 
 
+    public bool TrySelectDefensiveRescueTarget(
+        HeroActorController hero,
+        IReadOnlyList<MonsterActorController> candidates,
+        IReadOnlyList<HeroActorController> partyMembers,
+        out HeroTargetDecision decision)
+    {
+        decision = new HeroTargetDecision
+        {
+            SelectionRule = "NoDefensiveRescue"
+        };
+
+        HeroCombatStanceProfile stanceProfile =
+            hero.ActiveStanceProfile;
+
+        if (hero.CombatStance != HeroCombatStance.Defensive
+            || !stanceProfile.RescueVulnerableAllies)
+        {
+            return false;
+        }
+
+        HeroActorController? rescueAlly = null;
+        float rescueAllyHealthPercent = 0.0f;
+        int rescuePressure = 0;
+
+        foreach (HeroActorController partyMember
+            in partyMembers)
+        {
+            if (partyMember == hero
+                || !IsValidHeroTarget(partyMember)
+                || partyMember.Health.MaximumHealth <= 0.0f)
+            {
+                continue;
+            }
+
+            float healthPercent =
+                partyMember.Health.CurrentHealth
+                / partyMember.Health.MaximumHealth
+                * 100.0f;
+
+            if (healthPercent
+                > stanceProfile.RescueAllyHealthThresholdPercent)
+            {
+                continue;
+            }
+
+            int pressure = CountMonstersTargetingHero(
+                partyMember,
+                candidates);
+
+            if (pressure
+                < stanceProfile.MinimumRescuePressure)
+            {
+                continue;
+            }
+
+            bool isMoreVulnerable = rescueAlly is null
+                || healthPercent < rescueAllyHealthPercent;
+
+            bool tiesHealthWithMorePressure =
+                rescueAlly is not null
+                && Mathf.IsEqualApprox(
+                    healthPercent,
+                    rescueAllyHealthPercent)
+                && pressure > rescuePressure;
+
+            if (!isMoreVulnerable
+                && !tiesHealthWithMorePressure)
+            {
+                continue;
+            }
+
+            rescueAlly = partyMember;
+            rescueAllyHealthPercent = healthPercent;
+            rescuePressure = pressure;
+        }
+
+        if (rescueAlly is null)
+            return false;
+
+        MonsterActorController? currentRescueTarget =
+            null;
+
+        MonsterActorController? availableRescueTarget =
+            null;
+
+        foreach (MonsterActorController monster
+            in candidates)
+        {
+            if (!IsValidMonsterTarget(monster)
+                || monster.CurrentTarget != rescueAlly)
+            {
+                continue;
+            }
+
+            int preferredHeroAttackerCount =
+                System.Math.Max(
+                    monster.Definition
+                        .PreferredHeroAttackerCount,
+                    1);
+
+            int otherHeroAttackerCount =
+                CountOtherHeroAttackers(
+                    hero,
+                    monster,
+                    partyMembers);
+
+            if (otherHeroAttackerCount
+                >= preferredHeroAttackerCount)
+            {
+                continue;
+            }
+
+            if (hero.IsDefensiveRescueActive
+                && hero.DefensiveRescueAlly == rescueAlly
+                && hero.CurrentTarget == monster)
+            {
+                currentRescueTarget = monster;
+                continue;
+            }
+
+            if (availableRescueTarget is null
+                || IsBetterDefensiveRescueTarget(
+                    monster,
+                    availableRescueTarget))
+            {
+                availableRescueTarget = monster;
+            }
+        }
+
+        MonsterActorController? rescueTarget =
+            currentRescueTarget;
+
+        if (rescueTarget is null)
+        {
+            rescueTarget = availableRescueTarget;
+        }
+        else if (availableRescueTarget is not null
+            && IsGenuinelyMoreDangerousRescueTarget(
+                availableRescueTarget,
+                rescueTarget))
+        {
+            rescueTarget = availableRescueTarget;
+        }
+
+        if (rescueTarget is null)
+            return false;
+
+        int selectedOtherHeroAttackerCount =
+            CountOtherHeroAttackers(
+                hero,
+                rescueTarget,
+                partyMembers);
+
+        int selectedPreferredHeroAttackerCount =
+            System.Math.Max(
+                rescueTarget.Definition
+                    .PreferredHeroAttackerCount,
+                1);
+
+        decision = new HeroTargetDecision
+        {
+            SelectedTarget = rescueTarget,
+            ValidCandidateCount = rescuePressure,
+            SelectionRule = "DefensiveRescue",
+            SelectedRuleValue =
+                rescueTarget.Definition.DangerRating,
+            RescueAlly = rescueAlly,
+            RescueAllyHealthPercent =
+                rescueAllyHealthPercent,
+            RescuePressure = rescuePressure,
+            OtherHeroAttackerCount =
+                selectedOtherHeroAttackerCount,
+            PreferredHeroAttackerCount =
+                selectedPreferredHeroAttackerCount
+        };
+
+        return true;
+    }
+
+
     private HeroTargetScore ScoreMonsterForHero(
         HeroActorController hero,
         MonsterActorController monster,
@@ -237,6 +469,111 @@ public partial class TargetingService : Node
             PreferredHeroAttackerCount =
                 preferredHeroAttackerCount
         };
+    }
+
+
+    private int CountMonstersTargetingHero(
+        HeroActorController hero,
+        IReadOnlyList<MonsterActorController> candidates)
+    {
+        int count = 0;
+
+        foreach (MonsterActorController monster
+            in candidates)
+        {
+            if (IsValidMonsterTarget(monster)
+                && monster.CurrentTarget == hero)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+
+    private static bool IsBetterDefensiveRescueTarget(
+        MonsterActorController candidate,
+        MonsterActorController selected)
+    {
+        float candidateDanger =
+            candidate.Definition.DangerRating;
+
+        float selectedDanger =
+            selected.Definition.DangerRating;
+
+        if (candidateDanger > selectedDanger
+            && !Mathf.IsEqualApprox(
+                candidateDanger,
+                selectedDanger))
+        {
+            return true;
+        }
+
+        if (!Mathf.IsEqualApprox(
+            candidateDanger,
+            selectedDanger))
+        {
+            return false;
+        }
+
+        if (candidate.Health.CurrentHealth
+            > selected.Health.CurrentHealth
+            && !Mathf.IsEqualApprox(
+                candidate.Health.CurrentHealth,
+                selected.Health.CurrentHealth))
+        {
+            return true;
+        }
+
+        if (!Mathf.IsEqualApprox(
+            candidate.Health.CurrentHealth,
+            selected.Health.CurrentHealth))
+        {
+            return false;
+        }
+
+        return candidate.GlobalPosition.X
+            > selected.GlobalPosition.X;
+    }
+
+
+    private static bool
+        IsGenuinelyMoreDangerousRescueTarget(
+            MonsterActorController candidate,
+            MonsterActorController currentTarget)
+    {
+        float candidateDanger =
+            candidate.Definition.DangerRating;
+
+        float currentDanger =
+            currentTarget.Definition.DangerRating;
+
+        return candidateDanger > currentDanger
+            && !Mathf.IsEqualApprox(
+                candidateDanger,
+                currentDanger);
+    }
+
+
+    private static void ValidateSharedStanceProfile(
+        HeroCombatStanceProfile profile,
+        string profileName)
+    {
+        if (!GodotObject.IsInstanceValid(profile))
+        {
+            GD.PushError(
+                $"Shared {profileName} combat stance profile " +
+                "is missing.");
+
+            return;
+        }
+
+        foreach (string error
+            in profile.GetValidationErrors(profileName))
+        {
+            GD.PushError(error);
+        }
     }
 
 
