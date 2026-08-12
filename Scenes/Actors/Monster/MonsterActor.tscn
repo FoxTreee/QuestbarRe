@@ -13,6 +13,8 @@ VisualRoot = NodePath("PresentationRoot/VisualRoot")
 BodyBounds = NodePath("PresentationRoot/VisualRoot/BodyBounds")
 ImpactOrigin = NodePath("PresentationRoot/VisualRoot/ImpactOrigin")
 HealthBarAnchor = NodePath("PresentationRoot/VisualRoot/HealthBarAnchor")
+MeleeSlotHorizontalSpacingMultiplier = 0.75
+MeleeSlotVerticalSpacingMultiplier = 0.3
 
 [node name="PresentationRoot" type="Node2D" parent="." unique_id=2029984864]
 

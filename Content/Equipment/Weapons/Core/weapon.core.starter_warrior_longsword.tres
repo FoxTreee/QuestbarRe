@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="WeaponDefinition" format=3 uid="uid://d1ovf4dv10c4l"]
+
+[ext_resource type="Script" uid="uid://dvegn0qfvarlr" path="res://Scripts/Content/Definitions/EquipmentPercentageModifierDefinition.cs" id="1_lxxw1"]
+[ext_resource type="Script" uid="uid://c7t5joojna4re" path="res://Scripts/Content/Definitions/WeaponDefinition.cs" id="1_weapon"]
+
+[resource]
+script = ExtResource("1_weapon")
+Handedness = 1
+MaximumDamage = 100.0
+ContentId = "weapon.core.starter_warrior_longsword"
+DisplayName = "Starter Longsword"
+Description = "Starting two-handed melee weapon for the Warrior."
+Strength = 2
+Stamina = 2

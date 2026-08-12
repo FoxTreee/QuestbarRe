@@ -13,11 +13,14 @@ scale = Vector2(3, 3)
 [node name="MonsterBody" parent="PresentationRoot/VisualRoot" index="0" unique_id=1973935004]
 visible = false
 
+[node name="BodyBounds" parent="PresentationRoot/VisualRoot" index="1" unique_id=560112177]
+scale = Vector2(0.7480394, 1.1536573)
+
 [node name="HealthBarAnchor" parent="PresentationRoot/VisualRoot" index="3" unique_id=156696154]
 position = Vector2(0.07255981, -31.999916)
 
 [node name="Trainer" type="Sprite2D" parent="PresentationRoot/VisualRoot" index="4" unique_id=1730652212]
-position = Vector2(7.371106, -16.649994)
+position = Vector2(7, -17.333332)
 scale = Vector2(2.113635, 2.2967055)
 texture = ExtResource("2_aeu7f")
 

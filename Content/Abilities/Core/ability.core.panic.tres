@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://dh244cxw0adh6"]
+
+[ext_resource type="Resource" uid="uid://conkf5syw843t" path="res://Content/StatusEffects/Core/status.core.panic.tres" id="1_4rw2v"]
+[ext_resource type="Script" uid="uid://bus4x5fmyodi8" path="res://Scripts/Content/Definitions/AbilityDefinition.cs" id="1_b3lyt"]
+
+[resource]
+script = ExtResource("1_b3lyt")
+ContentId = "ability.core.panic"
+DisplayName = "Panic"
+Description = "Causes enemies to flee in panic."
+CooldownSeconds = 20.0
+TargetMode = 4
+AreaOrigin = 1
+AreaRadius = 200.0
+Range = 150.0
+EffectType = 4
+AppliedStatusEffect = ExtResource("1_4rw2v")
+EffectDurationSeconds = 6.0
+SupportRole = 2
+metadata/_custom_type_script = "uid://bus4x5fmyodi8"

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="WeaponDefinition" format=3 uid="uid://dla615q11it6b"]
+
+[ext_resource type="Script" uid="uid://dvegn0qfvarlr" path="res://Scripts/Content/Definitions/EquipmentPercentageModifierDefinition.cs" id="1_c4mhc"]
+[ext_resource type="Script" uid="uid://c7t5joojna4re" path="res://Scripts/Content/Definitions/WeaponDefinition.cs" id="1_weapon"]
+
+[resource]
+script = ExtResource("1_weapon")
+WeaponType = 1
+ContentId = "weapon.core.starter_priest_mace"
+DisplayName = "Starter Mace"
+Description = "Starting one-handed melee weapon for the Priest."
+Stamina = 2
+Intellect = 1
+Spirit = 1

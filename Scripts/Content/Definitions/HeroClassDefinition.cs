@@ -5,20 +5,14 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class HeroClassDefinition : Resource
 {
+    public const int MaximumClassAbilityCount = 6;
+
     [ExportCategory("Identity")]
 
-    /// <summary>
-    /// Stable content identifier for content; other systems use this value to find the same game data.
-    /// For example, changing this ID makes the owning resource resolve a different registered content.
-    /// </summary>
     [Export(PropertyHint.PlaceholderText, "class.core.warrior")]
     public string ContentId { get; set; } =
         string.Empty;
 
-    /// <summary>
-    /// Controls display name.
-    /// For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.
-    /// </summary>
     [Export(PropertyHint.PlaceholderText, "Warrior")]
     public string DisplayName { get; set; } =
         "Unnamed Class";
@@ -35,21 +29,19 @@ public partial class HeroClassDefinition : Resource
     { get; set; }
 
 
-    [ExportCategory("Abilities")]
+    [ExportCategory("Ability Pool")]
 
     /// <summary>
-    /// Stable content identifier for abilitys; other systems use this value to find the same game data.
-    /// For example, changing this ID makes the owning resource resolve a different registered abilitys.
+    /// The complete class ability pool. A class may author up to six abilities,
+    /// but individual heroes equip only two of them at a time through their
+    /// starting loadout. Being present here makes an ability available to the
+    /// class; it does not automatically make the ability active in combat.
     /// </summary>
     [Export]
     public Godot.Collections.Array<string> AbilityContentIds
     { get; set; } = new();
 
 
-    /// <summary>
-    /// Retrieves validation errors from the current game state.
-    /// Reads the current state and returns the resulting i read only list string to the caller.
-    /// </summary>
     public IReadOnlyList<string> GetValidationErrors()
     {
         List<string> errors = new();
@@ -82,6 +74,14 @@ public partial class HeroClassDefinition : Resource
             }
         }
 
+        if (AbilityContentIds.Count > MaximumClassAbilityCount)
+        {
+            errors.Add(
+                $"{ContentId}: class ability pool contains " +
+                $"{AbilityContentIds.Count} abilities, but the maximum is " +
+                $"{MaximumClassAbilityCount}.");
+        }
+
         HashSet<string> seenAbilityIds =
             new(StringComparer.OrdinalIgnoreCase);
 
@@ -105,5 +105,28 @@ public partial class HeroClassDefinition : Resource
         }
 
         return errors;
+    }
+
+    /// <summary>
+    /// Returns whether the supplied ability ID belongs to this class's authored
+    /// ability pool.
+    /// </summary>
+    public bool ContainsAbility(string abilityContentId)
+    {
+        if (string.IsNullOrWhiteSpace(abilityContentId))
+            return false;
+
+        foreach (string candidate in AbilityContentIds)
+        {
+            if (string.Equals(
+                candidate?.Trim(),
+                abilityContentId.Trim(),
+                StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

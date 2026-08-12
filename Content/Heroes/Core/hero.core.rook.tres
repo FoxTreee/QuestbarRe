@@ -17,4 +17,6 @@ AttackInterval = 0.7
 AttackDuration = 0.15000000000000002
 AttackReleasePoint = 0.1
 CombatMoveSpeed = 110.0
+StartingMainHandWeaponContentId = "weapon.core.starter_rogue_dagger"
+StartingAbilitySlot1ContentId = "ability.core.sinister_strike"
 metadata/_custom_type_script = "uid://b38xxk3rax5nx"

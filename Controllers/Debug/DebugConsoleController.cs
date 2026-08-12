@@ -828,8 +828,8 @@ public partial class DebugConsoleController : Window
 			$"DAMAGE  " +
 			$"{combatEvent.Attacker.Name} → " +
 			$"{combatEvent.Target.Name} | " +
-			$"{combatEvent.Damage.AppliedDamage} applied | " +
-			$"{combatEvent.Damage.RemainingHealth} remaining";
+			$"{combatEvent.Damage.AppliedDamage:0} applied | " +
+			$"{combatEvent.Damage.RemainingHealth:0} remaining";
 	}
 
 	/// <summary>

@@ -668,7 +668,11 @@ public partial class HeroActorController : Node2D, ICombatStatusEffectOwner
 	/// </summary>
 	[Export]
 	public HeroAbilityCooldownIndicatorController
-		AbilityCooldownIndicator { get; set; } = null!;
+	AbilityCooldownIndicatorSlot1 { get; set; } = null!;
+
+	[Export]
+	public HeroAbilityCooldownIndicatorController
+	AbilityCooldownIndicatorSlot2 { get; set; } = null!;
 
 	/// <summary>
 	/// Inspector reference to the reusable Mana, Energy, or Rage bar beneath
@@ -988,7 +992,8 @@ public partial class HeroActorController : Node2D, ICombatStatusEffectOwner
 		_healthBar.Bind(Health);
 		ResourceBar.Bind(Resource);
 		ComboPointDisplay.Bind(ComboPoints, UsesComboPoints);
-		AbilityCooldownIndicator.Bind(this);
+		AbilityCooldownIndicatorSlot1.Bind(this, 0);
+		AbilityCooldownIndicatorSlot2.Bind(this, 1);
 		ApplyJourneyState(JourneyState.CurrentState);
 		SnapToFormation();
 
@@ -2372,10 +2377,17 @@ public partial class HeroActorController : Node2D, ICombatStatusEffectOwner
 		valid &= Require(BodyBounds, nameof(BodyBounds));
 		valid &= Require(Targeting, nameof(Targeting));
 		valid &= Require(ProjectileOrigin, nameof(ProjectileOrigin));
+		
 		valid &= Require(
-			AbilityCooldownIndicator,
-			nameof(AbilityCooldownIndicator));
+		AbilityCooldownIndicatorSlot1,
+		nameof(AbilityCooldownIndicatorSlot1));
+
+		valid &= Require(
+		AbilityCooldownIndicatorSlot2,
+		nameof(AbilityCooldownIndicatorSlot2));
+		
 		valid &= Require(ResourceBar, nameof(ResourceBar));
+		
 		valid &= Require(
 			ComboPointDisplay,
 			nameof(ComboPointDisplay));

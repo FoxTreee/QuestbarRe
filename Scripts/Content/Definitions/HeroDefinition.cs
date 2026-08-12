@@ -150,15 +150,84 @@ public partial class HeroDefinition : Resource
         140.0f;
 
 
-    [ExportCategory("Abilities")]
+    [ExportCategory("Starting Weapon Loadout")]
 
     /// <summary>
-    /// Stable content identifier for abilitys; other systems use this value to find the same game data.
-    /// For example, changing this ID makes the owning resource resolve a different registered abilitys.
+    /// Chooses whether this hero's normal attacks use the equipped Main Hand
+    /// melee weapon or the independent Ranged weapon. Current starter heroes
+    /// default to Melee.
     /// </summary>
     [Export]
-    public Godot.Collections.Array<string> AbilityContentIds
-    { get; set; } = new();
+    public HeroWeaponPreference StartingWeaponPreference
+    { get; set; } = HeroWeaponPreference.Melee;
+
+
+    /// <summary>
+    /// Weapon definition equipped in Main Hand when this hero is created
+    /// without saved/authoritative equipment data.
+    /// </summary>
+    [Export(PropertyHint.PlaceholderText, "weapon.core.example")]
+    public string StartingMainHandWeaponContentId
+    { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Weapon definition equipped in Off Hand when this hero is created
+    /// without saved/authoritative equipment data. Leave empty when unused.
+    /// </summary>
+    [Export(PropertyHint.PlaceholderText, "weapon.core.example")]
+    public string StartingOffHandWeaponContentId
+    { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Weapon definition equipped in the independent Ranged slot when this hero
+    /// is created without saved/authoritative equipment data.
+    /// </summary>
+    [Export(PropertyHint.PlaceholderText, "weapon.core.example")]
+    public string StartingRangedWeaponContentId
+    { get; set; } = string.Empty;
+
+
+    [ExportCategory("Starting Ability Loadout")]
+
+    /// <summary>
+    /// First class ability equipped when this hero is created without saved
+    /// loadout data. Leave empty for an unused slot. The ability must belong to
+    /// the hero's class ability pool.
+    /// </summary>
+    [Export(PropertyHint.PlaceholderText, "ability.core.example")]
+    public string StartingAbilitySlot1ContentId
+    { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Second class ability equipped when this hero is created without saved
+    /// loadout data. Leave empty for an unused slot. The ability must belong to
+    /// the hero's class ability pool and cannot duplicate slot 1.
+    /// </summary>
+    [Export(PropertyHint.PlaceholderText, "ability.core.example")]
+    public string StartingAbilitySlot2ContentId
+    { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Enumerates the non-empty starting ability slots in slot order.
+    /// Runtime systems should resolve only these IDs, never the entire class
+    /// ability pool.
+    /// </summary>
+    public IEnumerable<string> GetStartingEquippedAbilityIds()
+    {
+        if (!string.IsNullOrWhiteSpace(
+            StartingAbilitySlot1ContentId))
+        {
+            yield return
+                StartingAbilitySlot1ContentId.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(
+            StartingAbilitySlot2ContentId))
+        {
+            yield return
+                StartingAbilitySlot2ContentId.Trim();
+        }
+    }
 
 
     /// <summary>
@@ -270,28 +339,101 @@ public partial class HeroDefinition : Resource
                 $"{ContentId}: StartingCombatStance is invalid.");
         }
 
-        HashSet<string> seenAbilityIds =
-            new(System.StringComparer.OrdinalIgnoreCase);
-
-        foreach (string abilityContentId in AbilityContentIds)
+        if (!System.Enum.IsDefined(StartingWeaponPreference))
         {
-            if (!global::ContentId.IsValid(abilityContentId))
-            {
-                errors.Add(
-                    $"{ContentId}: invalid ability Content ID " +
-                    $"'{abilityContentId}'.");
+            errors.Add(
+                $"{ContentId}: StartingWeaponPreference is invalid.");
+        }
 
-                continue;
-            }
+        ValidateStartingWeaponContentId(
+            StartingMainHandWeaponContentId,
+            "StartingMainHandWeaponContentId",
+            errors);
 
-            if (!seenAbilityIds.Add(abilityContentId.Trim()))
-            {
-                errors.Add(
-                    $"{ContentId}: duplicate ability Content ID " +
-                    $"'{abilityContentId}'.");
-            }
+        ValidateStartingWeaponContentId(
+            StartingOffHandWeaponContentId,
+            "StartingOffHandWeaponContentId",
+            errors);
+
+        ValidateStartingWeaponContentId(
+            StartingRangedWeaponContentId,
+            "StartingRangedWeaponContentId",
+            errors);
+
+        ValidateStartingAbilitySlot(
+            StartingAbilitySlot1ContentId,
+            "StartingAbilitySlot1ContentId",
+            errors);
+
+        ValidateStartingAbilitySlot(
+            StartingAbilitySlot2ContentId,
+            "StartingAbilitySlot2ContentId",
+            errors);
+
+        if (!string.IsNullOrWhiteSpace(
+                StartingAbilitySlot1ContentId)
+            && string.Equals(
+                StartingAbilitySlot1ContentId.Trim(),
+                StartingAbilitySlot2ContentId?.Trim(),
+                System.StringComparison.OrdinalIgnoreCase))
+        {
+            errors.Add(
+                $"{ContentId}: starting ability slots cannot equip " +
+                $"the same ability twice.");
         }
 
         return errors;
+    }
+
+    private void ValidateStartingWeaponContentId(
+        string weaponContentId,
+        string propertyName,
+        List<string> errors)
+    {
+        if (string.IsNullOrWhiteSpace(weaponContentId))
+            return;
+
+        string normalizedId = weaponContentId.Trim();
+
+        if (!global::ContentId.IsValid(normalizedId)
+            || !normalizedId.StartsWith(
+                "weapon.",
+                System.StringComparison.Ordinal))
+        {
+            errors.Add(
+                $"{ContentId}: {propertyName} contains invalid weapon " +
+                $"Content ID '{weaponContentId}'.");
+        }
+    }
+
+    private void ValidateStartingAbilitySlot(
+        string abilityContentId,
+        string propertyName,
+        List<string> errors)
+    {
+        if (string.IsNullOrWhiteSpace(abilityContentId))
+            return;
+
+        string normalizedId = abilityContentId.Trim();
+
+        if (!global::ContentId.IsValid(normalizedId))
+        {
+            errors.Add(
+                $"{ContentId}: {propertyName} contains invalid ability " +
+                $"Content ID '{abilityContentId}'.");
+
+            return;
+        }
+
+        if (!GodotObject.IsInstanceValid(ClassDefinition))
+            return;
+
+        if (!ClassDefinition.ContainsAbility(normalizedId))
+        {
+            errors.Add(
+                $"{ContentId}: equipped ability '{normalizedId}' in " +
+                $"{propertyName} is not present in class ability pool " +
+                $"'{ClassDefinition.ContentId}'.");
+        }
     }
 }

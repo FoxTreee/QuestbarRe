@@ -70,20 +70,17 @@ public partial class HeroContentRegistry : Node
                 && definition.ClassDefinition.AbilityContentIds.Count > 0)
             {
                 DebugLog.Print(
-                    $"Class ability loadout: " +
+                    $"Class ability pool: " +
                     $"{definition.ClassDefinition.ContentId} " +
                     $"('{definition.ClassDefinition.DisplayName}') -> " +
                     $"{string.Join(", ", definition.ClassDefinition.AbilityContentIds)}");
             }
 
-            if (definition.AbilityContentIds.Count > 0)
-            {
-                DebugLog.Print(
-                    $"Hero-specific ability loadout: " +
-                    $"{definition.ContentId} " +
-                    $"('{definition.DisplayName}') -> " +
-                    $"{string.Join(", ", definition.AbilityContentIds)}");
-            }
+            DebugLog.Print(
+                $"Hero equipped ability loadout: " +
+                $"{definition.ContentId} " +
+                $"('{definition.DisplayName}') -> " +
+                $"{FormatStartingLoadout(definition)}");
         }
     }
 
@@ -167,7 +164,7 @@ public partial class HeroContentRegistry : Node
             new(definition.GetValidationErrors());
 
         foreach (string abilityContentId
-            in definition.AbilityContentIds)
+            in definition.GetStartingEquippedAbilityIds())
         {
             if (!global::ContentId.IsValid(abilityContentId))
                 continue;
@@ -177,8 +174,8 @@ public partial class HeroContentRegistry : Node
                 out _))
             {
                 errors.Add(
-                    $"{definition.ContentId}: unknown ability " +
-                    $"Content ID '{abilityContentId}'.");
+                    $"{definition.ContentId}: equipped ability " +
+                    $"Content ID '{abilityContentId}' is not registered.");
             }
         }
 
@@ -238,6 +235,22 @@ public partial class HeroContentRegistry : Node
     /// Performs the normalize operation for Hero Content Registry.
     /// Uses the supplied arguments and current state and returns the resulting string to the caller.
     /// </summary>
+    private static string FormatStartingLoadout(
+        HeroDefinition definition)
+    {
+        List<string> slots = new();
+
+        foreach (string abilityContentId
+            in definition.GetStartingEquippedAbilityIds())
+        {
+            slots.Add(abilityContentId);
+        }
+
+        return slots.Count == 0
+            ? "(empty)"
+            : string.Join(", ", slots);
+    }
+
     private static string Normalize(
         string contentId)
     {

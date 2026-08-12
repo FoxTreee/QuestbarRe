@@ -94,7 +94,12 @@ public sealed class CombatHealthState
     /// </summary>
     public float ApplySpellHealing(float requestedHealing)
     {
-        return ApplyRecovery(requestedHealing);
+        float roundedHealing =
+            MathF.Round(
+                MathF.Max(requestedHealing, 0.0f),
+                MidpointRounding.AwayFromZero);
+
+        return ApplyRecovery(roundedHealing);
     }
 
     /// <summary>

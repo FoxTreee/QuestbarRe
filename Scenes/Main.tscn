@@ -51,10 +51,18 @@
 [ext_resource type="Resource" uid="uid://djymbg83v4q3y" path="res://Content/Abilities/Core/ability.core.serpent_shot.tres" id="31_m4llh"]
 [ext_resource type="Resource" uid="uid://i0takopxv3o2" path="res://Content/Abilities/Core/ability.core.sinister_strike.tres" id="36_js5gh"]
 [ext_resource type="Resource" uid="uid://b3c4n8wtaxc3u" path="res://Content/Abilities/Core/ability.core.frost_nova.tres" id="37_yisvs"]
+[ext_resource type="Resource" uid="uid://dh244cxw0adh6" path="res://Content/Abilities/Core/ability.core.panic.tres" id="38_5gwyn"]
 [ext_resource type="Script" uid="uid://bgv0cmtivgfi7" path="res://Controllers/PartyController.cs" id="40_6ehlx"]
 [ext_resource type="Script" uid="uid://dwnavkiixraok" path="res://Scripts/Services/RewardLedgerService.cs" id="40_ep8v8"]
 [ext_resource type="Script" uid="uid://cte4v1w5xrc6j" path="res://Scripts/Services/SceneBoundaryService.cs" id="43_rgw24"]
+[ext_resource type="Script" uid="uid://bntu3gf7et4cn" path="res://Content/Registries/WeaponContentRegistry.cs" id="45_1bbis"]
+[ext_resource type="Script" uid="uid://c7t5joojna4re" path="res://Scripts/Content/Definitions/WeaponDefinition.cs" id="46_yn2g2"]
+[ext_resource type="Resource" uid="uid://dinrbyapfo14q" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_hunter_shortsword.tres" id="47_yic5e"]
+[ext_resource type="Resource" uid="uid://sfhe6svwus3e" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_mage_dagger.tres" id="48_ex7s8"]
+[ext_resource type="Resource" uid="uid://dla615q11it6b" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_priest_mace.tres" id="49_4clwk"]
+[ext_resource type="Resource" uid="uid://cn2g2o2r78jph" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_rogue_dagger.tres" id="50_h2tpa"]
 [ext_resource type="Script" uid="uid://dphwrvuij0an5" path="res://Controllers/RegionRunController.cs" id="51_7sj7i"]
+[ext_resource type="Resource" uid="uid://d1ovf4dv10c4l" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_warrior_longsword.tres" id="51_nkjwg"]
 [ext_resource type="Resource" uid="uid://fgvs1onm3prx" path="res://Resources/Regions/TrainingRegion.tres" id="52_semxg"]
 [ext_resource type="Script" uid="uid://bi3msg7aodwjr" path="res://Controllers/IncapacitationChoicePopupController.cs" id="54_3133c"]
 [ext_resource type="Script" uid="uid://fgfei303hnli" path="res://Scripts/Services/CombatHitResolver.cs" id="56_vvjo1"]
@@ -342,9 +350,10 @@ script = ExtResource("9_vs04g")
 AbilityRegistry = NodePath("../AbilityContentRegistry")
 Definitions = Array[ExtResource("10_6ehlx")]([ExtResource("11_utia5"), ExtResource("11_6ehlx"), ExtResource("12_utia5"), ExtResource("13_f7hdo"), ExtResource("14_clvyn")])
 
-[node name="HeroFactory" type="Node" parent="Services" unique_id=242192504 node_paths=PackedStringArray("Registry")]
+[node name="HeroFactory" type="Node" parent="Services" unique_id=242192504 node_paths=PackedStringArray("Registry", "WeaponRegistry")]
 script = ExtResource("12_f7hdo")
 Registry = NodePath("../HeroContentRegistry")
+WeaponRegistry = NodePath("../WeaponContentRegistry")
 
 [node name="MonsterContentRegistry" type="Node" parent="Services" unique_id=436469126 node_paths=PackedStringArray("AbilityRegistry")]
 script = ExtResource("8_346fj")
@@ -363,7 +372,7 @@ SceneBoundaries = NodePath("../SceneBoundaryService")
 
 [node name="AbilityContentRegistry" type="Node" parent="Services" unique_id=801032179]
 script = ExtResource("25_vvnwx")
-Definitions = Array[ExtResource("26_btbly")]([ExtResource("27_vs04g"), ExtResource("29_d8m2u"), ExtResource("30_5psol"), ExtResource("31_m4llh"), ExtResource("36_js5gh"), ExtResource("37_yisvs")])
+Definitions = Array[ExtResource("26_btbly")]([ExtResource("27_vs04g"), ExtResource("29_d8m2u"), ExtResource("30_5psol"), ExtResource("31_m4llh"), ExtResource("36_js5gh"), ExtResource("37_yisvs"), ExtResource("38_5gwyn")])
 
 [node name="EncounterPoolContentRegistry" type="Node" parent="Services" unique_id=297296029 node_paths=PackedStringArray("EncounterRegistry")]
 script = ExtResource("21_u7mjy")
@@ -386,6 +395,10 @@ SceneLeftBoundary = NodePath("../../RegionViewportContainer/RegionViewport/Scala
 SceneRightBoundary = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/SceneRightBoundary")
 GroundTopBoundary = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer/GroundTopBoundary")
 GroundBottomBoundary = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer/GroundBottomBoundary")
+
+[node name="WeaponContentRegistry" type="Node" parent="Services" unique_id=1270571163]
+script = ExtResource("45_1bbis")
+Definitions = Array[ExtResource("46_yn2g2")]([ExtResource("47_yic5e"), ExtResource("48_ex7s8"), ExtResource("49_4clwk"), ExtResource("50_h2tpa"), ExtResource("51_nkjwg")])
 
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 

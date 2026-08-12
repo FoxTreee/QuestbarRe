@@ -24,7 +24,12 @@ public partial class CombatDamageResolver : Node
         ArgumentNullException.ThrowIfNull(
             targetHealth);
 
+        float roundedDamage =
+            MathF.Round(
+                MathF.Max(request.RequestedDamage, 0.0f),
+                MidpointRounding.AwayFromZero);
+
         return targetHealth.ApplyDamage(
-            request.RequestedDamage);
+            roundedDamage);
     }
 }

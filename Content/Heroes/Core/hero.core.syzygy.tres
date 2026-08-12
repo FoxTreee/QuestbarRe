@@ -17,5 +17,6 @@ AttackDamage = 28.0
 AttackInterval = 1.6
 AttackDuration = 0.3
 AttackReleasePoint = 0.25
-AbilityContentIds = Array[String](["ability.core.taunt"])
+StartingMainHandWeaponContentId = "weapon.core.starter_warrior_longsword"
+StartingAbilitySlot1ContentId = "ability.core.taunt"
 metadata/_custom_type_script = "uid://b38xxk3rax5nx"

@@ -975,7 +975,7 @@ public partial class DebugCommandService : Node
 
 				AppendAbilityIds(
 					output,
-					hero.AbilityContentIds,
+					hero.GetStartingEquippedAbilityIds(),
 					abilityRegistry,
 					"      Hero abilities");
 			}
@@ -1000,7 +1000,7 @@ public partial class DebugCommandService : Node
 
 			AppendAbilityIds(
 				output,
-				hero.AbilityContentIds,
+				hero.GetStartingEquippedAbilityIds(),
 				abilityRegistry,
 				"    Hero abilities");
 		}
@@ -1089,47 +1089,47 @@ public partial class DebugCommandService : Node
 	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
 	/// </summary>
 	private static void AppendAbilityIds(
-		StringBuilder output,
-		Godot.Collections.Array<string> abilityContentIds,
-		AbilityContentRegistry abilityRegistry,
-		string label)
+	StringBuilder output,
+	IEnumerable<string> abilityContentIds,
+	AbilityContentRegistry abilityRegistry,
+	string label)
+{
+	List<string> sortedAbilityIds =
+		new(abilityContentIds);
+
+	if (sortedAbilityIds.Count == 0)
 	{
-		if (abilityContentIds.Count == 0)
-		{
-			output.AppendLine($"{label}: None");
-			return;
-		}
-
-		output.AppendLine($"{label}:");
-
-		List<string> sortedAbilityIds =
-			new(abilityContentIds);
-
-		sortedAbilityIds.Sort(
-			StringComparer.OrdinalIgnoreCase);
-
-		foreach (string abilityContentId in sortedAbilityIds)
-		{
-			string displayName = "Unregistered";
-
-			if (abilityRegistry.TryGet(
-				abilityContentId,
-				out AbilityDefinition definition))
-			{
-				displayName = definition.DisplayName;
-			}
-
-			int leadingSpaceCount =
-				label.Length - label.TrimStart().Length;
-
-			string entryIndent =
-				new(' ', leadingSpaceCount + 2);
-
-			output.AppendLine(
-				entryIndent +
-				$"{abilityContentId} - {displayName}");
-		}
+		output.AppendLine($"{label}: None");
+		return;
 	}
+
+	output.AppendLine($"{label}:");
+
+	sortedAbilityIds.Sort(
+		StringComparer.OrdinalIgnoreCase);
+
+	foreach (string abilityContentId in sortedAbilityIds)
+	{
+		string displayName = "Unregistered";
+
+		if (abilityRegistry.TryGet(
+			abilityContentId,
+			out AbilityDefinition definition))
+		{
+			displayName = definition.DisplayName;
+		}
+
+		int leadingSpaceCount =
+			label.Length - label.TrimStart().Length;
+
+		string entryIndent =
+			new(' ', leadingSpaceCount + 2);
+
+		output.AppendLine(
+			entryIndent +
+				$"{abilityContentId} - {displayName}");
+	}
+}
 
 	/// <summary>
 	/// Performs the append section header operation for assigned.

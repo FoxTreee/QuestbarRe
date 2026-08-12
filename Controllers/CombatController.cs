@@ -491,7 +491,7 @@ public partial class CombatController : Node
 		{
 			result =
 				$"{ability.DisplayName} resolved invalid damage " +
-				$"({requestedDamage:0.##}).";
+				$"({requestedDamage:0}).";
 			return false;
 		}
 
@@ -503,13 +503,13 @@ public partial class CombatController : Node
 
 		DebugLog.Print(
 			$"{caster.Name} used '{ability.DisplayName}' on {target.Name}. " +
-			$"RequestedDamage={requestedDamage:0.##}; " +
-			$"AppliedDamage={damage.AppliedDamage:0.##}.",
+			$"RequestedDamage={requestedDamage:0}; " +
+			$"AppliedDamage={damage.AppliedDamage:0}.",
 			DebugLogCategory.Ability);
 
 		result =
 			$"{caster.Name} used {ability.DisplayName} on {target.Name} " +
-			$"for {damage.AppliedDamage:0.##} damage.";
+			$"for {damage.AppliedDamage:0} damage.";
 
 		return true;
 	}
@@ -649,7 +649,7 @@ public partial class CombatController : Node
 				Mathf.Max(ability.BaseDamage, 0.0f),
 
 			AbilityDamageCalculationMode.BasicAttackMultiplier =>
-				Mathf.Max(caster.CombatProfile.AttackDamage, 0.0f)
+				Mathf.Max(caster.RollActiveWeaponDamage(), 0.0f)
 				* Mathf.Max(ability.BasicAttackDamageMultiplier, 0.0f),
 
 			_ => 0.0f
@@ -682,13 +682,13 @@ public partial class CombatController : Node
 
 		DebugLog.Print(
 			$"{caster.Name} used '{ability.DisplayName}' on " +
-			$"{target.Name}. SpellHealing={appliedHealing:0.##}; " +
-			$"Health={target.Health.CurrentHealth:0.##}/" +
-			$"{target.Health.MaximumHealth:0.##}.");
+			$"{target.Name}. SpellHealing={appliedHealing:0}; " +
+			$"Health={target.Health.CurrentHealth:0}/" +
+			$"{target.Health.MaximumHealth:0}.");
 
 		result =
 			$"{caster.Name} healed {target.Name} for " +
-			$"{appliedHealing:0.##}.";
+			$"{appliedHealing:0}.";
 
 		return true;
 	}
@@ -1105,10 +1105,13 @@ public partial class CombatController : Node
 			return;
 		}
 
+		float weaponDamage =
+			attacker.RollActiveWeaponDamage();
+
 		ApplyHeroDamage(
 			attacker,
 			target,
-			attacker.CombatProfile.AttackDamage,
+			weaponDamage,
 			HeroDamageOrigin.BasicAttack);
 	}
 
@@ -1446,7 +1449,7 @@ public partial class CombatController : Node
 			DebugLog.Print(
 				$"{source.Name} refreshed " +
 				$"'{ability.DisplayName}' on {target.Name}. " +
-				$"Damage={ability.BaseDamage:0.##} every " +
+				$"Damage={ability.BaseDamage:0} every " +
 				$"{ability.EffectTickIntervalSeconds:0.##}s; " +
 				$"Ticks={totalTicks}.",
 				DebugLogCategory.Ability);
@@ -1464,7 +1467,7 @@ public partial class CombatController : Node
 		DebugLog.Print(
 			$"{source.Name} applied '{ability.DisplayName}' " +
 			$"to {target.Name}. " +
-			$"Damage={ability.BaseDamage:0.##} every " +
+			$"Damage={ability.BaseDamage:0} every " +
 			$"{ability.EffectTickIntervalSeconds:0.##}s; " +
 			$"Ticks={totalTicks}; " +
 			$"Duration={ability.EffectDurationSeconds:0.##}s.",
@@ -1768,11 +1771,11 @@ public partial class CombatController : Node
 
 		DebugLog.Print(
 			$"{source.Name}'s '{ability.DisplayName}' dealt " +
-			$"{result.AppliedDamage:0.##} poison damage to " +
+			$"{result.AppliedDamage:0} poison damage to " +
 			$"{target.Name}. " +
 			$"Tick={activeEffect.AppliedTickCount + 1}/" +
 			$"{activeEffect.TotalTicks}; " +
-			$"Remaining health={result.RemainingHealth:0.##}.",
+			$"Remaining health={result.RemainingHealth:0}.",
 			DebugLogCategory.Ability);
 
 		if (!result.WasLethal)
@@ -3121,10 +3124,10 @@ public partial class CombatController : Node
 	{
 		DebugLog.Print(
 			$"{attackerName} dealt " +
-			$"{result.AppliedDamage} damage to " +
+			$"{result.AppliedDamage:0} damage to " +
 			$"{targetName}. " +
 			$"Remaining health=" +
-			$"{result.RemainingHealth}.");
+			$"{result.RemainingHealth:0}.");
 
 		if (!result.WasLethal)
 			return;

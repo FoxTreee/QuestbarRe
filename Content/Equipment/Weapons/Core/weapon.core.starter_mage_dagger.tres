@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WeaponDefinition" format=3 uid="uid://sfhe6svwus3e"]
+
+[ext_resource type="Script" uid="uid://dvegn0qfvarlr" path="res://Scripts/Content/Definitions/EquipmentPercentageModifierDefinition.cs" id="1_4nfi4"]
+[ext_resource type="Script" uid="uid://c7t5joojna4re" path="res://Scripts/Content/Definitions/WeaponDefinition.cs" id="1_weapon"]
+
+[resource]
+script = ExtResource("1_weapon")
+WeaponType = 2
+ContentId = "weapon.core.starter_mage_dagger"
+DisplayName = "Starter Dagger"
+Description = "Starting one-handed melee weapon for the Mage."
+Stamina = 2
+Intellect = 2

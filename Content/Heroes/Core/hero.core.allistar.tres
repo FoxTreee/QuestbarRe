@@ -21,4 +21,6 @@ AttackReleasePoint = 1.0
 AttackLungeDistance = 4.0
 AttackDelivery = 1
 CombatMoveSpeed = 101.0
+StartingMainHandWeaponContentId = "weapon.core.starter_priest_mace"
+StartingAbilitySlot1ContentId = "ability.core.heal"
 metadata/_custom_type_script = "uid://b38xxk3rax5nx"

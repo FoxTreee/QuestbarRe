@@ -1,6 +1,7 @@
 {
   "res://Content/Factories/HeroFactory.cs": {
-    "Registry": "Inspector reference used by this component for its registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+    "Registry": "Inspector reference used by this component for its registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "WeaponRegistry": "Registry used to resolve a hero's starting weapon Content IDs into validated runtime equipment."
   },
   "res://Content/Factories/MonsterFactory.cs": {
     "Registry": "Inspector reference used by this component for its registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
@@ -54,7 +55,7 @@
     "BobPhaseOffset": "Controls bob phase offset, measured as pixels. For example, changing 0 to 1 doubles this setting's configured contribution to the system.",
     "MovementAnimationGraceTime": "Controls movement animation grace time, measured as seconds. For example, changing 0.15 to 0.3 doubles this setting's configured contribution to the system.",
     "TemporaryMaximumHealth": "Controls temporary maximum health, measured as health points. For example, changing 100 to 200 doubles the configured temporary maximum health.",
-    "TemporaryAttackDamage": "Controls temporary attack damage, measured as damage points. For example, changing 20 to 40 doubles the configured temporary attack damage.",
+    "TemporaryAttackDamage": "Legacy/transitional hero-authored damage value. Equipped heroes no longer use this for normal attack damage; normal attacks roll directly from the active weapon. Keep only as temporary fallback/debug data during migration.",
     "CombatMoveSpeed": "Controls combat move speed, measured as pixels per second. For example, changing 140 to 280 makes the affected movement or animation run about twice as fast.",
     "TemporaryAttackRange": "Controls temporary attack range, measured as pixels. For example, changing 28 to 56 doubles the configured temporary attack range.",
     "CombatArrivalDistance": "Controls combat arrival distance, measured as pixels. For example, changing 1 to 2 doubles the configured combat arrival distance.",
@@ -65,7 +66,7 @@
     "HeroSeparationHorizontalRangeMultiplier": "Controls hero separation horizontal range multiplier, measured as pixels. For example, changing 1 to 2 doubles the configured hero separation horizontal range multiplier.",
     "HeroSeparationVerticalSpacingMultiplier": "Controls hero separation vertical spacing multiplier, measured as pixels. For example, changing 0.75 to 1.5 doubles this setting's configured contribution to the system.",
     "HeroSeparationSpeed": "Controls hero separation speed, measured as pixels per second. For example, changing 24 to 48 makes the affected movement or animation run about twice as fast.",
-    "TemporaryAttackInterval": "Controls temporary attack interval, measured as seconds. For example, changing 1.5 to 3 makes the affected action wait twice as long between uses.",
+    "TemporaryAttackInterval": "Legacy/transitional hero attack timing value. When an active weapon is equipped, its AttackSpeedSeconds overwrites this value and becomes authoritative for normal attack timing.",
     "TemporaryAttackDuration": "Controls temporary attack duration, measured as seconds. For example, changing 0.3 to 0.6 doubles this setting's configured contribution to the system.",
     "TemporaryAttackLungeDistance": "Controls temporary attack lunge distance, measured as pixels. For example, changing 8 to 16 doubles the configured temporary attack lunge distance.",
     "TemporaryAttackReleasePoint": "Controls temporary attack release point. For example, changing 0.5 to 1 doubles this setting's configured contribution to the system.",
@@ -257,7 +258,7 @@
     "ContentId": "Stable content identifier for content; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered content.",
     "DisplayName": "Controls display name. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
     "ResourceDefinition": "Defines this class's resource type, capacity, starting amount, and regeneration. Leave it empty for a class that does not use Mana, Energy, or Rage.",
-    "AbilityContentIds": "Stable content identifier for abilitys; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered abilitys."
+    "AbilityContentIds": "Complete class ability pool. Author up to six ability Content IDs here. These abilities are available to the class but are not automatically active; each hero equips at most two through its starting loadout."
   },
   "res://Scripts/Content/Definitions/HeroResourceDefinition.cs": {
     "ResourceType": "Selects Mana, Energy, Rage, or None. None disables runtime resource tracking for heroes using this definition.",
@@ -304,7 +305,12 @@
     "AttackLungeDistance": "Controls attack lunge distance, measured as pixels. For example, changing 8 to 16 doubles the configured attack lunge distance.",
     "AttackDelivery": "Controls attack delivery. For example, selecting a different value changes which attack delivery behavior or content the owning system uses.",
     "CombatMoveSpeed": "Controls combat move speed, measured as pixels per second. For example, changing 140 to 280 makes the affected movement or animation run about twice as fast.",
-    "AbilityContentIds": "Stable content identifier for abilitys; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered abilitys."
+    "StartingAbilitySlot1ContentId": "First ability equipped by default when this hero is created. Leave empty for an unused slot. The ID must belong to the hero class's ability pool.",
+    "StartingAbilitySlot2ContentId": "Second ability equipped by default when this hero is created. Leave empty for an unused slot. The ID must belong to the hero class's ability pool and cannot duplicate slot 1.",
+    "StartingMainHandWeaponContentId": "Default Main Hand weapon template for this hero when no saved/authoritative loadout is supplied.",
+    "StartingOffHandWeaponContentId": "Default Off Hand weapon template. Leave empty when the hero starts without an off-hand weapon.",
+    "StartingRangedWeaponContentId": "Default weapon template for the independent Ranged slot. Leave empty until a ranged starter is assigned.",
+    "StartingWeaponPreference": "Which equipped weapon supplies this hero's normal attack damage and attack speed. Melee uses Main Hand; Ranged uses the independent Ranged slot. Current starter heroes default to Melee."
   },
   "res://Scripts/Content/Definitions/MonsterDefinition.cs": {
     "ContentId": "Stable content identifier for content; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered content.",
@@ -389,5 +395,33 @@
     "SceneRightBoundary": "Movable Marker2D defining the right edge for gameplay mechanics that opt into scene containment. It is not a collision wall.",
     "GroundTopBoundary": "Existing movable Marker2D defining the top legal grounded-actor Y coordinate.",
     "GroundBottomBoundary": "Existing movable Marker2D defining the bottom legal grounded-actor Y coordinate."
+  },
+  "res://Scripts/Content/Definitions/EquipmentDefinition.cs": {
+    "ContentId": "Stable equipment template ID. This identifies the item definition, not a future server-issued owned item instance.",
+    "DisplayName": "Player-facing equipment name used by tooltips and UI.",
+    "Description": "Optional player-facing description for this equipment definition.",
+    "RequiredLevel": "Minimum hero level required to equip this item. Questbar does not use Item Level.",
+    "Strength": "Authored Strength granted while equipped. Stored now; its gameplay formula is intentionally not implemented yet.",
+    "Agility": "Authored Agility granted while equipped. Stored now; its gameplay formula is intentionally not implemented yet.",
+    "Stamina": "Authored Stamina granted while equipped. Stored now; its gameplay formula is intentionally not implemented yet.",
+    "Intellect": "Authored Intellect granted while equipped. Stored now; its gameplay formula is intentionally not implemented yet.",
+    "Spirit": "Authored Spirit granted while equipped. Stored now; its gameplay formula is intentionally not implemented yet.",
+    "PercentageModifiers": "Optional data-only percentage equipment effects. These values do nothing until the corresponding mechanic is explicitly implemented."
+  },
+  "res://Scripts/Content/Definitions/WeaponDefinition.cs": {
+    "AttackStyle": "Whether this weapon is used for melee or ranged normal attacks.",
+    "WeaponType": "Weapon family such as Sword, Mace, Dagger, Bow, Gun, or Wand.",
+    "Handedness": "Whether the weapon requires one hand or two hands. Class/talent rules such as Rogue dual wield are validated separately.",
+    "MinimumDamage": "Minimum raw whole-number damage available to a normal attack using this weapon. The runtime weapon roll uses integer damage; character stat scaling is not implemented yet.",
+    "MaximumDamage": "Maximum raw whole-number damage available to a normal attack using this weapon. The runtime weapon roll uses integer damage; character stat scaling is not implemented yet.",
+    "AttackSpeedSeconds": "Seconds between normal attacks when this weapon is active. This is the tooltip-style weapon Speed value.",
+    "EquipPosition": "Which hero weapon slot this item is eligible to occupy: Main Hand only, Off Hand only, Either Hand, or Ranged. This is separate from one-handed/two-handed occupancy and separate from class/talent permission."
+  },
+  "res://Scripts/Content/Definitions/EquipmentPercentageModifierDefinition.cs": {
+    "ModifierContentId": "Stable ID describing the future equipment effect this percentage belongs to. The equipment item stores data only; gameplay logic is resolved elsewhere.",
+    "PercentValue": "Percentage supplied by the item. For example, 2 means +2%. This has no gameplay effect until its mechanic is implemented."
+  },
+  "res://Content/Registries/WeaponContentRegistry.cs": {
+    "Definitions": "Weapon definitions currently available to local content. Later, server-authoritative item ownership can reference the same stable weapon Content IDs."
   }
 }

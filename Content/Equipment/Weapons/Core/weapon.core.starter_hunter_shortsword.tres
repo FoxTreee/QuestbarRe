@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WeaponDefinition" format=3 uid="uid://dinrbyapfo14q"]
+
+[ext_resource type="Script" uid="uid://dvegn0qfvarlr" path="res://Scripts/Content/Definitions/EquipmentPercentageModifierDefinition.cs" id="1_blbnp"]
+[ext_resource type="Script" uid="uid://c7t5joojna4re" path="res://Scripts/Content/Definitions/WeaponDefinition.cs" id="1_weapon"]
+
+[resource]
+script = ExtResource("1_weapon")
+ContentId = "weapon.core.starter_hunter_shortsword"
+DisplayName = "Starter Shortsword"
+Description = "Starting one-handed melee weapon for the Hunter."
+Strength = 1
+Agility = 1
+Stamina = 1

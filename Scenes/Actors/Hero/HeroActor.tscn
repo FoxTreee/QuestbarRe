@@ -15,28 +15,30 @@ corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4ebpt"]
-bg_color = Color(1, 1, 1, 1)
+bg_color = Color(0.27265528, 0.2726553, 0.2726553, 1)
 corner_radius_top_left = 1
 corner_radius_top_right = 1
 corner_radius_bottom_right = 1
 corner_radius_bottom_left = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_eh30r"]
-bg_color = Color(0.14509805, 0.15686275, 0.1882353, 1)
+bg_color = Color(0.7383602, 0.60241884, 0.33683327, 1)
 corner_radius_top_left = 1
 corner_radius_top_right = 1
 corner_radius_bottom_right = 1
 corner_radius_bottom_left = 1
 
-[node name="HeroActor" type="Node2D" unique_id=162660220 node_paths=PackedStringArray("VisualRoot", "BodyBounds", "ProjectileOrigin", "AbilityCooldownIndicator", "ResourceBar", "ComboPointDisplay")]
+[node name="HeroActor" type="Node2D" unique_id=162660220 node_paths=PackedStringArray("VisualRoot", "BodyBounds", "ProjectileOrigin", "AbilityCooldownIndicatorSlot1", "AbilityCooldownIndicatorSlot2", "ResourceBar", "ComboPointDisplay")]
 script = ExtResource("1_nd8h6")
 VisualRoot = NodePath("VisualRoot")
 BodyBounds = NodePath("VisualRoot/BodyBounds")
 ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
-AbilityCooldownIndicator = NodePath("VisualRoot/HeroAbilityCooldownIndicator")
+AbilityCooldownIndicatorSlot1 = NodePath("VisualRoot/HeroAbilityCooldownIndicator")
+AbilityCooldownIndicatorSlot2 = NodePath("VisualRoot/HeroAbilityCooldownIndicator2")
 ResourceBar = NodePath("VisualRoot/HeroResourceBar")
 ComboPointDisplay = NodePath("VisualRoot/HeroComboPointDisplay")
-MeleeSlotVerticalSpacingMultiplier = 0.6
+MeleeSlotHorizontalSpacingMultiplier = 0.75
+MeleeSlotVerticalSpacingMultiplier = 0.4
 
 [node name="VisualRoot" type="Node2D" parent="." unique_id=18405630]
 
@@ -64,7 +66,7 @@ position = Vector2(-12, -24)
 
 [node name="HeroAbilityCooldownIndicator" type="Node2D" parent="VisualRoot" unique_id=390563175]
 z_index = 6
-position = Vector2(-15, -62.000004)
+position = Vector2(-8, -62)
 scale = Vector2(1.3370678, 1.3863667)
 script = ExtResource("4_d8mty")
 
@@ -78,6 +80,34 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_d8mty")
 
 [node name="CooldownProgress" type="ProgressBar" parent="VisualRoot/HeroAbilityCooldownIndicator" unique_id=610945823]
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+theme_override_styles/background = SubResource("StyleBoxFlat_4ebpt")
+theme_override_styles/fill = SubResource("StyleBoxFlat_eh30r")
+max_value = 1.0
+step = 0.001
+value = 1.0
+fill_mode = 3
+show_percentage = false
+
+[node name="HeroAbilityCooldownIndicator2" type="Node2D" parent="VisualRoot" unique_id=2106245047]
+z_index = 6
+position = Vector2(8, -62)
+scale = Vector2(1.3370678, 1.3863667)
+script = ExtResource("4_d8mty")
+
+[node name="Outline" type="Panel" parent="VisualRoot/HeroAbilityCooldownIndicator2" unique_id=323238120]
+visible = false
+offset_left = -5.0
+offset_top = -5.0
+offset_right = 5.0
+offset_bottom = 5.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_d8mty")
+
+[node name="CooldownProgress" type="ProgressBar" parent="VisualRoot/HeroAbilityCooldownIndicator2" unique_id=282187191]
 offset_left = -4.0
 offset_top = -4.0
 offset_right = 4.0

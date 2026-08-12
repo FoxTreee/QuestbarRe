@@ -5,18 +5,14 @@ public partial class HeroFactory : Node
 {
     [ExportCategory("Dependencies")]
 
-    /// <summary>
-    /// Inspector reference used by this component for its registry dependency.
-    /// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
-    /// </summary>
     [Export]
     public HeroContentRegistry Registry
     { get; set; } = null!;
 
-    /// <summary>
-    /// Runs Godot setup for Hero Factory when the node enters the scene tree.
-    /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
-    /// </summary>
+    [Export]
+    public WeaponContentRegistry WeaponRegistry
+    { get; set; } = null!;
+
     public override void _Ready()
     {
         if (!GodotObject.IsInstanceValid(Registry))
@@ -25,12 +21,15 @@ public partial class HeroFactory : Node
                 "HeroFactory is missing its " +
                 "Registry Inspector reference.");
         }
+
+        if (!GodotObject.IsInstanceValid(WeaponRegistry))
+        {
+            GD.PushError(
+                "HeroFactory is missing its " +
+                "WeaponRegistry Inspector reference.");
+        }
     }
 
-    /// <summary>
-    /// Attempts to create without throwing when the operation cannot be completed.
-    /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
-    /// </summary>
     public bool TryCreate(
         string contentId,
         out HeroActorController hero,
@@ -43,6 +42,14 @@ public partial class HeroFactory : Node
         {
             error =
                 "HeroFactory has no valid registry.";
+
+            return false;
+        }
+
+        if (!GodotObject.IsInstanceValid(WeaponRegistry))
+        {
+            error =
+                "HeroFactory has no valid weapon registry.";
 
             return false;
         }
@@ -72,45 +79,108 @@ public partial class HeroFactory : Node
             definition.ActorScene.Instantiate
                 <HeroActorController>();
 
-        List<AbilityDefinition> abilities = new();
-        HashSet<string> loadedAbilityIds =
-            new(System.StringComparer.OrdinalIgnoreCase);
+        List<AbilityDefinition> equippedAbilities = new();
 
         foreach (string abilityContentId
-            in definition.ClassDefinition.AbilityContentIds)
+            in definition.GetStartingEquippedAbilityIds())
         {
-            if (loadedAbilityIds.Add(abilityContentId)
-                && Registry.AbilityRegistry.TryGet(
+            if (!Registry.AbilityRegistry.TryGet(
                 abilityContentId,
                 out AbilityDefinition ability))
             {
-                abilities.Add(ability);
+                error =
+                    $"{definition.ContentId}: equipped ability " +
+                    $"'{abilityContentId}' is not registered.";
+
+                hero.QueueFree();
+                hero = null!;
+                return false;
             }
+
+            equippedAbilities.Add(ability);
         }
 
-        foreach (string abilityContentId
-            in definition.AbilityContentIds)
+        if (!TryResolveStartingWeapon(
+            definition.StartingMainHandWeaponContentId,
+            HeroWeaponSlot.MainHand,
+            out WeaponDefinition? mainHand,
+            out error)
+            || !TryResolveStartingWeapon(
+                definition.StartingOffHandWeaponContentId,
+                HeroWeaponSlot.OffHand,
+                out WeaponDefinition? offHand,
+                out error)
+            || !TryResolveStartingWeapon(
+                definition.StartingRangedWeaponContentId,
+                HeroWeaponSlot.Ranged,
+                out WeaponDefinition? ranged,
+                out error))
         {
-            if (loadedAbilityIds.Add(abilityContentId)
-                && Registry.AbilityRegistry.TryGet(
-                    abilityContentId,
-                    out AbilityDefinition ability))
-            {
-                abilities.Add(ability);
-            }
+            hero.QueueFree();
+            hero = null!;
+            return false;
         }
 
         hero.Configure(
             definition,
-            abilities);
+            equippedAbilities);
+
+        if (!hero.TryConfigureStartingEquipment(
+            mainHand,
+            offHand,
+            ranged,
+            out error))
+        {
+            error =
+                $"{definition.ContentId}: {error}";
+
+            hero.QueueFree();
+            hero = null!;
+            return false;
+        }
 
         return true;
     }
 
-    /// <summary>
-    /// Creates required from the supplied configuration and current dependencies.
-    /// Uses the supplied arguments and current state and returns the resulting hero actor controller to the caller.
-    /// </summary>
+    private bool TryResolveStartingWeapon(
+        string weaponContentId,
+        HeroWeaponSlot slot,
+        out WeaponDefinition? weapon,
+        out string error)
+    {
+        weapon = null;
+        error = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(weaponContentId))
+            return true;
+
+        string normalizedId =
+            weaponContentId.Trim();
+
+        if (!WeaponRegistry.TryGet(
+            normalizedId,
+            out WeaponDefinition definition))
+        {
+            error =
+                $"Starting weapon '{normalizedId}' is not registered.";
+
+            return false;
+        }
+
+        if (!definition.CanEquipInSlot(slot))
+        {
+            error =
+                $"Starting weapon '{normalizedId}' is not eligible " +
+                $"for {slot}. EquipPosition={definition.EquipPosition}.";
+
+            return false;
+        }
+
+        weapon = definition;
+        return true;
+    }
+
+
     public HeroActorController CreateRequired(
         string contentId)
     {
