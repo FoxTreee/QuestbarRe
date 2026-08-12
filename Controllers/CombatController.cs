@@ -48,6 +48,14 @@ public partial class CombatController : Node
 	public CombatDamageResolver DamageResolver { get; set; } = null!;
 
 	/// <summary>
+	/// Resolves whether offensive attacks and abilities connect before damage
+	/// or other hit-gated effects are applied. In 21F-A every check resolves
+	/// to Hit; later checkpoints add real miss/dodge rules inside this service.
+	/// </summary>
+	[Export]
+	public CombatHitResolver HitResolver { get; set; } = null!;
+
+	/// <summary>
 	/// Inspector reference used by this component for its party dependency.
 	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
 	/// </summary>
@@ -331,7 +339,8 @@ public partial class CombatController : Node
 
 		if (ability.EffectType != AbilityEffectType.AreaTaunt
 			&& ability.EffectType != AbilityEffectType.DirectHealing
-			&& ability.EffectType != AbilityEffectType.DirectDamage)
+			&& ability.EffectType != AbilityEffectType.DirectDamage
+			&& ability.EffectType != AbilityEffectType.ApplyStatusEffect)
 		{
 			return FailUnsupportedHeroAbility(
 				ability,
@@ -347,6 +356,9 @@ public partial class CombatController : Node
 				ResolveAutomaticHealingTarget(hero, ability),
 
 			AbilityEffectType.DirectDamage =>
+				ResolveAbilityTarget(hero, ability),
+
+			AbilityEffectType.ApplyStatusEffect =>
 				ResolveAbilityTarget(hero, ability),
 
 			_ => null
@@ -399,6 +411,13 @@ public partial class CombatController : Node
 					ability,
 					out result),
 
+			AbilityEffectType.ApplyStatusEffect =>
+				TryApplyStatusEffectAbility(
+					hero,
+					target,
+					ability,
+					out result),
+
 			_ => false
 		};
 
@@ -447,6 +466,22 @@ public partial class CombatController : Node
 			return false;
 		}
 
+		if (!TryResolveOffensiveHit(
+			caster,
+			target,
+			ability.DodgeRule,
+			ability,
+			out CombatHitOutcome hitOutcome))
+		{
+			result =
+				$"{caster.Name} used {ability.DisplayName} on {target.Name}, " +
+				DescribeFailedHit(hitOutcome) + ".";
+
+			// The ability already committed before release. An avoided result is
+			// therefore a successful resolution, not a failed activation.
+			return true;
+		}
+
 		float requestedDamage = CalculateHeroAbilityDamage(
 			caster,
 			ability);
@@ -477,6 +512,125 @@ public partial class CombatController : Node
 			$"for {damage.AppliedDamage:0.##} damage.";
 
 		return true;
+	}
+
+	/// <summary>
+	/// Applies a committed status-effect ability to one monster or to every
+	/// valid monster inside its authored AOE. Each affected defender resolves
+	/// Dodge independently. A successful application refreshes the same status
+	/// rather than stacking duplicate runtime instances.
+	/// </summary>
+	private bool TryApplyStatusEffectAbility(
+		HeroActorController caster,
+		Node2D targetOrAreaAnchor,
+		AbilityDefinition ability,
+		out string result)
+	{
+		result = string.Empty;
+
+		if (!GodotObject.IsInstanceValid(caster)
+			|| !GodotObject.IsInstanceValid(targetOrAreaAnchor)
+			|| !GodotObject.IsInstanceValid(ability)
+			|| !GodotObject.IsInstanceValid(ability.AppliedStatusEffect)
+			|| ability.EffectDurationSeconds <= 0.0f)
+		{
+			result = $"{ability.DisplayName} has invalid status-effect data.";
+			return false;
+		}
+
+		CombatStatusEffectDefinition status =
+			ability.AppliedStatusEffect;
+
+		int eligibleCount = 0;
+		int appliedCount = 0;
+		int dodgedCount = 0;
+
+		if (ability.TargetMode == AbilityTargetMode.AreaOfEffect)
+		{
+			if (ability.AreaTargetGroup != AbilityTargetGroup.Enemies
+				&& ability.AreaTargetGroup != AbilityTargetGroup.Everyone)
+			{
+				result = $"{ability.DisplayName} does not target enemy actors.";
+				return false;
+			}
+
+			foreach (MonsterActorController monster
+				in _monsterParticipants)
+			{
+				if (!Targeting.IsValidMonsterTarget(monster)
+					|| !IsInsideAbilityArea(
+						targetOrAreaAnchor,
+						monster,
+						ability.AreaRadius))
+				{
+					continue;
+				}
+
+				eligibleCount++;
+
+				if (!TryResolveOffensiveHit(
+					caster,
+					monster,
+					ability.DodgeRule,
+					ability,
+					out _))
+				{
+					dodgedCount++;
+					continue;
+				}
+
+				if (monster.StatusEffects.TryApplyOrRefresh(
+					status,
+					ability.EffectDurationSeconds))
+				{
+					appliedCount++;
+				}
+			}
+		}
+		else if (targetOrAreaAnchor is MonsterActorController target
+			&& Targeting.IsValidMonsterTarget(target))
+		{
+			eligibleCount = 1;
+
+			if (!TryResolveOffensiveHit(
+				caster,
+				target,
+				ability.DodgeRule,
+				ability,
+				out _))
+			{
+				dodgedCount = 1;
+			}
+			else if (target.StatusEffects.TryApplyOrRefresh(
+				status,
+				ability.EffectDurationSeconds))
+			{
+				appliedCount = 1;
+			}
+		}
+		else
+		{
+			result = $"{ability.DisplayName} could not resolve a valid status target.";
+			return false;
+		}
+
+		DebugLog.Print(
+			$"{caster.Name} used '{ability.DisplayName}'. " +
+			$"Status='{status.DisplayName}'; " +
+			$"Eligible={eligibleCount}; Applied={appliedCount}; " +
+			$"Dodged={dodgedCount}; " +
+			$"Duration={ability.EffectDurationSeconds:0.##}s.",
+			DebugLogCategory.Ability);
+
+		result =
+			$"{caster.Name} used {ability.DisplayName}. " +
+			$"Applied {status.DisplayName} to {appliedCount} " +
+			$"of {eligibleCount} eligible monster(s); " +
+			$"{dodgedCount} dodged.";
+
+		// An AOE that found valid defenders but was entirely dodged still
+		// resolved successfully after commit, exactly like a dodged direct hit.
+		return eligibleCount > 0;
 	}
 
 	private static float CalculateHeroAbilityDamage(
@@ -899,6 +1053,13 @@ public partial class CombatController : Node
 					ability,
 					out _),
 
+			AbilityEffectType.ApplyStatusEffect =>
+				TryApplyStatusEffectAbility(
+					caster,
+					target,
+					ability,
+					out _),
+
 			_ => false
 		};
 
@@ -927,6 +1088,16 @@ public partial class CombatController : Node
 		DebugLog.Print(
 			$"Hero impact confirmed: " +
 			$"{attacker.Name} → {target.Name}");
+
+		if (!TryResolveOffensiveHit(
+			attacker,
+			target,
+			CombatDodgeRule.DefenderDodge,
+			null,
+			out _))
+		{
+			return;
+		}
 
 		ApplyHeroDamage(
 			attacker,
@@ -1231,6 +1402,18 @@ public partial class CombatController : Node
 		MonsterActorController target,
 		AbilityDefinition ability)
 	{
+		if (!TryResolveOffensiveHit(
+			source,
+			target,
+			ability.DodgeRule,
+			ability,
+			out _))
+		{
+			// Only the initial application checks accuracy. Existing DOT ticks do
+			// not reroll hit/miss/dodge once the effect is successfully applied.
+			return;
+		}
+
 		int totalTicks = Math.Max(
 			(int)Math.Floor(
 				ability.EffectDurationSeconds
@@ -1679,6 +1862,9 @@ public partial class CombatController : Node
 			return false;
 		}
 
+		if (TryBeginPartySupportAbility(hero))
+			return true;
+
 		foreach (AbilityDefinition ability
 			in hero.Abilities)
 		{
@@ -1748,6 +1934,467 @@ public partial class CombatController : Node
 		}
 
 		return false;
+	}
+
+	/// <summary>
+	/// Gives authored party-support abilities first choice while this hero is
+	/// actively rescuing a pressured ally. The support role only changes which
+	/// target/context makes the ability desirable; normal ownership, cooldown,
+	/// resource, combo-point, range, and cast rules still apply.
+	/// </summary>
+	private bool TryBeginPartySupportAbility(
+		HeroActorController hero)
+	{
+		if (!hero.IsPartySupportActive
+			|| hero.PartySupportAlly is not HeroActorController rescueAlly
+			|| !TargetingService.IsValidHeroTarget(rescueAlly))
+		{
+			return false;
+		}
+
+		AbilityDefinition? selectedAbility = null;
+		Node2D? selectedTarget = null;
+		float selectedScore = float.MinValue;
+		string selectedSituation = string.Empty;
+
+		foreach (AbilityDefinition ability in hero.Abilities)
+		{
+			if (!GodotObject.IsInstanceValid(ability)
+				|| ability.SupportRole == AbilitySupportRole.None
+				|| !hero.IsAbilityReady(ability.ContentId)
+				|| !hero.CanAffordAbility(ability)
+				|| !hero.HasRequiredComboPoints(ability))
+			{
+				continue;
+			}
+
+			Node2D? supportTarget =
+				ResolvePartySupportAbilityTarget(
+					hero,
+					rescueAlly,
+					ability);
+
+			if (supportTarget is null)
+				continue;
+
+			float supportScore =
+				CalculatePartySupportAbilityScore(
+					rescueAlly,
+					ability,
+					supportTarget,
+					out string situationSummary);
+
+			// Highest final situational score wins. Equal scores deliberately keep
+			// the first ability in authored list order as a stable tie-breaker.
+			if (selectedAbility is not null
+				&& supportScore <= selectedScore)
+			{
+				continue;
+			}
+
+			selectedAbility = ability;
+			selectedTarget = supportTarget;
+			selectedScore = supportScore;
+			selectedSituation = situationSummary;
+		}
+
+		if (selectedAbility is null
+			|| selectedTarget is null
+			|| !hero.TryBeginAbility(
+				selectedAbility,
+				selectedTarget))
+		{
+			return false;
+		}
+
+		if (selectedAbility.EffectType
+			== AbilityEffectType.AreaTaunt)
+		{
+			ConsumeAutomaticTauntTrigger(hero);
+		}
+
+		DebugLog.Print(
+			$"{hero.Name} prioritized support ability " +
+				$"'{selectedAbility.DisplayName}' for {rescueAlly.Name}. " +
+				$"SupportRole={selectedAbility.SupportRole}; " +
+				$"Base={selectedAbility.SupportPriority:0.##}; " +
+				$"{selectedSituation}; Final={selectedScore:0.##}.",
+			DebugLogCategory.Ability);
+
+		return true;
+	}
+
+	/// <summary>
+	/// Adds situational context to an ability's authored support priority. Peel
+	/// abilities gain value for each threatening monster they can actually affect.
+	/// RecoverAlly abilities gain value as the missing-health coverage they can
+	/// reach increases. The authored weights keep these behaviors tunable without
+	/// introducing class-specific decision branches.
+	/// </summary>
+	private float CalculatePartySupportAbilityScore(
+		HeroActorController rescueAlly,
+		AbilityDefinition ability,
+		Node2D supportTarget,
+		out string situationSummary)
+	{
+		float score = ability.SupportPriority;
+
+		switch (ability.SupportRole)
+		{
+			case AbilitySupportRole.Peel:
+			{
+				int affectedThreats =
+					CountAffectedRescueThreats(
+						rescueAlly,
+						ability,
+						supportTarget);
+
+				float situationalBonus =
+					affectedThreats
+					* ability.SupportPriorityPerThreatAffected;
+
+				situationSummary =
+					$"ThreatsAffected={affectedThreats}; " +
+					$"SituationBonus={situationalBonus:0.##}";
+
+				return score + situationalBonus;
+			}
+
+			case AbilitySupportRole.RecoverAlly:
+			{
+				float missingHealthCoverage =
+					CalculateRecoverAllyMissingHealthCoverage(
+						rescueAlly,
+						ability,
+						supportTarget);
+
+				float situationalBonus =
+					missingHealthCoverage
+					* ability.SupportPriorityPerMissingHealthPercent;
+
+				situationSummary =
+					$"MissingHealthCoverage={missingHealthCoverage:0.##}%; " +
+					$"SituationBonus={situationalBonus:0.##}";
+
+				return score + situationalBonus;
+			}
+
+			default:
+				situationSummary = "SituationBonus=0";
+				return score;
+		}
+	}
+
+	/// <summary>
+	/// Counts only monsters currently attacking the rescued ally that the chosen
+	/// Peel ability would actually affect from its resolved target or AOE anchor.
+	/// </summary>
+	private int CountAffectedRescueThreats(
+		HeroActorController rescueAlly,
+		AbilityDefinition ability,
+		Node2D supportTarget)
+	{
+		int affectedThreats = 0;
+
+		foreach (MonsterActorController monster
+			in _monsterParticipants)
+		{
+			if (!Targeting.IsValidMonsterTarget(monster)
+				|| monster.CurrentTarget != rescueAlly)
+			{
+				continue;
+			}
+
+			bool isAffected = ability.TargetMode switch
+			{
+				AbilityTargetMode.CurrentTarget
+					or AbilityTargetMode.Monster =>
+					supportTarget == monster,
+
+				AbilityTargetMode.AreaOfEffect =>
+					IsInsideAbilityArea(
+						supportTarget,
+						monster,
+						ability.AreaRadius),
+
+				_ => false
+			};
+
+			if (isAffected)
+				affectedThreats++;
+		}
+
+		return affectedThreats;
+	}
+
+	/// <summary>
+	/// Returns the missing-health percentage covered by a recovery ability. A
+	/// single-target ability considers the rescued ally. An AOE ability sums all
+	/// living party members inside the resolved area so group recovery naturally
+	/// becomes more valuable when several nearby allies are injured.
+	/// </summary>
+	private float CalculateRecoverAllyMissingHealthCoverage(
+		HeroActorController rescueAlly,
+		AbilityDefinition ability,
+		Node2D supportTarget)
+	{
+		if (ability.TargetMode != AbilityTargetMode.AreaOfEffect)
+			return GetMissingHealthPercent(rescueAlly);
+
+		float totalMissingHealthPercent = 0.0f;
+
+		foreach (HeroActorController partyMember
+			in _heroParticipants)
+		{
+			if (!TargetingService.IsValidHeroTarget(partyMember)
+				|| !IsInsideAbilityArea(
+					supportTarget,
+					partyMember,
+					ability.AreaRadius))
+			{
+				continue;
+			}
+
+			totalMissingHealthPercent +=
+				GetMissingHealthPercent(partyMember);
+		}
+
+		return totalMissingHealthPercent;
+	}
+
+	private static float GetMissingHealthPercent(
+		HeroActorController hero)
+	{
+		if (hero.Health.MaximumHealth <= 0.0f)
+			return 0.0f;
+
+		float healthPercent =
+			hero.Health.CurrentHealth
+			/ hero.Health.MaximumHealth
+			* 100.0f;
+
+		return Mathf.Clamp(
+			100.0f - healthPercent,
+			0.0f,
+			100.0f);
+	}
+
+	/// <summary>
+	/// Resolves a support ability against the ally already selected by the party
+	/// support system. RecoverAlly abilities act on that ally; Peel abilities act
+	/// on monsters currently targeting that ally.
+	/// </summary>
+	private Node2D? ResolvePartySupportAbilityTarget(
+		HeroActorController caster,
+		HeroActorController rescueAlly,
+		AbilityDefinition ability)
+	{
+		return ability.SupportRole switch
+		{
+			AbilitySupportRole.RecoverAlly =>
+				ResolveRecoverAllySupportTarget(
+					caster,
+					rescueAlly,
+					ability),
+
+			AbilitySupportRole.Peel =>
+				ResolvePeelSupportTarget(
+					caster,
+					rescueAlly,
+					ability),
+
+			_ => null
+		};
+	}
+
+	private Node2D? ResolveRecoverAllySupportTarget(
+		HeroActorController caster,
+		HeroActorController rescueAlly,
+		AbilityDefinition ability)
+	{
+		// Preserve the ability's normal healing threshold. Party support changes
+		// priority and target focus; it does not make a heal ignore its authored
+		// automatic-use condition.
+		if (ability.EffectType == AbilityEffectType.DirectHealing
+			&& !IsBelowAutomaticHealthThreshold(
+				rescueAlly,
+				ability))
+		{
+			return null;
+		}
+
+		if (ability.TargetMode == AbilityTargetMode.Ally)
+		{
+			return caster.IsWithinAbilityRange(
+				ability,
+				rescueAlly)
+					? rescueAlly
+					: null;
+		}
+
+		if (ability.TargetMode != AbilityTargetMode.AreaOfEffect
+			|| (ability.AreaTargetGroup != AbilityTargetGroup.Allies
+				&& ability.AreaTargetGroup != AbilityTargetGroup.Everyone))
+		{
+			return null;
+		}
+
+		if (ability.AreaOrigin == AbilityAreaOrigin.Self)
+		{
+			return IsInsideAbilityArea(
+				caster,
+				rescueAlly,
+				ability.AreaRadius)
+					? caster
+					: null;
+		}
+
+		return caster.IsWithinAbilityRange(
+			ability,
+			rescueAlly)
+				? rescueAlly
+				: null;
+	}
+
+	private Node2D? ResolvePeelSupportTarget(
+		HeroActorController caster,
+		HeroActorController rescueAlly,
+		AbilityDefinition ability)
+	{
+		List<MonsterActorController> threats = new();
+
+		foreach (MonsterActorController monster
+			in _monsterParticipants)
+		{
+			if (Targeting.IsValidMonsterTarget(monster)
+				&& monster.CurrentTarget == rescueAlly)
+			{
+				threats.Add(monster);
+			}
+		}
+
+		if (threats.Count == 0)
+			return null;
+
+		if (ability.TargetMode == AbilityTargetMode.CurrentTarget)
+		{
+			MonsterActorController? currentTarget =
+				caster.CurrentTarget;
+
+			return currentTarget is not null
+				&& threats.Contains(currentTarget)
+				&& caster.IsWithinAbilityRange(
+					ability,
+					currentTarget)
+					? currentTarget
+					: null;
+		}
+
+		if (ability.TargetMode == AbilityTargetMode.Monster)
+		{
+			return ResolveAbilityTarget(
+				caster,
+				ability,
+				monsterCandidates: threats);
+		}
+
+		if (ability.TargetMode != AbilityTargetMode.AreaOfEffect
+			|| (ability.AreaTargetGroup != AbilityTargetGroup.Enemies
+				&& ability.AreaTargetGroup != AbilityTargetGroup.Everyone))
+		{
+			return null;
+		}
+
+		if (ability.AreaOrigin == AbilityAreaOrigin.Self)
+		{
+			foreach (MonsterActorController threat in threats)
+			{
+				if (IsInsideAbilityArea(
+					caster,
+					threat,
+					ability.AreaRadius))
+				{
+					return caster;
+				}
+			}
+
+			return null;
+		}
+
+		return SelectBestTargetCenteredPeelAnchor(
+			caster,
+			ability,
+			threats);
+	}
+
+	/// <summary>
+	/// Chooses the target-centered AOE anchor that catches the greatest number
+	/// of monsters currently pressuring the rescued ally. Authored target
+	/// selection style remains the deterministic tie-breaker between equally
+	/// strong anchors. This keeps ranged AOE Peel abilities focused on the
+	/// actual swarm rather than on arbitrary ability-list or monster order.
+	/// </summary>
+	private MonsterActorController? SelectBestTargetCenteredPeelAnchor(
+		HeroActorController caster,
+		AbilityDefinition ability,
+		IReadOnlyList<MonsterActorController> threats)
+	{
+		List<MonsterActorController> bestAnchors = new();
+		int bestAffectedCount = 0;
+
+		foreach (MonsterActorController candidate in threats)
+		{
+			if (!Targeting.IsValidMonsterTarget(candidate)
+				|| !caster.IsWithinAbilityRange(ability, candidate))
+			{
+				continue;
+			}
+
+			int affectedCount = 0;
+
+			foreach (MonsterActorController threat in threats)
+			{
+				if (Targeting.IsValidMonsterTarget(threat)
+					&& IsInsideAbilityArea(
+						candidate,
+						threat,
+						ability.AreaRadius))
+				{
+					affectedCount++;
+				}
+			}
+
+			if (affectedCount < bestAffectedCount)
+				continue;
+
+			if (affectedCount > bestAffectedCount)
+			{
+				bestAffectedCount = affectedCount;
+				bestAnchors.Clear();
+			}
+
+			bestAnchors.Add(candidate);
+		}
+
+		if (bestAnchors.Count == 0)
+			return null;
+
+		return Targeting.SelectAbilityMonsterTarget(
+			caster,
+			bestAnchors,
+			ability.TargetSelectionStyle);
+	}
+
+	private static bool IsInsideAbilityArea(
+		Node2D areaAnchor,
+		Node2D target,
+		float radius)
+	{
+		float clampedRadius = Mathf.Max(radius, 0.0f);
+
+		return areaAnchor.GlobalPosition.DistanceSquaredTo(
+			target.GlobalPosition)
+			<= clampedRadius * clampedRadius;
 	}
 
 	/// <summary>
@@ -2275,6 +2922,16 @@ public partial class CombatController : Node
 			$"{attacker.Name} → {target.Name} " +
 			$"with '{ability.DisplayName}'.");
 
+		if (!TryResolveOffensiveHit(
+			attacker,
+			target,
+			ability.DodgeRule,
+			ability,
+			out _))
+		{
+			return;
+		}
+
 		DamageResult result = DamageResolver.Resolve(
 			new DamageRequest(
 				attacker,
@@ -2329,6 +2986,16 @@ public partial class CombatController : Node
 			$"Monster impact confirmed: " +
 			$"{attacker.Name} → {target.Name}");
 
+		if (!TryResolveOffensiveHit(
+			attacker,
+			target,
+			CombatDodgeRule.DefenderDodge,
+			null,
+			out _))
+		{
+			return;
+		}
+
 		DamageResult result = DamageResolver.Resolve(
 			new DamageRequest(
 				attacker,
@@ -2360,6 +3027,53 @@ public partial class CombatController : Node
 				Target = target,
 				Damage = result
 			});
+	}
+
+	/// <summary>
+	/// Resolves one offensive Dodge check through the shared hit service. Basic
+	/// attacks always use defender Dodge. Abilities supply their authored Dodge
+	/// rule so effects such as Taunt can explicitly bypass Dodge.
+	/// </summary>
+	private bool TryResolveOffensiveHit(
+		Node source,
+		Node target,
+		CombatDodgeRule dodgeRule,
+		AbilityDefinition? ability,
+		out CombatHitOutcome outcome)
+	{
+		outcome = HitResolver.Resolve(
+			new CombatHitRequest(
+				source,
+				target,
+				dodgeRule,
+				ability));
+
+		if (outcome == CombatHitOutcome.Hit)
+		{
+			return true;
+		}
+
+		string actionName =
+			GodotObject.IsInstanceValid(ability)
+				? $"'{ability!.DisplayName}'"
+				: "basic attack";
+
+		DebugLog.Print(
+			$"{source.Name}'s {actionName} against {target.Name} " +
+			DescribeFailedHit(outcome) + ".",
+			DebugLogCategory.Damage);
+
+		return false;
+	}
+
+	private static string DescribeFailedHit(
+		CombatHitOutcome outcome)
+	{
+		return outcome switch
+		{
+			CombatHitOutcome.Dodge => "was dodged",
+			_ => "did not connect"
+		};
 	}
 
 	/// <summary>
@@ -2554,6 +3268,14 @@ public partial class CombatController : Node
 			GD.PushError(
 				"CombatController is missing its " +
 				"DamageResolver Inspector reference.");
+
+			return false;
+		}
+		if (!GodotObject.IsInstanceValid(HitResolver))
+		{
+			GD.PushError(
+				"CombatController is missing its " +
+				"HitResolver Inspector reference.");
 
 			return false;
 		}

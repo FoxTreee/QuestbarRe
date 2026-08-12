@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cjebar3h2j3m" path="res://Controllers/Actors/MonsterActorController.cs" id="1_qwhad"]
 [ext_resource type="Script" uid="uid://cl6hid01monyl" path="res://Controllers/Actors/BodyBounds2D.cs" id="2_2b0if"]
 [ext_resource type="PackedScene" uid="uid://b8j8ii2jqo33s" path="res://ActorHealthBar.tscn" id="2_v6gei"]
+[ext_resource type="PackedScene" uid="uid://cmcvjtx4a0sp5" path="res://Content/Abilities/Core/CombatStatusEffectDisplay.tscn" id="4_vv6e3"]
 
 [node name="MonsterActor" type="Node2D" unique_id=1953699697 node_paths=PackedStringArray("PresentationRoot", "VisualRoot", "BodyBounds", "ImpactOrigin", "HealthBarAnchor")]
 rotation = -0.0022674962
@@ -33,3 +34,7 @@ position = Vector2(0, -32)
 
 [node name="ActorHealthBar" parent="PresentationRoot" unique_id=1290293826 instance=ExtResource("2_v6gei")]
 position = Vector2(0, -50)
+
+[node name="CombatStatusEffectDisplay" parent="PresentationRoot" unique_id=1725489144 node_paths=PackedStringArray("StatusOwner") instance=ExtResource("4_vv6e3")]
+position = Vector2(0, -66)
+StatusOwner = NodePath("../..")

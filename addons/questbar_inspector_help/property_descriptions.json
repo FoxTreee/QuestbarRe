@@ -94,7 +94,8 @@
     "Targeting": "Inspector reference used by this component for its targeting dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
     "DamageResolver": "Controls damage resolver, measured as damage points. For example, selecting a different value changes which damage resolver behavior or content the owning system uses.",
     "Party": "Inspector reference used by this component for its party dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
-    "ProjectileScene": "Inspector reference used by this component for its projectile scene dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+    "ProjectileScene": "Inspector reference used by this component for its projectile scene dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "HitResolver": "Shared authority for offensive hit checks. Basic attacks and hit-gated abilities flow through this resolver before damage/effects. 21F-A always returns Hit; later miss/dodge tuning belongs inside the resolver rather than individual abilities."
   },
   "res://Controllers/Debug/DebugConsoleController.cs": {
     "Commands": "Inspector reference used by this component for its commands dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
@@ -218,7 +219,13 @@
     "ComboPointCost": "Combo points required and consumed when the ability commits. Sinister Strike uses 5. A value of 0 means the ability does not use combo points.",
     "DamageCalculationMode": "Defines how DirectDamage calculates requested damage. Fixed uses BaseDamage. BasicAttackMultiplier scales the caster's normal basic attack damage.",
     "BasicAttackDamageMultiplier": "Multiplier used when DamageCalculationMode is BasicAttackMultiplier. A value of 2.0 means exactly 200% of the caster's current basic attack damage.",
-    "RangeMode": "Defines how target range is evaluated. Fixed uses the authored Range value. BasicAttackRange inherits the caster's real basic-attack reach, including combat spacing, body radii, lunge distance, presentation scale, and melee engagement positioning."
+    "RangeMode": "Defines how target range is evaluated. Fixed uses the authored Range value. BasicAttackRange inherits the caster's real basic-attack reach, including combat spacing, body radii, lunge distance, presentation scale, and melee engagement positioning.",
+    "DodgeRule": "Controls whether the ability uses the defender's resolved Dodge chance or cannot be dodged. Use DefenderDodge for normal offensive attacks/spells/abilities. Use CannotBeDodged for explicit overrides such as Taunt and non-offensive effects such as Heal.",
+    "SupportRole": "Describes how this ability participates in party rescue decisions. None uses only normal automatic-use rules. RecoverAlly prioritizes the pressured ally selected by party support. Peel prioritizes monsters currently pressuring that ally; Taunt, Frost Nova, Fear, and other different effects can all use Peel.",
+    "SupportPriority": "Base score for this ability during party-support decisions. Situational bonuses are added on top of this value. Higher final scores are preferred; exact ties preserve authored ability-list order.",
+    "SupportPriorityPerThreatAffected": "For Peel abilities, adds this much support score for each monster currently pressuring the rescued ally that the ability would actually affect. Raise it to make multi-target peel tools become more valuable as pressure increases.",
+    "SupportPriorityPerMissingHealthPercent": "For RecoverAlly abilities, adds this much support score per missing-health percentage point covered. Single-target recovery uses the rescued ally; AOE recovery sums injured living allies inside the area.",
+    "AppliedStatusEffect": "Reusable CombatStatusEffectDefinition applied when Effect Type is Apply Status Effect. Drag a status resource such as status.core.freeze here. The status defines control behavior; this ability defines duration, targeting, Dodge, cooldown, resource cost, and support intent."
   },
   "res://Scripts/Content/Definitions/EncounterDefinition.cs": {
     "ContentId": "Stable content identifier for content; other systems use this value to find the same game data. For example, changing this ID makes the owning resource resolve a different registered content.",
@@ -303,6 +310,7 @@
     "DisplayName": "Controls display name. For example, changing this text changes the name, message, key, or lookup value shown or consumed by the owning system.",
     "ActorScene": "Inspector reference used by this component for its actor scene dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
     "MaximumHealth": "Controls maximum health, measured as health points. For example, changing 100 to 200 doubles the configured maximum health.",
+    "DodgeChancePercent": "Direct dodge chance for this monster type, measured as percent. The default is 5%. This is intentionally simple monster-authored data; hero Dodge will instead be resolved from stats such as Agility, gear, and effects.",
     "AttackDamage": "Controls attack damage, measured as damage points. For example, changing 10 to 20 doubles the configured attack damage.",
     "AttackRange": "Controls attack range, measured as pixels. For example, changing 28 to 56 doubles the configured attack range.",
     "AttackInterval": "Controls attack interval, measured as seconds. For example, changing 1.5 to 3 makes the affected action wait twice as long between uses.",
@@ -352,5 +360,22 @@
     "PassiveStanceProfile": "Controls passive stance profile. For example, selecting a different value changes which passive stance profile behavior or content the owning system uses.",
     "DefensiveStanceProfile": "Controls defensive stance profile. For example, selecting a different value changes which defensive stance profile behavior or content the owning system uses.",
     "AggressiveStanceProfile": "Controls aggressive stance profile. For example, selecting a different value changes which aggressive stance profile behavior or content the owning system uses."
+  },
+  "res://Scripts/Content/Definitions/CombatStatusEffectDefinition.cs": {
+    "ContentId": "Stable ID for this reusable combat status effect, such as status.core.freeze. IDs must use lowercase category.namespace.name format and begin with status.",
+    "DisplayName": "Player-facing name used by logs, tooltips, and future status-effect UI.",
+    "Description": "Description of what the status represents. Control behavior is authored separately below so identity text never drives gameplay.",
+    "DesignerNotes": "Designer-only notes. This field has no gameplay effect.",
+    "PreventsMovement": "When enabled, affected actors cannot move through normal combat movement while this status is active. Use for effects such as Freeze or Root.",
+    "PreventsBasicAttacks": "When enabled, affected actors cannot begin new basic attacks while this status is active.",
+    "PreventsAbilities": "When enabled, affected actors cannot begin new abilities while this status is active.",
+    "InterruptsBasicAttacks": "When enabled, a basic attack already in progress is canceled and reset when the status takes control. Requires Prevents Basic Attacks.",
+    "InterruptsAbilities": "When enabled, an ability already being cast is canceled and reset without starting its cooldown. Requires Prevents Abilities.",
+    "DisplayAbbreviation": "Short label used by the reusable status display, such as FRZ. Leave blank to derive the first three letters from Display Name.",
+    "DisplayColor": "Presentation-only tint used for this status in the reusable status display. It does not affect gameplay."
+  },
+  "res://Controllers/UI/CombatStatusEffectDisplayController.cs": {
+    "StatusOwner": "Actor whose runtime CombatStatusEffectState this reusable display presents. Assign the owning HeroActorController or MonsterActorController.",
+    "StatusContainer": "HBoxContainer that receives one compact label for each active status effect."
   }
 }

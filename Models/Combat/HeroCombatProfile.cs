@@ -18,5 +18,12 @@ public sealed class HeroCombatProfile
 
     public float AttackDamage { get; set; }
 
+    /// <summary>
+    /// Final resolved chance for this hero to dodge an incoming dodgeable
+    /// offensive action. The current foundation starts at 0%; future hero
+    /// stats, Agility, gear, and effects will resolve into this value.
+    /// </summary>
+    public float DodgeChancePercent { get; set; }
+
     public AttackDeliveryMode AttackDelivery { get; set; }
 }

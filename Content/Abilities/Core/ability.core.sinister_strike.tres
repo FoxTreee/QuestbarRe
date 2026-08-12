@@ -13,6 +13,7 @@ ResourceCost = 25.0
 ComboPointCost = 5
 RangeMode = 1
 Range = 28.0
+HitCheckMode = 1
 DamageCalculationMode = 1
 BasicAttackDamageMultiplier = 2.0
 AutoCastHealthThresholdPercent = 1.0

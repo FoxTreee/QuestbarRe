@@ -10,6 +10,7 @@ public partial class DebugCommandService : Node
 	{
 		".help",
 		".status",
+		".statusTimers [on|off|toggle]",
 		".clear",
 		".revive <hero_id>",
 		".reviveAll",
@@ -230,6 +231,12 @@ public partial class DebugCommandService : Node
 
 		output.AppendLine(
 			$"Active monsters: {Encounter.ActiveMonsterCount}");
+
+		output.AppendLine(
+			$"Status timers: " +
+			(DebugPresentationSettings.StatusEffectTimersVisible
+				? "ON"
+				: "OFF"));
 
 		output.AppendLine();
 		output.AppendLine("Heroes:");
@@ -602,6 +609,9 @@ public partial class DebugCommandService : Node
 
 				".testresource" when argumentIndex == 1 =>
 					new[] { "mana", "energy", "rage", "none" },
+
+				".statustimers" when argumentIndex == 0 =>
+					new[] { "on", "off", "toggle" },
 
 				".kill" when argumentIndex == 1
 					&& completedTokens.Length > 1
@@ -1189,6 +1199,16 @@ public partial class DebugCommandService : Node
 			"      .status\n" +
 			"      .startEncounter encounter.core.heavy_patrol && .status\n\n" +
 
+			".statusTimers [on|off|toggle]\n" +
+			"    Show or change the developer status-effect timer overlay.\n" +
+			"    This only affects labels such as [FRZ 2.4]; status gameplay continues normally.\n" +
+			"    Omitting the argument prints the current state. The development default is ON.\n" +
+			"    Examples:\n" +
+			"      .statusTimers\n" +
+			"      .statusTimers off\n" +
+			"      .statusTimers on\n" +
+			"      .statusTimers toggle\n\n" +
+
 			".clear\n" +
 			"    Clear visible console history without changing game state. Chainable with &&.\n" +
 			"    Examples:\n" +
@@ -1491,6 +1511,9 @@ public partial class DebugCommandService : Node
 			".status" or "status" =>
 				BuildStatusText(),
 
+			".statustimers" =>
+				ExecuteStatusTimers(parts),
+
 			".revive" =>
 				ExecuteReviveHero(parts),
 
@@ -1531,6 +1554,62 @@ public partial class DebugCommandService : Node
 				$"Unknown command: {parts[0]}\n" +
                 "Type '.help' for available commands."
 		};
+	}
+
+	/// <summary>
+	/// Shows or changes the global developer status-effect timer overlay.
+	/// This changes presentation only; active status effects continue running.
+	/// </summary>
+	private static string ExecuteStatusTimers(string[] parts)
+	{
+		if (parts.Length == 1)
+		{
+			return
+				$"Status effect debug timers: " +
+				(DebugPresentationSettings.StatusEffectTimersVisible
+					? "ON"
+					: "OFF") + ".";
+		}
+
+		if (parts.Length != 2)
+			return BuildStatusTimersUsage();
+
+		string option = parts[1].Trim().ToLowerInvariant();
+
+		switch (option)
+		{
+			case "on":
+				DebugPresentationSettings
+					.SetStatusEffectTimersVisible(true);
+				break;
+
+			case "off":
+				DebugPresentationSettings
+					.SetStatusEffectTimersVisible(false);
+				break;
+
+			case "toggle":
+				DebugPresentationSettings
+					.ToggleStatusEffectTimersVisible();
+				break;
+
+			default:
+				return BuildStatusTimersUsage();
+		}
+
+		return
+			$"Status effect debug timers: " +
+			(DebugPresentationSettings.StatusEffectTimersVisible
+				? "ON"
+				: "OFF") + ".";
+	}
+
+	private static string BuildStatusTimersUsage()
+	{
+		return
+			"Usage: .statusTimers [on|off|toggle]\n" +
+			"Examples: .statusTimers off | .statusTimers on | " +
+			".statusTimers toggle";
 	}
 
 	/// <summary>

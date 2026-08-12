@@ -12,4 +12,5 @@ script = ExtResource("1_7hne4")
 ContentId = "class.core.mage"
 DisplayName = "Mage"
 ResourceDefinition = SubResource("HeroResourceDefinition_mage")
+AbilityContentIds = Array[String](["ability.core.frost_nova"])
 metadata/_custom_type_script = "uid://djb803f4i720b"

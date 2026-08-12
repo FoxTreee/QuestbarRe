@@ -18,6 +18,12 @@ public sealed class MonsterCombatProfile
 
     public float MoveSpeed { get; set; }
 
+    /// <summary>
+    /// Final authored chance for this monster to dodge an incoming dodgeable
+    /// offensive action. MonsterDefinition supplies this value directly.
+    /// </summary>
+    public float DodgeChancePercent { get; set; }
+
     public AttackDeliveryMode AttackDelivery
     {
         get;

@@ -40,6 +40,17 @@ public partial class MonsterDefinition : Resource
     public float MaximumHealth { get; set; } = 100.0f;
 
 
+    [ExportCategory("Defense")]
+
+    /// <summary>
+    /// Chance for this monster type to dodge any offensive action that uses
+    /// defender Dodge. Monsters intentionally use a simple authored value
+    /// instead of the future hero Agility/gear stat pipeline.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,100,0.1")]
+    public float DodgeChancePercent { get; set; } = 5.0f;
+
+
     [ExportCategory("Attack")]
 
     /// <summary>
@@ -195,6 +206,13 @@ public partial class MonsterDefinition : Resource
             errors.Add(
                 $"{ContentId}: MaximumHealth must be " +
                 "greater than zero.");
+        }
+        if (DodgeChancePercent < 0.0f
+            || DodgeChancePercent > 100.0f)
+        {
+            errors.Add(
+                $"{ContentId}: DodgeChancePercent must be " +
+                "between 0 and 100.");
         }
         if (AttackDamage < 0.0f)
         {

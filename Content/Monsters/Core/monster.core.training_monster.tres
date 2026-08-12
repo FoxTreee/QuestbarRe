@@ -12,7 +12,5 @@ MaximumHealth = 125.0
 AttackDamage = 5.0
 AttackInterval = 1.8
 AttackDuration = 0.5
-MeleeSlotHorizontalSpacingMultiplier = 0.7
-MeleeSlotVerticalSpacingMultiplier = 0.6
 TargetingStyle = 0
 metadata/_custom_type_script = "uid://bwnluygsef150"

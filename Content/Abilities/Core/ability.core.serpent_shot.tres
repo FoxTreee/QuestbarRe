@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://djymbg83v4q3y"]
 
 [ext_resource type="Script" uid="uid://bus4x5fmyodi8" path="res://Scripts/Content/Definitions/AbilityDefinition.cs" id="1_serpent_shot"]
 
@@ -9,10 +9,9 @@ DisplayName = "Serpent Shot"
 Description = "Replace the next basic ranged attack with a poison arrow that damages its target once per second for ten seconds."
 CooldownSeconds = 10.0
 CastTimeSeconds = 0.0
-TargetMode = 0
 Range = 180.0
+HitCheckMode = 1
 EffectType = 3
 BaseDamage = 5.0
 EffectDurationSeconds = 10.0
-EffectTickIntervalSeconds = 1.0
 DesignerNotes = "Automatically replaces the Hunter's next basic attack when ready. The poison begins one second after projectile impact, deals ten ticks, refreshes on reapplication by the same Hunter, and does not deal immediate impact damage."

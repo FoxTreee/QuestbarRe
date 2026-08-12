@@ -2,7 +2,7 @@ using Godot;
 using System.Collections.Generic;
 
 
-public partial class MonsterActorController : Node2D
+public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 {
 	[Signal]
 	public delegate void AttackReleasedEventHandler(
@@ -164,6 +164,13 @@ public partial class MonsterActorController : Node2D
 
 	public CombatHealthState Health { get; } = new();
 
+	/// <summary>
+	/// Owns temporary combat status effects currently active on this monster.
+	/// The state tracks identity and duration only; individual effects decide
+	/// their gameplay behavior in later checkpoints.
+	/// </summary>
+	public CombatStatusEffectState StatusEffects { get; } = new();
+
 	public MonsterThreatState Threat { get; } = new();
 
 	public MeleeEngagementSlotSet MeleeEngagementSlots { get; } =
@@ -201,6 +208,7 @@ public partial class MonsterActorController : Node2D
 
 		Definition = definition;
 
+		StatusEffects.Clear();
 		Threat.Clear();
 		SetCurrentTarget(null);
 		MeleeEngagementSlots.Clear();
@@ -338,6 +346,7 @@ public partial class MonsterActorController : Node2D
 		CombatProfile.AttackReleasePoint = Definition.AttackReleasePoint;
 		CombatProfile.AttackLungeDistance = Definition.AttackLungeDistance;
 		CombatProfile.MoveSpeed = Definition.CombatMoveSpeed;
+		CombatProfile.DodgeChancePercent = Definition.DodgeChancePercent;
 		CombatProfile.AttackDelivery = Definition.AttackDelivery;
 	}
 
@@ -948,6 +957,9 @@ public partial class MonsterActorController : Node2D
 		HeroActorController target =
 			CurrentTarget!;
 
+		if (StatusEffects.PreventsMovement)
+			return;
+
 		if (TryGetMeleeEngagementPosition(
 			target,
 			out Vector2 meleeEngagementPosition))
@@ -1049,19 +1061,28 @@ public partial class MonsterActorController : Node2D
 			return;
 		}
 
-		AbilityDefinition? readyAbility =
-			FindReadyAbility();
-
-		if (readyAbility is not null)
+		if (!StatusEffects.PreventsAbilities)
 		{
-			BeginAbility(readyAbility);
-			return;
+			AbilityDefinition? readyAbility =
+				FindReadyAbility();
+
+			if (readyAbility is not null)
+			{
+				BeginAbility(readyAbility);
+				return;
+			}
 		}
 
-		_attackCooldownRemaining -= delta;
+		_attackCooldownRemaining =
+			System.Math.Max(
+				0.0,
+				_attackCooldownRemaining - delta);
 
-		if (_attackCooldownRemaining > 0.0)
+		if (_attackCooldownRemaining > 0.0
+			|| StatusEffects.PreventsBasicAttacks)
+		{
 			return;
+		}
 
 		BeginAttack();
 	}
@@ -1180,8 +1201,11 @@ public partial class MonsterActorController : Node2D
 	/// </summary>
 	private void BeginAttack()
 	{
-		if (!IsValidHeroTarget(CurrentTarget))
+		if (!IsValidHeroTarget(CurrentTarget)
+			|| StatusEffects.PreventsBasicAttacks)
+		{
 			return;
+		}
 
 		_state = MonsterState.Attacking;
 
@@ -1201,8 +1225,11 @@ public partial class MonsterActorController : Node2D
 	/// </summary>
 	private void BeginAbility(AbilityDefinition ability)
 	{
-		if (!IsValidHeroTarget(CurrentTarget))
+		if (!IsValidHeroTarget(CurrentTarget)
+			|| StatusEffects.PreventsAbilities)
+		{
 			return;
+		}
 
 		_activeAbility = ability;
 		_abilityCastTimeRemaining =
@@ -1329,6 +1356,76 @@ public partial class MonsterActorController : Node2D
 	}
 
 	/// <summary>
+	/// Cancels and resets an in-progress combat action when an active control
+	/// status explicitly interrupts that action type. Interrupted abilities do
+	/// not start their cooldown; interrupted basic attacks do not release damage
+	/// if their release point has not already occurred.
+	/// </summary>
+	private void InterruptControlledActionIfNeeded()
+	{
+		if (_state == MonsterState.Attacking
+			&& StatusEffects.InterruptsBasicAttacks)
+		{
+			_attackTimeRemaining = 0.0;
+			_attackCooldownRemaining = 0.0;
+			_attackReleaseEmitted = false;
+			StopAttackPresentation();
+			ResetStateAfterInterruptedAction();
+
+			DebugLog.Print(
+				$"{Name}'s basic attack was interrupted " +
+				"and reset by a control status.");
+
+			return;
+		}
+
+		if (_state != MonsterState.UsingAbility
+			|| !StatusEffects.InterruptsAbilities)
+		{
+			return;
+		}
+
+		string abilityName =
+			_activeAbility?.DisplayName
+			?? "Unknown Ability";
+
+		ClearAbilityCast();
+		_attackCooldownRemaining = 0.0;
+		StopAttackPresentation();
+		ResetStateAfterInterruptedAction();
+
+		DebugLog.Print(
+			$"{Name}'s ability '{abilityName}' was interrupted " +
+			"and reset by a control status.");
+	}
+
+	private void ResetStateAfterInterruptedAction()
+	{
+		if (!IsValidHeroTarget(CurrentTarget))
+		{
+			SetCurrentTarget(null);
+			_state = MonsterState.WaitingForTarget;
+			return;
+		}
+
+		HeroActorController target = CurrentTarget!;
+
+		bool hasMeleeReservation =
+			HasMeleeEngagementReservation(target);
+
+		bool targetStillInRange =
+			hasMeleeReservation
+				? IsTargetWithinMeleeEngagementRange(target)
+				: IsTargetWithinAttackRange(target)
+					&& IsVerticallyAligned(target);
+
+		_state =
+			targetStillInRange
+				? MonsterState.WaitingToAttack
+				: MonsterState.ApproachingTarget;
+	}
+
+	/// <summary>
 	/// Recalculates attack from the latest runtime state.
 	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
 	/// </summary>
@@ -1381,6 +1478,11 @@ public partial class MonsterActorController : Node2D
 	/// </summary>
 	public override void _Process(double delta)
 	{
+		StatusEffects.Update(delta);
+
+		if (!IsDead)
+			InterruptControlledActionIfNeeded();
+
 		if (!IsDead)
 			UpdateForcedTarget(delta);
 

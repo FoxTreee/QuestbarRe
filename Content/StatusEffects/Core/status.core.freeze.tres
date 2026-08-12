@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CombatStatusEffectDefinition" format=3 uid="uid://oj424qmoqfja"]
+
+[ext_resource type="Script" uid="uid://dq43thgs5wwhv" path="res://Scripts/Content/Definitions/CombatStatusEffectDefinition.cs" id="1_l5uk1"]
+
+[resource]
+script = ExtResource("1_l5uk1")
+ContentId = "status.core.freeze"
+DisplayName = "Freeze"
+Description = " Prevents movement and combat actions for the duration."
+DisplayColor = Color(0.47058824, 0.84313726, 1, 1)
+PreventsMovement = true
+PreventsBasicAttacks = true
+PreventsAbilities = true
+InterruptsBasicAttacks = true
+InterruptsAbilities = true
+metadata/_custom_type_script = "uid://dq43thgs5wwhv"

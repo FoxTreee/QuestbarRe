@@ -1,7 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 
-public partial class HeroActorController : Node2D
+public partial class HeroActorController : Node2D, ICombatStatusEffectOwner
 {
 	[Signal]
 	public delegate void AttackReleasedEventHandler(
@@ -46,8 +46,8 @@ public partial class HeroActorController : Node2D
 	private double _abilityCastTimeRemaining;
 	private double _targetCommitmentRemainingSeconds;
 	private double _targetReassessmentRemainingSeconds;
-	private bool _isDefensiveRescueActive;
-	private HeroActorController? _defensiveRescueAlly;
+	private bool _isPartySupportActive;
+	private HeroActorController? _partySupportAlly;
 	private IReadOnlyList<HeroActorController> _partyMembers =
 		System.Array.Empty<HeroActorController>();
 	private System.Func<HeroActorController, bool>?
@@ -62,10 +62,10 @@ public partial class HeroActorController : Node2D
 		_targetCommitmentRemainingSeconds;
 	public double TargetReassessmentRemainingSeconds =>
 		_targetReassessmentRemainingSeconds;
-	public bool IsDefensiveRescueActive =>
-		_isDefensiveRescueActive;
-	public HeroActorController? DefensiveRescueAlly =>
-		_defensiveRescueAlly;
+	public bool IsPartySupportActive =>
+		_isPartySupportActive;
+	public HeroActorController? PartySupportAlly =>
+		_partySupportAlly;
 	private bool UsesMeleeEngagementSlots =>
 		HasCombatTag(HeroCombatTag.Melee);
 
@@ -115,6 +115,13 @@ public partial class HeroActorController : Node2D
 
 	public HeroResourceState Resource { get; } = new();
 	public HeroComboPointState ComboPoints { get; } = new();
+
+	/// <summary>
+	/// Owns temporary combat status effects currently active on this hero.
+	/// The state tracks identity and duration only; individual effects decide
+	/// their gameplay behavior in later checkpoints.
+	/// </summary>
+	public CombatStatusEffectState StatusEffects { get; } = new();
 	public bool UsesComboPoints =>
 		Definition?.ClassDefinition.ContentId
 			.Equals(
@@ -347,6 +354,7 @@ public partial class HeroActorController : Node2D
 
 		Definition = definition;
 		ComboPoints.Reset();
+		StatusEffects.Clear();
 		CombatTagMask = definition.CombatTagMask;
 		CombatProfile.CombatStance =
 			definition.StartingCombatStance;
@@ -1020,6 +1028,7 @@ public partial class HeroActorController : Node2D
 	/// </summary>
 	public override void _Process(double delta)
 	{
+		StatusEffects.Update(delta);
 		_abilityCooldowns.Update(delta);
 		Resource.Update(
 			delta,
@@ -1177,8 +1186,8 @@ public partial class HeroActorController : Node2D
 	{
 		_targetCommitmentRemainingSeconds = 0.0;
 		_targetReassessmentRemainingSeconds = 0.0;
-		_isDefensiveRescueActive = false;
-		_defensiveRescueAlly = null;
+		_isPartySupportActive = false;
+		_partySupportAlly = null;
 	}
 
 	private double _movementAnimationGraceRemaining;
@@ -2416,20 +2425,20 @@ public partial class HeroActorController : Node2D
 			return;
 		}
 
-		bool wasDefensiveRescueActive =
-			_isDefensiveRescueActive;
+		bool wasPartySupportActive =
+			_isPartySupportActive;
 
-		if (TryRefreshDefensiveRescueTarget(
+		if (TryRefreshPartySupportTarget(
 			candidates,
 			hasValidCurrentTarget))
 		{
 			return;
 		}
 
-		_isDefensiveRescueActive = false;
-		_defensiveRescueAlly = null;
+		_isPartySupportActive = false;
+		_partySupportAlly = null;
 
-		if (wasDefensiveRescueActive)
+		if (wasPartySupportActive)
 		{
 			_targetCommitmentRemainingSeconds = 0.0;
 			_targetReassessmentRemainingSeconds = 0.0;
@@ -2485,14 +2494,14 @@ public partial class HeroActorController : Node2D
 	}
 
 	/// <summary>
-	/// Attempts to refresh defensive rescue target without throwing when the operation cannot be completed.
+	/// Attempts to refresh party support target without throwing when the operation cannot be completed.
 	/// Uses the supplied arguments and current state and returns the resulting bool to the caller.
 	/// </summary>
-	private bool TryRefreshDefensiveRescueTarget(
+	private bool TryRefreshPartySupportTarget(
 		IReadOnlyList<MonsterActorController> candidates,
 		bool hasValidCurrentTarget)
 	{
-		if (!Targeting.TrySelectDefensiveRescueTarget(
+		if (!Targeting.TrySelectPartySupportTarget(
 			this,
 			candidates,
 			_partyMembers,
@@ -2506,12 +2515,12 @@ public partial class HeroActorController : Node2D
 			decision.SelectedTarget;
 
 		bool wasAlreadyRescuingSameAlly =
-			_isDefensiveRescueActive
-			&& _defensiveRescueAlly
+			_isPartySupportActive
+			&& _partySupportAlly
 				== decision.RescueAlly;
 
-		_isDefensiveRescueActive = true;
-		_defensiveRescueAlly = decision.RescueAlly;
+		_isPartySupportActive = true;
+		_partySupportAlly = decision.RescueAlly;
 
 		if (hasValidCurrentTarget
 			&& CurrentTarget == rescueTarget)
@@ -2526,7 +2535,7 @@ public partial class HeroActorController : Node2D
 			if (!wasAlreadyRescuingSameAlly
 				&& ActiveStanceProfile.LogTargetingDecisions)
 			{
-				PrintDefensiveRescueDecision(decision);
+				PrintPartySupportDecision(decision);
 			}
 
 			return true;
@@ -2542,7 +2551,7 @@ public partial class HeroActorController : Node2D
 				.RescueTargetCommitmentSeconds);
 
 		if (ActiveStanceProfile.LogTargetingDecisions)
-			PrintDefensiveRescueDecision(decision);
+			PrintPartySupportDecision(decision);
 
 		return true;
 	}
@@ -2669,10 +2678,10 @@ public partial class HeroActorController : Node2D
 	}
 
 	/// <summary>
-	/// Performs the print defensive rescue decision operation for Hero Actor Controller.
+	/// Performs the print party support decision operation for Hero Actor Controller.
 	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
 	/// </summary>
-	private void PrintDefensiveRescueDecision(
+	private void PrintPartySupportDecision(
 		HeroTargetDecision decision)
 	{
 		if (decision.SelectedTarget is null
@@ -2681,8 +2690,15 @@ public partial class HeroActorController : Node2D
 			return;
 		}
 
+		string supportReason = decision.SelectionRule switch
+		{
+			"CriticalAllyRescue" => "CriticalRescue",
+			"VulnerableAllyRescue" => "VulnerableRescue",
+			_ => decision.SelectionRule
+		};
+
 		DebugLog.Print(
-			$"{Name} [Defensive] rescue override: " +
+			$"{Name} [{CombatStance}] party support: {supportReason}; " +
 			$"Ally={decision.RescueAlly.Name}; " +
 			$"Health={decision.RescueAllyHealthPercent:0.##}%; " +
 			$"Pressure={decision.RescuePressure}; " +

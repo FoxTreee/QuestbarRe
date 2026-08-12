@@ -130,6 +130,18 @@ public partial class AbilityDefinition : Resource
     public float Range { get; set; } =
         45.0f;
 
+    [ExportCategory("Resolution")]
+
+    /// <summary>
+    /// Defines whether this ability uses the target's resolved Dodge chance or
+    /// is guaranteed to connect once its other targeting/commit rules succeed.
+    /// Offensive abilities normally use DefenderDodge. Abilities such as Taunt
+    /// that explicitly ignore Dodge use CannotBeDodged.
+    /// </summary>
+    [Export]
+    public CombatDodgeRule DodgeRule { get; set; } =
+        CombatDodgeRule.DefenderDodge;
+
     [ExportCategory("Effect")]
 
     /// <summary>
@@ -139,6 +151,15 @@ public partial class AbilityDefinition : Resource
     [Export]
     public AbilityEffectType EffectType { get; set; } =
         AbilityEffectType.DirectDamage;
+
+    /// <summary>
+    /// Reusable status-effect definition applied by ApplyStatusEffect abilities.
+    /// The status owns control behavior; the ability owns targeting, duration,
+    /// cooldown, resource cost, Dodge rules, and party-support intent.
+    /// </summary>
+    [Export]
+    public CombatStatusEffectDefinition AppliedStatusEffect { get; set; } =
+        null!;
 
     /// <summary>
     /// Defines how a direct-damage ability calculates its requested damage.
@@ -207,6 +228,48 @@ public partial class AbilityDefinition : Resource
     [Export(PropertyHint.Range, "1,100,1")]
     public float AutoCastHealthThresholdPercent { get; set; } =
         50.0f;
+
+    [ExportCategory("Party Support")]
+
+    /// <summary>
+    /// Describes how this ability can help when the hero is actively rescuing
+    /// a pressured ally. None keeps the ability on its normal automatic-use
+    /// rules. RecoverAlly targets the rescued ally directly. Peel targets or
+    /// affects monsters that are currently pressuring that ally.
+    /// </summary>
+    [Export]
+    public AbilitySupportRole SupportRole { get; set; } =
+        AbilitySupportRole.None;
+
+    /// <summary>
+    /// Base priority used when more than one ready party-support ability can
+    /// help the currently rescued ally. Higher values win. Equal values keep
+    /// the authored ability-list order as a stable tie-breaker.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,1000,1")]
+    public float SupportPriority { get; set; } =
+        100.0f;
+
+    /// <summary>
+    /// Extra support score granted for each monster currently pressuring the
+    /// rescued ally that this Peel ability would actually affect. AOE Peel
+    /// abilities therefore become more attractive as more threats are caught
+    /// inside their area, while single-target Peel abilities normally affect
+    /// one threat.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,1000,1")]
+    public float SupportPriorityPerThreatAffected { get; set; } =
+        25.0f;
+
+    /// <summary>
+    /// Extra support score granted for each missing-health percentage point
+    /// covered by a RecoverAlly ability. Single-target recovery scores against
+    /// the rescued ally; AOE recovery sums the missing-health percentages of
+    /// living allies inside the authored area.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,100,0.1")]
+    public float SupportPriorityPerMissingHealthPercent { get; set; } =
+        1.0f;
 
     [ExportCategory("Authoring")]
 
@@ -300,6 +363,23 @@ public partial class AbilityDefinition : Resource
             }
         }
 
+        if (!System.Enum.IsDefined(
+            typeof(CombatDodgeRule),
+            DodgeRule))
+        {
+            errors.Add(
+                $"{ContentId}: DodgeRule is invalid.");
+        }
+
+        if ((EffectType == AbilityEffectType.DirectHealing
+                || EffectType == AbilityEffectType.AreaTaunt)
+            && DodgeRule != CombatDodgeRule.CannotBeDodged)
+        {
+            errors.Add(
+                $"{ContentId}: {EffectType} must explicitly use " +
+                "DodgeRule CannotBeDodged.");
+        }
+
         if (BaseDamage < 0.0f)
         {
             errors.Add(
@@ -383,6 +463,67 @@ public partial class AbilityDefinition : Resource
                 "must be greater than zero and no more than 100.");
         }
 
+        if (!System.Enum.IsDefined(
+            typeof(AbilitySupportRole),
+            SupportRole))
+        {
+            errors.Add(
+                $"{ContentId}: SupportRole is invalid.");
+        }
+
+        if (SupportPriority < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: SupportPriority cannot be negative.");
+        }
+
+        if (SupportPriorityPerThreatAffected < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: SupportPriorityPerThreatAffected " +
+                "cannot be negative.");
+        }
+
+        if (SupportPriorityPerMissingHealthPercent < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: SupportPriorityPerMissingHealthPercent " +
+                "cannot be negative.");
+        }
+
+        if (SupportRole == AbilitySupportRole.RecoverAlly)
+        {
+            bool validRecoverTarget =
+                TargetMode == AbilityTargetMode.Ally
+                || (TargetMode == AbilityTargetMode.AreaOfEffect
+                    && (AreaTargetGroup == AbilityTargetGroup.Allies
+                        || AreaTargetGroup == AbilityTargetGroup.Everyone));
+
+            if (!validRecoverTarget)
+            {
+                errors.Add(
+                    $"{ContentId}: RecoverAlly support requires Ally " +
+                    "targeting or an ally/everyone AreaOfEffect.");
+            }
+        }
+
+        if (SupportRole == AbilitySupportRole.Peel)
+        {
+            bool validPeelTarget =
+                TargetMode == AbilityTargetMode.CurrentTarget
+                || TargetMode == AbilityTargetMode.Monster
+                || (TargetMode == AbilityTargetMode.AreaOfEffect
+                    && (AreaTargetGroup == AbilityTargetGroup.Enemies
+                        || AreaTargetGroup == AbilityTargetGroup.Everyone));
+
+            if (!validPeelTarget)
+            {
+                errors.Add(
+                    $"{ContentId}: Peel support requires CurrentTarget, " +
+                    "Monster, or an enemy/everyone AreaOfEffect target.");
+            }
+        }
+
         if (EffectType == AbilityEffectType.AreaTaunt)
         {
             if (TargetMode != AbilityTargetMode.AreaOfEffect)
@@ -434,6 +575,48 @@ public partial class AbilityDefinition : Resource
                 errors.Add(
                     $"{ContentId}: DirectHealing abilities require " +
                     "BaseHealing greater than zero.");
+            }
+        }
+
+        if (EffectType == AbilityEffectType.ApplyStatusEffect)
+        {
+            if (!GodotObject.IsInstanceValid(AppliedStatusEffect))
+            {
+                errors.Add(
+                    $"{ContentId}: ApplyStatusEffect abilities require an " +
+                    "AppliedStatusEffect resource.");
+            }
+            else
+            {
+                IReadOnlyList<string> statusErrors =
+                    AppliedStatusEffect.GetValidationErrors();
+
+                if (statusErrors.Count > 0)
+                {
+                    errors.Add(
+                        $"{ContentId}: AppliedStatusEffect " +
+                        $"'{AppliedStatusEffect.ContentId}' is invalid.");
+                }
+            }
+
+            if (EffectDurationSeconds <= 0.0f)
+            {
+                errors.Add(
+                    $"{ContentId}: ApplyStatusEffect abilities require " +
+                    "EffectDurationSeconds greater than zero.");
+            }
+
+            bool validStatusTarget =
+                TargetMode == AbilityTargetMode.CurrentTarget
+                || TargetMode == AbilityTargetMode.Monster
+                || (TargetMode == AbilityTargetMode.AreaOfEffect
+                    && AreaTargetGroup == AbilityTargetGroup.Enemies);
+
+            if (!validStatusTarget)
+            {
+                errors.Add(
+                    $"{ContentId}: ApplyStatusEffect currently supports " +
+                    "CurrentTarget, Monster, or enemy AreaOfEffect targeting.");
             }
         }
 

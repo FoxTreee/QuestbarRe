@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://cmcvjtx4a0sp5"]
+
+[ext_resource type="Script" uid="uid://7pi687cfrfxr" path="res://Controllers/UI/CombatStatusEffectDisplayController.cs" id="1_n3bdm"]
+
+[node name="CombatStatusEffectDisplay" type="Node2D" unique_id=1725489144 node_paths=PackedStringArray("StatusContainer")]
+script = ExtResource("1_n3bdm")
+StatusContainer = NodePath("StatusContainer")
+
+[node name="StatusContainer" type="HBoxContainer" parent="." unique_id=1351861324]
+offset_left = -80.0
+offset_top = -7.0
+offset_right = 80.0
+offset_bottom = 7.0
+mouse_filter = 2
+theme_override_constants/separation = 4
+alignment = 1

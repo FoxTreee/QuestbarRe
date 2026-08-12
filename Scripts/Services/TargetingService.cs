@@ -9,6 +9,9 @@ public partial class TargetingService : Node
     public const float DistantThreatTakeoverMultiplier =
         1.30f;
 
+    public const float CriticalAllyHealthThresholdPercent =
+        25.0f;
+
     private readonly RandomNumberGenerator _random =
         new();
 
@@ -384,10 +387,10 @@ public partial class TargetingService : Node
 
 
     /// <summary>
-    /// Attempts to select defensive rescue target without throwing when the operation cannot be completed.
+    /// Attempts to select party support target without throwing when the operation cannot be completed.
     /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
     /// </summary>
-    public bool TrySelectDefensiveRescueTarget(
+    public bool TrySelectPartySupportTarget(
         HeroActorController hero,
         IReadOnlyList<MonsterActorController> candidates,
         IReadOnlyList<HeroActorController> partyMembers,
@@ -395,17 +398,61 @@ public partial class TargetingService : Node
     {
         decision = new HeroTargetDecision
         {
-            SelectionRule = "NoDefensiveRescue"
+            SelectionRule = "NoPartySupport"
         };
 
         HeroCombatStanceProfile stanceProfile =
             hero.ActiveStanceProfile;
 
-        if (hero.CombatStance != HeroCombatStance.Defensive
-            || !stanceProfile.RescueVulnerableAllies)
+        if (stanceProfile.RescueCriticalAllies
+            && TrySelectRescueTarget(
+                hero,
+                candidates,
+                partyMembers,
+                CriticalAllyHealthThresholdPercent,
+                stanceProfile.MinimumRescuePressure,
+                "CriticalAllyRescue",
+                out decision))
         {
-            return false;
+            return true;
         }
+
+        if (hero.CombatStance == HeroCombatStance.Defensive
+            && stanceProfile.RescueVulnerableAllies
+            && TrySelectRescueTarget(
+                hero,
+                candidates,
+                partyMembers,
+                stanceProfile.RescueAllyHealthThresholdPercent,
+                stanceProfile.MinimumRescuePressure,
+                "VulnerableAllyRescue",
+                out decision))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    /// <summary>
+    /// Selects a monster threatening the most urgent ally inside the supplied
+    /// health threshold. The caller decides whether this is a critical rescue
+    /// or a stance-specific vulnerable rescue.
+    /// </summary>
+    private bool TrySelectRescueTarget(
+        HeroActorController hero,
+        IReadOnlyList<MonsterActorController> candidates,
+        IReadOnlyList<HeroActorController> partyMembers,
+        float healthThresholdPercent,
+        int minimumPressure,
+        string selectionRule,
+        out HeroTargetDecision decision)
+    {
+        decision = new HeroTargetDecision
+        {
+            SelectionRule = "NoPartySupport"
+        };
 
         HeroActorController? rescueAlly = null;
         float rescueAllyHealthPercent = 0.0f;
@@ -426,21 +473,15 @@ public partial class TargetingService : Node
                 / partyMember.Health.MaximumHealth
                 * 100.0f;
 
-            if (healthPercent
-                > stanceProfile.RescueAllyHealthThresholdPercent)
-            {
+            if (healthPercent > healthThresholdPercent)
                 continue;
-            }
 
             int pressure = CountMonstersTargetingHero(
                 partyMember,
                 candidates);
 
-            if (pressure
-                < stanceProfile.MinimumRescuePressure)
-            {
+            if (pressure < minimumPressure)
                 continue;
-            }
 
             bool isMoreVulnerable = rescueAlly is null
                 || healthPercent < rescueAllyHealthPercent;
@@ -499,8 +540,8 @@ public partial class TargetingService : Node
                 continue;
             }
 
-            if (hero.IsDefensiveRescueActive
-                && hero.DefensiveRescueAlly == rescueAlly
+            if (hero.IsPartySupportActive
+                && hero.PartySupportAlly == rescueAlly
                 && hero.CurrentTarget == monster)
             {
                 currentRescueTarget = monster;
@@ -508,7 +549,7 @@ public partial class TargetingService : Node
             }
 
             if (availableRescueTarget is null
-                || IsBetterDefensiveRescueTarget(
+                || IsBetterPartySupportTarget(
                     monster,
                     availableRescueTarget))
             {
@@ -550,7 +591,7 @@ public partial class TargetingService : Node
         {
             SelectedTarget = rescueTarget,
             ValidCandidateCount = rescuePressure,
-            SelectionRule = "DefensiveRescue",
+            SelectionRule = selectionRule,
             SelectedRuleValue =
                 rescueTarget.Definition.DangerRating,
             RescueAlly = rescueAlly,
@@ -706,10 +747,10 @@ public partial class TargetingService : Node
 
 
     /// <summary>
-    /// Performs the is better defensive rescue target operation for Targeting Service.
+    /// Performs the is better party support target operation for Targeting Service.
     /// Uses the supplied arguments and current state and returns the resulting bool to the caller.
     /// </summary>
-    private static bool IsBetterDefensiveRescueTarget(
+    private static bool IsBetterPartySupportTarget(
         MonsterActorController candidate,
         MonsterActorController selected)
     {
