@@ -15,6 +15,13 @@ public partial class MonsterFactory : Node
         set;
     } = null!;
 
+    [Export]
+    public SceneBoundaryService SceneBoundaries
+    {
+        get;
+        set;
+    } = null!;
+
     /// <summary>
     /// Runs Godot setup for Monster Factory when the node enters the scene tree.
     /// Uses the current node and service state; any result is applied through side effects, events, or stored fields.
@@ -26,6 +33,13 @@ public partial class MonsterFactory : Node
             GD.PushError(
                 "MonsterFactory is missing its " +
                 "Registry Inspector reference.");
+        }
+
+        if (!GodotObject.IsInstanceValid(SceneBoundaries))
+        {
+            GD.PushError(
+                "MonsterFactory is missing its " +
+                "SceneBoundaries Inspector reference.");
         }
     }
 
@@ -45,6 +59,14 @@ public partial class MonsterFactory : Node
         {
             error =
                 "MonsterFactory has no valid registry.";
+
+            return false;
+        }
+
+        if (!GodotObject.IsInstanceValid(SceneBoundaries))
+        {
+            error =
+                "MonsterFactory has no valid SceneBoundaryService.";
 
             return false;
         }
@@ -89,7 +111,8 @@ public partial class MonsterFactory : Node
 
         monster.Configure(
             definition,
-            abilities);
+            abilities,
+            SceneBoundaries);
 
         return true;
     }

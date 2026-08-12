@@ -47,6 +47,13 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 	private HeroActorController? _forcedTarget;
 	private double _forcedTargetTimeRemaining;
 
+	private SceneBoundaryService _sceneBoundaries = null!;
+	private readonly RandomNumberGenerator _forcedMovementRandom = new();
+	private CombatStatusEffectInstance? _activeForcedMovementEffect;
+	private Vector2 _panicStartPosition;
+	private Vector2 _panicDirection;
+	private double _panicDirectionTimeRemaining;
+
 	public bool HasValidTarget => IsValidHeroTarget(CurrentTarget);
 
 	[ExportCategory("Visuals")]
@@ -198,7 +205,8 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 	/// </summary>
 	public void Configure(
 		MonsterDefinition definition,
-		IReadOnlyList<AbilityDefinition>? abilities = null)
+		IReadOnlyList<AbilityDefinition>? abilities,
+		SceneBoundaryService sceneBoundaries)
 	{
 		if (!GodotObject.IsInstanceValid(definition))
 		{
@@ -206,7 +214,13 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 				nameof(definition));
 		}
 
+		if (!GodotObject.IsInstanceValid(sceneBoundaries))
+		{
+			throw new System.ArgumentNullException(nameof(sceneBoundaries));
+		}
+
 		Definition = definition;
+		_sceneBoundaries = sceneBoundaries;
 
 		StatusEffects.Clear();
 		Threat.Clear();
@@ -214,6 +228,7 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 		MeleeEngagementSlots.Clear();
 		_forcedTarget = null;
 		_forcedTargetTimeRemaining = 0.0;
+		ResetForcedMovementRuntime();
 
 		_abilities.Clear();
 		_abilityCooldowns.Clear();
@@ -452,6 +467,16 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 			SetProcess(false);
 			return;
 		}
+
+		if (!GodotObject.IsInstanceValid(_sceneBoundaries))
+		{
+			GD.PushError(
+				$"{Name} cannot initialize because no SceneBoundaryService was configured.");
+			SetProcess(false);
+			return;
+		}
+
+		_forcedMovementRandom.Randomize();
 
 		_healthBar = GetNodeOrNull<ActorHealthBarController>("PresentationRoot/ActorHealthBar")!;
 
@@ -1473,6 +1498,241 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 	}
 
 	/// <summary>
+	/// Gives an active forced-movement status temporary ownership of this
+	/// monster's movement. Threat and CurrentTarget are deliberately preserved
+	/// so normal combat can resume when the status expires.
+	/// </summary>
+	private bool TryUpdateForcedMovement(double delta)
+	{
+		if (!StatusEffects.TryGetForcedMovementEffect(
+			out CombatStatusEffectInstance effect))
+		{
+			ResetForcedMovementRuntime();
+			return false;
+		}
+
+		CombatStatusEffectDefinition definition = effect.Definition;
+
+		if (!ReferenceEquals(_activeForcedMovementEffect, effect))
+			BeginForcedMovement(effect);
+
+		Vector2 direction = definition.ForcedMovementMode switch
+		{
+			CombatForcedMovementMode.AwayFromSource =>
+				GetAwayFromSourceDirection(effect),
+
+			CombatForcedMovementMode.Panic =>
+				GetPanicDirection(effect, delta),
+
+			_ => Vector2.Zero
+		};
+
+		if (direction.LengthSquared() <= 0.0001f)
+		{
+			ResetForcedMovementRuntime();
+			return false;
+		}
+
+		ReleaseMeleeEngagementSlot(CurrentTarget);
+
+		float movementDistance =
+			Mathf.Max(0.0f, CombatProfile.MoveSpeed)
+			* Mathf.Max(0.0f, definition.ForcedMovementSpeedMultiplier)
+			* (float)System.Math.Max(delta, 0.0);
+
+		Vector2 candidate =
+			GlobalPosition + direction * movementDistance;
+
+		if (definition.ForcedMovementMode
+			== CombatForcedMovementMode.Panic)
+		{
+			candidate = ApplyPanicLeash(
+				candidate,
+				definition.PanicLeashDistance);
+		}
+
+		Vector2 contained =
+			_sceneBoundaries.ClampToScene(candidate);
+
+		bool hitBoundary =
+			!contained.IsEqualApprox(candidate);
+
+		GlobalPosition = contained;
+
+		if (definition.ForcedMovementMode
+			== CombatForcedMovementMode.Panic
+			&& hitBoundary)
+		{
+			_panicDirectionTimeRemaining = 0.0;
+		}
+
+		if (Mathf.Abs(direction.X) > FacingDeadZone)
+		{
+			Facing = direction.X < 0.0f
+				? FacingDirection.Left
+				: FacingDirection.Right;
+		}
+
+		StopAttackPresentation();
+		return true;
+	}
+
+	private void BeginForcedMovement(
+		CombatStatusEffectInstance effect)
+	{
+		_activeForcedMovementEffect = effect;
+		_panicStartPosition = GlobalPosition;
+		_panicDirection = Vector2.Zero;
+		_panicDirectionTimeRemaining = 0.0;
+
+		if (effect.Definition.ForcedMovementMode
+			== CombatForcedMovementMode.Panic)
+		{
+			ChooseNewPanicDirection(effect.Definition);
+		}
+	}
+
+	private Vector2 GetAwayFromSourceDirection(
+		CombatStatusEffectInstance effect)
+	{
+		CombatStatusEffectApplicationContext context =
+			effect.ApplicationContext;
+
+		Vector2 sourcePosition = context.OriginPosition;
+
+		if (context.SourceActor is Node2D sourceActor
+			&& GodotObject.IsInstanceValid(sourceActor)
+			&& sourceActor.IsInsideTree())
+		{
+			sourcePosition = sourceActor.GlobalPosition;
+		}
+
+		Vector2 awayDirection =
+			GlobalPosition - sourcePosition;
+
+		if (awayDirection.LengthSquared() <= 0.0001f)
+		{
+			return Facing == FacingDirection.Right
+				? Vector2.Left
+				: Vector2.Right;
+		}
+
+		return awayDirection.Normalized();
+	}
+
+	private Vector2 GetPanicDirection(
+		CombatStatusEffectInstance effect,
+		double delta)
+	{
+		CombatStatusEffectDefinition definition =
+			effect.Definition;
+
+		_panicDirectionTimeRemaining -=
+			System.Math.Max(delta, 0.0);
+
+		float leashDistance =
+			Mathf.Max(1.0f, definition.PanicLeashDistance);
+
+		Vector2 fromStart =
+			GlobalPosition - _panicStartPosition;
+
+		bool atLeash =
+			fromStart.LengthSquared()
+			>= leashDistance * leashDistance;
+
+		bool movingFartherOut =
+			atLeash
+			&& fromStart.LengthSquared() > 0.0001f
+			&& _panicDirection.Dot(fromStart.Normalized()) > 0.0f;
+
+		if (_panicDirectionTimeRemaining <= 0.0
+			|| _panicDirection.LengthSquared() <= 0.0001f
+			|| movingFartherOut)
+		{
+			ChooseNewPanicDirection(
+				definition,
+				atLeash ? -fromStart : Vector2.Zero);
+		}
+
+		return _panicDirection;
+	}
+
+	private void ChooseNewPanicDirection(
+		CombatStatusEffectDefinition definition,
+		Vector2 preferredInwardDirection = default)
+	{
+		Vector2 direction;
+
+		if (preferredInwardDirection.LengthSquared() > 0.0001f)
+		{
+			Vector2 inward = preferredInwardDirection.Normalized();
+			float jitterAngle =
+				_forcedMovementRandom.RandfRange(-0.65f, 0.65f);
+			direction = inward.Rotated(jitterAngle);
+		}
+		else
+		{
+			float angle =
+				_forcedMovementRandom.RandfRange(0.0f, Mathf.Tau);
+			direction = Vector2.FromAngle(angle);
+		}
+
+		if (direction.LengthSquared() <= 0.0001f)
+		{
+			direction = Facing == FacingDirection.Right
+				? Vector2.Left
+				: Vector2.Right;
+		}
+
+		_panicDirection = direction.Normalized();
+
+		float minSeconds =
+			Mathf.Max(
+				0.05f,
+				definition.PanicDirectionChangeMinSeconds);
+
+		float maxSeconds =
+			Mathf.Max(
+				minSeconds,
+				definition.PanicDirectionChangeMaxSeconds);
+
+		_panicDirectionTimeRemaining =
+			_forcedMovementRandom.RandfRange(
+				minSeconds,
+				maxSeconds);
+	}
+
+	private Vector2 ApplyPanicLeash(
+		Vector2 candidatePosition,
+		float leashDistance)
+	{
+		float maxDistance = Mathf.Max(1.0f, leashDistance);
+
+		Vector2 fromStart =
+			candidatePosition - _panicStartPosition;
+
+		if (fromStart.LengthSquared()
+			<= maxDistance * maxDistance)
+		{
+			return candidatePosition;
+		}
+
+		_panicDirectionTimeRemaining = 0.0;
+
+		return _panicStartPosition
+			+ fromStart.Normalized()
+			* maxDistance;
+	}
+
+	private void ResetForcedMovementRuntime()
+	{
+		_activeForcedMovementEffect = null;
+		_panicStartPosition = Vector2.Zero;
+		_panicDirection = Vector2.Zero;
+		_panicDirectionTimeRemaining = 0.0;
+	}
+
+	/// <summary>
 	/// Updates Monster Actor Controller every rendered frame using the supplied frame delta.
 	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
 	/// </summary>
@@ -1486,10 +1746,17 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 		if (!IsDead)
 			UpdateForcedTarget(delta);
 
-		UpdateFacingTowardTarget();
-
 		if (!IsDead)
 			UpdateAbilityCooldowns(delta);
+
+		if (!IsDead
+			&& TryUpdateForcedMovement(delta))
+		{
+			PositionHealthBar();
+			return;
+		}
+
+		UpdateFacingTowardTarget();
 
 		switch (_state)
 		{
@@ -1597,6 +1864,7 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 	/// </summary>
 	public override void _ExitTree()
 	{
+		ResetForcedMovementRuntime();
 		SetCurrentTarget(null);
 		MeleeEngagementSlots.Clear();
 	}

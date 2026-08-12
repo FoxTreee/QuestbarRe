@@ -545,6 +545,10 @@ public partial class CombatController : Node
 		int appliedCount = 0;
 		int dodgedCount = 0;
 
+		CombatStatusEffectApplicationContext applicationContext = new(
+			caster,
+			targetOrAreaAnchor.GlobalPosition);
+
 		if (ability.TargetMode == AbilityTargetMode.AreaOfEffect)
 		{
 			if (ability.AreaTargetGroup != AbilityTargetGroup.Enemies
@@ -581,7 +585,8 @@ public partial class CombatController : Node
 
 				if (monster.StatusEffects.TryApplyOrRefresh(
 					status,
-					ability.EffectDurationSeconds))
+					ability.EffectDurationSeconds,
+					applicationContext))
 				{
 					appliedCount++;
 				}
@@ -603,7 +608,8 @@ public partial class CombatController : Node
 			}
 			else if (target.StatusEffects.TryApplyOrRefresh(
 				status,
-				ability.EffectDurationSeconds))
+				ability.EffectDurationSeconds,
+				applicationContext))
 			{
 				appliedCount = 1;
 			}

@@ -2,15 +2,21 @@ public sealed class CombatStatusEffectInstance
 {
     public CombatStatusEffectInstance(
         CombatStatusEffectDefinition definition,
-        float durationSeconds)
+        float durationSeconds,
+        CombatStatusEffectApplicationContext? applicationContext = null)
     {
         Definition = definition;
+        ApplicationContext =
+            applicationContext ?? CombatStatusEffectApplicationContext.None;
+
         RemainingSeconds = System.MathF.Max(
             durationSeconds,
             0.0f);
     }
 
     public CombatStatusEffectDefinition Definition { get; }
+
+    public CombatStatusEffectApplicationContext ApplicationContext { get; }
 
     public string ContentId => Definition.ContentId;
 

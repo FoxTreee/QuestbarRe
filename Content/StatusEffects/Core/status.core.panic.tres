@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CombatStatusEffectDefinition" format=3 uid="uid://conkf5syw843t"]
+
+[ext_resource type="Script" uid="uid://dq43thgs5wwhv" path="res://Scripts/Content/Definitions/CombatStatusEffectDefinition.cs" id="1_70enw"]
+
+[resource]
+script = ExtResource("1_70enw")
+ContentId = "status.core.panic"
+DisplayName = "Panic"
+Description = "Causes the affected actor to flee unpredictably."
+DisplayAbbreviation = "PNC"
+PreventsBasicAttacks = true
+PreventsAbilities = true
+InterruptsBasicAttacks = true
+InterruptsAbilities = true
+ForcedMovementMode = 2
+ForcedMovementSpeedMultiplier = 1.5
+PanicLeashDistance = 180.0
+metadata/_custom_type_script = "uid://dq43thgs5wwhv"

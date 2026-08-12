@@ -53,6 +53,7 @@
 [ext_resource type="Resource" uid="uid://b3c4n8wtaxc3u" path="res://Content/Abilities/Core/ability.core.frost_nova.tres" id="37_yisvs"]
 [ext_resource type="Script" uid="uid://bgv0cmtivgfi7" path="res://Controllers/PartyController.cs" id="40_6ehlx"]
 [ext_resource type="Script" uid="uid://dwnavkiixraok" path="res://Scripts/Services/RewardLedgerService.cs" id="40_ep8v8"]
+[ext_resource type="Script" uid="uid://cte4v1w5xrc6j" path="res://Scripts/Services/SceneBoundaryService.cs" id="43_rgw24"]
 [ext_resource type="Script" uid="uid://dphwrvuij0an5" path="res://Controllers/RegionRunController.cs" id="51_7sj7i"]
 [ext_resource type="Resource" uid="uid://fgvs1onm3prx" path="res://Resources/Regions/TrainingRegion.tres" id="52_semxg"]
 [ext_resource type="Script" uid="uid://bi3msg7aodwjr" path="res://Controllers/IncapacitationChoicePopupController.cs" id="54_3133c"]
@@ -101,6 +102,12 @@ render_target_update_mode = 4
 z_index = -100
 
 [node name="ScalableWorld" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1379885866]
+
+[node name="SceneLeftBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=972278134]
+position = Vector2(20, 168)
+
+[node name="SceneRightBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=481286879]
+position = Vector2(780, 168)
 
 [node name="RegionPresentation" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=1114696346 node_paths=PackedStringArray("RegionTileA", "RegionTileB", "BackgroundPresentation", "TravelingGround", "GroundSprite", "JourneyState")]
 script = ExtResource("1_v1gob")
@@ -272,6 +279,7 @@ oversampling_override = 1.0
 title = "Hero Incapacitated"
 position = Vector2i(0, 36)
 size = Vector2i(248, 176)
+visible = false
 transient = true
 unresizable = true
 
@@ -348,9 +356,10 @@ script = ExtResource("14_5jffn")
 MonsterRegistry = NodePath("../MonsterContentRegistry")
 Definitions = Array[ExtResource("15_kpo4j")]([ExtResource("16_4n42c"), ExtResource("17_4n42c"), ExtResource("18_c5snn")])
 
-[node name="MonsterFactory" type="Node" parent="Services" unique_id=583709723 node_paths=PackedStringArray("Registry")]
+[node name="MonsterFactory" type="Node" parent="Services" unique_id=583709723 node_paths=PackedStringArray("Registry", "SceneBoundaries")]
 script = ExtResource("12_0sclb")
 Registry = NodePath("../MonsterContentRegistry")
+SceneBoundaries = NodePath("../SceneBoundaryService")
 
 [node name="AbilityContentRegistry" type="Node" parent="Services" unique_id=801032179]
 script = ExtResource("25_vvnwx")
@@ -370,6 +379,13 @@ Console = NodePath("../../PopupWindows/DebugConsoleWindow")
 
 [node name="RewardLedgerService" type="Node" parent="Services" unique_id=1372524594]
 script = ExtResource("40_ep8v8")
+
+[node name="SceneBoundaryService" type="Node" parent="Services" unique_id=811700688 node_paths=PackedStringArray("SceneLeftBoundary", "SceneRightBoundary", "GroundTopBoundary", "GroundBottomBoundary")]
+script = ExtResource("43_rgw24")
+SceneLeftBoundary = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/SceneLeftBoundary")
+SceneRightBoundary = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/SceneRightBoundary")
+GroundTopBoundary = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer/GroundTopBoundary")
+GroundBottomBoundary = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer/GroundBottomBoundary")
 
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 

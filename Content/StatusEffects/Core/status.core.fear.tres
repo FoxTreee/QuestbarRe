@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CombatStatusEffectDefinition" format=3 uid="uid://dbtld217r6k3w"]
+
+[ext_resource type="Script" uid="uid://dq43thgs5wwhv" path="res://Scripts/Content/Definitions/CombatStatusEffectDefinition.cs" id="1_2askd"]
+
+[resource]
+script = ExtResource("1_2askd")
+ContentId = "status.core.fear"
+DisplayName = "Fear"
+Description = "Forces the affected actor to flee from the source."
+DisplayAbbreviation = "FEAR"
+PreventsBasicAttacks = true
+PreventsAbilities = true
+InterruptsBasicAttacks = true
+InterruptsAbilities = true
+ForcedMovementMode = 1
+ForcedMovementSpeedMultiplier = 0.5
+metadata/_custom_type_script = "uid://dq43thgs5wwhv"

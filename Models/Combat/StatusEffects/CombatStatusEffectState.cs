@@ -15,10 +15,6 @@ public sealed class CombatStatusEffectState
 
     public int Count => _activeEffects.Count;
 
-    /// <summary>
-    /// Read-only enumeration used by presentation or debug consumers that bind
-    /// after statuses are already active. Callers cannot mutate runtime state.
-    /// </summary>
     public IEnumerable<CombatStatusEffectInstance> ActiveEffects =>
         _activeEffects.Values;
 
@@ -36,6 +32,12 @@ public sealed class CombatStatusEffectState
 
     public bool InterruptsAbilities =>
         AnyActiveEffect(static definition => definition.InterruptsAbilities);
+
+    public bool HasForcedMovement =>
+        AnyActiveEffect(
+            static definition =>
+                definition.ForcedMovementMode
+                    != CombatForcedMovementMode.None);
 
     public bool Has(string contentId)
     {
@@ -55,15 +57,29 @@ public sealed class CombatStatusEffectState
                 out effect!);
     }
 
-    /// <summary>
-    /// Adds a new timed status or refreshes the same status to at least the
-    /// supplied duration. Different status IDs remain independent. Control
-    /// behavior is resolved from the active definitions rather than from
-    /// hard-coded status IDs.
-    /// </summary>
+    public bool TryGetForcedMovementEffect(
+        out CombatStatusEffectInstance effect)
+    {
+        foreach (CombatStatusEffectInstance candidate
+            in _activeEffects.Values)
+        {
+            if (!candidate.IsExpired
+                && candidate.Definition.ForcedMovementMode
+                    != CombatForcedMovementMode.None)
+            {
+                effect = candidate;
+                return true;
+            }
+        }
+
+        effect = null!;
+        return false;
+    }
+
     public bool TryApplyOrRefresh(
         CombatStatusEffectDefinition definition,
-        float durationSeconds)
+        float durationSeconds,
+        CombatStatusEffectApplicationContext? applicationContext = null)
     {
         if (!GodotObject.IsInstanceValid(definition)
             || durationSeconds <= 0.0f)
@@ -91,7 +107,8 @@ public sealed class CombatStatusEffectState
 
         CombatStatusEffectInstance instance = new(
             definition,
-            durationSeconds);
+            durationSeconds,
+            applicationContext);
 
         _activeEffects.Add(
             normalizedId,

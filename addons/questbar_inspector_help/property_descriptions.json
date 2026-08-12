@@ -3,7 +3,8 @@
     "Registry": "Inspector reference used by this component for its registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
   },
   "res://Content/Factories/MonsterFactory.cs": {
-    "Registry": "Inspector reference used by this component for its registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working."
+    "Registry": "Inspector reference used by this component for its registry dependency. Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.",
+    "SceneBoundaries": "Shared scene-boundary service injected into spawned monsters so Panic and future containment mechanics use authored visual anchors."
   },
   "res://Content/Registries/AbilityContentRegistry.cs": {
     "Definitions": "Controls definitions. For example, adding another entry gives the owning system one more configured definitions to use."
@@ -372,10 +373,21 @@
     "InterruptsBasicAttacks": "When enabled, a basic attack already in progress is canceled and reset when the status takes control. Requires Prevents Basic Attacks.",
     "InterruptsAbilities": "When enabled, an ability already being cast is canceled and reset without starting its cooldown. Requires Prevents Abilities.",
     "DisplayAbbreviation": "Short label used by the reusable status display, such as FRZ. Leave blank to derive the first three letters from Display Name.",
-    "DisplayColor": "Presentation-only tint used for this status in the reusable status display. It does not affect gameplay."
+    "DisplayColor": "Presentation-only tint used for this status in the reusable status display. It does not affect gameplay.",
+    "ForcedMovementMode": "Optional forced-movement behavior. Away From Source preserves directional fear; Panic changes direction randomly while contained.",
+    "ForcedMovementSpeedMultiplier": "Multiplier on normal move speed while forced movement owns the actor.",
+    "PanicDirectionChangeMinSeconds": "Minimum time a Panicked actor keeps one random direction.",
+    "PanicDirectionChangeMaxSeconds": "Maximum time a Panicked actor keeps one random direction.",
+    "PanicLeashDistance": "Maximum logical-pixel distance a Panicked actor may wander from where its Panic movement began."
   },
   "res://Controllers/UI/CombatStatusEffectDisplayController.cs": {
     "StatusOwner": "Actor whose runtime CombatStatusEffectState this reusable display presents. Assign the owning HeroActorController or MonsterActorController.",
     "StatusContainer": "HBoxContainer that receives one compact label for each active status effect."
+  },
+  "res://Scripts/Services/SceneBoundaryService.cs": {
+    "SceneLeftBoundary": "Movable Marker2D defining the left edge for gameplay mechanics that opt into scene containment. It does not block normal monster spawning or approach movement.",
+    "SceneRightBoundary": "Movable Marker2D defining the right edge for gameplay mechanics that opt into scene containment. It is not a collision wall.",
+    "GroundTopBoundary": "Existing movable Marker2D defining the top legal grounded-actor Y coordinate.",
+    "GroundBottomBoundary": "Existing movable Marker2D defining the bottom legal grounded-actor Y coordinate."
   }
 }

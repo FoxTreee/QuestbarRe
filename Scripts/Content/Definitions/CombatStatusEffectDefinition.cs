@@ -6,89 +6,65 @@ public partial class CombatStatusEffectDefinition : Resource
 {
     [ExportCategory("Identity")]
 
-    /// <summary>
-    /// Stable content identifier for this status effect. Use lowercase
-    /// category.namespace.name format such as status.core.freeze.
-    /// </summary>
     [Export(PropertyHint.PlaceholderText, "status.core.freeze")]
     public string ContentId { get; set; } =
         string.Empty;
 
-    /// <summary>
-    /// Player-facing name used by logs, tooltips, and status UI.
-    /// </summary>
     [Export(PropertyHint.PlaceholderText, "Freeze")]
     public string DisplayName { get; set; } =
         "Unnamed Status Effect";
 
-    /// <summary>
-    /// Player/designer-facing description of the status effect.
-    /// </summary>
     [Export(PropertyHint.MultilineText)]
     public string Description { get; set; } =
         string.Empty;
 
     [ExportCategory("Presentation")]
 
-    /// <summary>
-    /// Compact label shown in the reusable status display. Leave empty to use
-    /// the first three characters of DisplayName automatically.
-    /// </summary>
     [Export(PropertyHint.PlaceholderText, "FRZ")]
     public string DisplayAbbreviation { get; set; } =
         string.Empty;
 
-    /// <summary>
-    /// Presentation tint used by the generic status label. This is visual
-    /// metadata only and has no gameplay effect.
-    /// </summary>
     [Export]
     public Color DisplayColor { get; set; } = Colors.White;
 
     [ExportCategory("Control")]
 
-    /// <summary>
-    /// When enabled, actors affected by this status cannot move under their
-    /// normal combat movement logic while the status remains active.
-    /// </summary>
     [Export]
     public bool PreventsMovement { get; set; }
 
-    /// <summary>
-    /// When enabled, affected actors cannot begin new basic attacks while the
-    /// status remains active.
-    /// </summary>
     [Export]
     public bool PreventsBasicAttacks { get; set; }
 
-    /// <summary>
-    /// When enabled, affected actors cannot begin new abilities while the
-    /// status remains active.
-    /// </summary>
     [Export]
     public bool PreventsAbilities { get; set; }
 
-    /// <summary>
-    /// When enabled, a basic attack already in progress is canceled and reset
-    /// when this status becomes active. The attack must begin again from the
-    /// start after control ends.
-    /// </summary>
     [Export]
     public bool InterruptsBasicAttacks { get; set; }
 
-    /// <summary>
-    /// When enabled, an ability already being cast is canceled and reset when
-    /// this status becomes active. An interrupted cast does not start its
-    /// cooldown and must begin again from the start after control ends.
-    /// </summary>
     [Export]
     public bool InterruptsAbilities { get; set; }
 
+    [ExportCategory("Forced Movement")]
+
+    [Export]
+    public CombatForcedMovementMode ForcedMovementMode { get; set; } =
+        CombatForcedMovementMode.None;
+
+    [Export(PropertyHint.Range, "0.1,5,0.05")]
+    public float ForcedMovementSpeedMultiplier { get; set; } =
+        1.0f;
+
+    [Export(PropertyHint.Range, "0.05,5,0.05")]
+    public float PanicDirectionChangeMinSeconds { get; set; } = 0.35f;
+
+    [Export(PropertyHint.Range, "0.05,5,0.05")]
+    public float PanicDirectionChangeMaxSeconds { get; set; } = 0.80f;
+
+    [Export(PropertyHint.Range, "1,400,1")]
+    public float PanicLeashDistance { get; set; } = 90.0f;
+
     [ExportCategory("Authoring")]
 
-    /// <summary>
-    /// Freeform notes for designers. This does not affect runtime behavior.
-    /// </summary>
     [Export(PropertyHint.MultilineText)]
     public string DesignerNotes { get; set; } =
         string.Empty;
@@ -133,6 +109,43 @@ public partial class CombatStatusEffectDefinition : Resource
                 $"{ContentId}: InterruptsAbilities requires " +
                 "PreventsAbilities so the interrupted cast cannot " +
                 "immediately restart while the status is active.");
+        }
+
+        if (!System.Enum.IsDefined(
+            typeof(CombatForcedMovementMode),
+            ForcedMovementMode))
+        {
+            errors.Add(
+                $"{ContentId}: ForcedMovementMode is invalid.");
+        }
+
+        if (!float.IsFinite(ForcedMovementSpeedMultiplier)
+            || ForcedMovementSpeedMultiplier <= 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: ForcedMovementSpeedMultiplier must be " +
+                "finite and greater than zero.");
+        }
+
+        if (!float.IsFinite(PanicDirectionChangeMinSeconds)
+            || PanicDirectionChangeMinSeconds <= 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: PanicDirectionChangeMinSeconds must be finite and greater than zero.");
+        }
+
+        if (!float.IsFinite(PanicDirectionChangeMaxSeconds)
+            || PanicDirectionChangeMaxSeconds < PanicDirectionChangeMinSeconds)
+        {
+            errors.Add(
+                $"{ContentId}: PanicDirectionChangeMaxSeconds must be finite and at least the minimum.");
+        }
+
+        if (!float.IsFinite(PanicLeashDistance)
+            || PanicLeashDistance <= 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: PanicLeashDistance must be finite and greater than zero.");
         }
 
         return errors;
