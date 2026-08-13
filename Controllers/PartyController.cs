@@ -81,11 +81,31 @@ public partial class PartyController : Node
 	private readonly List<HeroActorController>
 		_spawnedHeroes = new();
 
+	private readonly HeroActorController?[]
+		_spawnedHeroesBySlot =
+			new HeroActorController?[MaximumPartySize];
+
 	public IReadOnlyList<HeroActorController>
 		SpawnedHeroes => _spawnedHeroes;
 
 	public int SpawnedHeroCount =>
 		_spawnedHeroes.Count;
+
+	/// <summary>
+	/// Returns the runtime hero occupying the requested zero-based party slot,
+	/// or null when that authored slot is currently empty.
+	/// </summary>
+	public HeroActorController? GetHeroAtSlot(
+		int slotIndex)
+	{
+		if (slotIndex < 0
+			|| slotIndex >= MaximumPartySize)
+		{
+			return null;
+		}
+
+		return _spawnedHeroesBySlot[slotIndex];
+	}
 
 
 	/// <summary>
@@ -146,6 +166,7 @@ public partial class PartyController : Node
 
 			ActorLayer.AddChild(hero);
 			_spawnedHeroes.Add(hero);
+			_spawnedHeroesBySlot[slotIndex] = hero;
 
 			DebugLog.Print(
 				$"Party slot {slotNumber} spawned " +

@@ -1,0 +1,393 @@
+[gd_scene format=3 uid="uid://b1scwnwktr8ej"]
+
+[ext_resource type="PackedScene" uid="uid://c7vhsd7xshavb" path="res://Scenes/UI/Items/ItemSlot.tscn" id="1_7jhsc"]
+
+[node name="CharacterWindow" type="Window" unique_id=411267466]
+oversampling_override = 1.0
+title = "Character Window"
+initial_position = 1
+size = Vector2i(592, 761)
+transient = true
+unresizable = true
+minimize_disabled = true
+maximize_disabled = true
+
+[node name="RootMargin" type="MarginContainer" parent="." unique_id=856065446]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -592.0
+offset_top = -764.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="RootVBox" type="VBoxContainer" parent="RootMargin" unique_id=1052355126]
+layout_mode = 2
+
+[node name="SelectedHeroLabel" type="Label" parent="RootMargin/RootVBox" unique_id=2140122654]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+text = "Selected Hero — Level —"
+horizontal_alignment = 1
+
+[node name="HeroTabs" type="TabContainer" parent="RootMargin/RootVBox" unique_id=2036952331]
+layout_mode = 2
+current_tab = 0
+
+[node name="Character" type="MarginContainer" parent="RootMargin/RootVBox/HeroTabs" unique_id=1340582443]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="CharacterVBox" type="VBoxContainer" parent="RootMargin/RootVBox/HeroTabs/Character" unique_id=660872501]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="PaperDollrow" type="HBoxContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox" unique_id=742745935]
+layout_mode = 2
+
+[node name="LeftEquipmentslots" type="VBoxContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow" unique_id=480289721]
+custom_minimum_size = Vector2(52, 0)
+custom_maximum_size = Vector2(52, -1)
+layout_mode = 2
+
+[node name="HeadSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" unique_id=1502368664 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+tooltip_text = "HELMET"
+InitialPurpose = 2
+
+[node name="NecklaceSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" unique_id=1193285647 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 1
+
+[node name="ShouldersSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" unique_id=1343440655 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 2
+
+[node name="ChestSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" unique_id=233190699 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 3
+
+[node name="BackSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" unique_id=1525106886 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 4
+
+[node name="WristsSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" unique_id=894833465 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 6
+
+[node name="HandsSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" unique_id=262714549 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 7
+
+[node name="CenterSection" type="HBoxContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow" unique_id=911898394]
+layout_mode = 2
+
+[node name="WeaponSlots" type="VBoxContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection" unique_id=191075152]
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+
+[node name="WeaponTopSpacer" type="Control" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection/WeaponSlots" unique_id=2099237602]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MainHandSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection/WeaponSlots" unique_id=1134062033 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 15
+
+[node name="OffHandSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection/WeaponSlots" unique_id=761232019 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 16
+
+[node name="RangedSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection/WeaponSlots" unique_id=2043588045 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 17
+
+[node name="WeaponBottomSpacer" type="Control" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection/WeaponSlots" unique_id=1749652003]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HeroPreviewPanel" type="PanelContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection" unique_id=1188195940]
+custom_minimum_size = Vector2(400, 330)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HeropreviewCenter" type="CenterContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection/HeroPreviewPanel" unique_id=2004399731]
+layout_mode = 2
+
+[node name="HeroPreviewPlaceholder" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection/HeroPreviewPanel/HeropreviewCenter" unique_id=181412500]
+layout_mode = 2
+text = "LIVE HERO PREVIEW"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RightEquipmentslots" type="VBoxContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow" unique_id=722238747]
+custom_minimum_size = Vector2(52, 0)
+layout_mode = 2
+
+[node name="BeltSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" unique_id=1650188705 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 8
+
+[node name="LegsSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" unique_id=1272350275 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 9
+
+[node name="BootsSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" unique_id=716419071 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 10
+
+[node name="Ring1Slot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" unique_id=1148061673 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 11
+
+[node name="Ring2Slot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" unique_id=1390311729 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 12
+
+[node name="Trinket1Slot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" unique_id=1342776420 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 13
+
+[node name="Trinket2Slot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" unique_id=1275816116 instance=ExtResource("1_7jhsc")]
+layout_mode = 2
+InitialPurpose = 2
+InitialCharacterEquipmentSlot = 14
+
+[node name="StatStrip" type="HBoxContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox" unique_id=918706672]
+custom_minimum_size = Vector2(135, 0)
+layout_mode = 2
+
+[node name="StatsPanel" type="PanelContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip" unique_id=2135958085]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatsVbox" type="VBoxContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel" unique_id=999577266]
+layout_mode = 2
+
+[node name="StatsTitle" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox" unique_id=868790531]
+visible = false
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="StatsGrid" type="GridContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox" unique_id=1655427947]
+layout_mode = 2
+columns = 2
+
+[node name="StrengthLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=1141803985]
+layout_mode = 2
+text = "Strength"
+
+[node name="StrengthValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=1873141647]
+layout_mode = 2
+text = "—"
+
+[node name="AgilityLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=1526753088]
+layout_mode = 2
+text = "Agility"
+
+[node name="AgilityValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=1905634743]
+layout_mode = 2
+text = "—"
+
+[node name="StaminaLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=1481304190]
+layout_mode = 2
+text = "Stamina"
+
+[node name="StaminaValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=28379407]
+layout_mode = 2
+text = "—"
+
+[node name="IntellectLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=681361469]
+layout_mode = 2
+text = "Intellect"
+
+[node name="IntellectValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=706356674]
+layout_mode = 2
+text = "—"
+
+[node name="SpiritLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=1835638508]
+layout_mode = 2
+text = "Spirit"
+
+[node name="SpiritValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=770572422]
+layout_mode = 2
+text = "—"
+
+[node name="ArmorLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=627668738]
+layout_mode = 2
+text = "Armor"
+
+[node name="ArmorValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/StatsPanel/StatsVbox/StatsGrid" unique_id=1512079138]
+layout_mode = 2
+text = "—"
+
+[node name="DamagePanel" type="PanelContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip" unique_id=1001563816]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DamageVbox" type="VBoxContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/DamagePanel" unique_id=1650881616]
+layout_mode = 2
+
+[node name="DamageTitle" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/DamagePanel/DamageVbox" unique_id=1555004407]
+visible = false
+layout_mode = 2
+
+[node name="DamageGrid" type="GridContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/DamagePanel/DamageVbox" unique_id=1461509849]
+layout_mode = 2
+columns = 2
+
+[node name="MinDamageLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/DamagePanel/DamageVbox/DamageGrid" unique_id=494219887]
+layout_mode = 2
+text = "Min Damage"
+
+[node name="MinDamageValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/DamagePanel/DamageVbox/DamageGrid" unique_id=551984991]
+layout_mode = 2
+text = "—"
+
+[node name="MaxDamageLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/DamagePanel/DamageVbox/DamageGrid" unique_id=370938538]
+layout_mode = 2
+text = "Max Damage"
+
+[node name="MaxDamageValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/DamagePanel/DamageVbox/DamageGrid" unique_id=615241514]
+layout_mode = 2
+text = "—"
+
+[node name="AttackSpeedLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/DamagePanel/DamageVbox/DamageGrid" unique_id=795319022]
+layout_mode = 2
+text = "Attack Speed"
+
+[node name="AttackSpeedValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/DamagePanel/DamageVbox/DamageGrid" unique_id=1796927584]
+layout_mode = 2
+text = "—"
+
+[node name="DpsLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/DamagePanel/DamageVbox/DamageGrid" unique_id=1320483352]
+layout_mode = 2
+text = "Dps"
+
+[node name="DpsValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/DamagePanel/DamageVbox/DamageGrid" unique_id=1539322192]
+layout_mode = 2
+text = "—"
+
+[node name="RangedDamagePanel" type="PanelContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip" unique_id=189020996]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RangedDamageVbox" type="VBoxContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/RangedDamagePanel" unique_id=107320663]
+layout_mode = 2
+
+[node name="RangedDamageTitle" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/RangedDamagePanel/RangedDamageVbox" unique_id=94398151]
+visible = false
+layout_mode = 2
+
+[node name="RangedDamageGrid" type="GridContainer" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/RangedDamagePanel/RangedDamageVbox" unique_id=1548739714]
+layout_mode = 2
+columns = 2
+
+[node name="RangedMinDamageLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/RangedDamagePanel/RangedDamageVbox/RangedDamageGrid" unique_id=2000415188]
+layout_mode = 2
+text = "Min Damage"
+
+[node name="RangedMinDamageValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/RangedDamagePanel/RangedDamageVbox/RangedDamageGrid" unique_id=539172988]
+layout_mode = 2
+text = "—"
+
+[node name="RangedMaxDamageLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/RangedDamagePanel/RangedDamageVbox/RangedDamageGrid" unique_id=137955149]
+layout_mode = 2
+text = "Max Damage"
+
+[node name="RangedMaxDamageValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/RangedDamagePanel/RangedDamageVbox/RangedDamageGrid" unique_id=205325862]
+layout_mode = 2
+text = "—"
+
+[node name="RangedAttackSpeedLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/RangedDamagePanel/RangedDamageVbox/RangedDamageGrid" unique_id=640416772]
+layout_mode = 2
+text = "Attack Speed"
+
+[node name="RangedAttackSpeedValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/RangedDamagePanel/RangedDamageVbox/RangedDamageGrid" unique_id=2140129042]
+layout_mode = 2
+text = "—"
+
+[node name="RangedDpsLabel" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/RangedDamagePanel/RangedDamageVbox/RangedDamageGrid" unique_id=1266510206]
+layout_mode = 2
+text = "Dps"
+
+[node name="RangedDpsValue" type="Label" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/StatStrip/RangedDamagePanel/RangedDamageVbox/RangedDamageGrid" unique_id=1941028885]
+visible = false
+layout_mode = 2
+text = "—"
+
+[node name="Skills" type="MarginContainer" parent="RootMargin/RootVBox/HeroTabs" unique_id=1434015953]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="SkillsPlaceholder" type="Label" parent="RootMargin/RootVBox/HeroTabs/Skills" unique_id=534637856]
+layout_mode = 2
+text = "Skills tab will come later"
+
+[node name="Reputation" type="MarginContainer" parent="RootMargin/RootVBox/HeroTabs" unique_id=440505688]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="ReputationPlaceholder" type="Label" parent="RootMargin/RootVBox/HeroTabs/Reputation" unique_id=1678096507]
+layout_mode = 2
+text = "Reputation wil come later."
+
+[node name="PartySelectorPanel" type="PanelContainer" parent="RootMargin/RootVBox" unique_id=843726985]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+
+[node name="PartySelectorRow" type="HBoxContainer" parent="RootMargin/RootVBox/PartySelectorPanel" unique_id=1208010049]
+layout_mode = 2
+
+[node name="PartySlot1Button" type="Button" parent="RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow" unique_id=1948327736]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hero 1
+Lvl —"
+
+[node name="PartySlot2Button" type="Button" parent="RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow" unique_id=814979363]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hero 2
+Lvl —"
+
+[node name="PartySlot3Button" type="Button" parent="RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow" unique_id=1338335030]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hero 3
+Lvl —"
+
+[node name="PartySlot4Button" type="Button" parent="RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow" unique_id=1433103959]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hero 4
+Lvl —"
+
+[node name="PartySlot5Button" type="Button" parent="RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow" unique_id=888266711]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hero 5
+Lvl —"

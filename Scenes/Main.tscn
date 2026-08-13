@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
 [ext_resource type="Script" uid="uid://ccdcfymdch8h5" path="res://Scripts/Services/TargetingService.cs" id="6_frkhe"]
 [ext_resource type="Script" uid="uid://cxklmvye8ghgt" path="res://Scripts/Services/DebugCommandService.cs" id="7_h1m7h"]
+[ext_resource type="PackedScene" uid="uid://b1scwnwktr8ej" path="res://Scenes/UI/Character/CharacterWindow.tscn" id="7_yn2g2"]
 [ext_resource type="Script" uid="uid://s3pr1p2lapds" path="res://Content/Registries/MonsterContentRegistry.cs" id="8_346fj"]
 [ext_resource type="Resource" path="res://Content/CombatStances/Core/stance.core.passive.tres" id="8_off7b"]
 [ext_resource type="Script" uid="uid://bwnluygsef150" path="res://Scripts/Content/Definitions/MonsterDefinition.cs" id="9_0sclb"]
@@ -56,6 +57,7 @@
 [ext_resource type="Script" uid="uid://dwnavkiixraok" path="res://Scripts/Services/RewardLedgerService.cs" id="40_ep8v8"]
 [ext_resource type="Script" uid="uid://cte4v1w5xrc6j" path="res://Scripts/Services/SceneBoundaryService.cs" id="43_rgw24"]
 [ext_resource type="Script" uid="uid://bntu3gf7et4cn" path="res://Content/Registries/WeaponContentRegistry.cs" id="45_1bbis"]
+[ext_resource type="Script" uid="uid://c7t5joojna4re" path="res://Scripts/Content/Definitions/WeaponDefinition.cs" id="47_ex7s8"]
 [ext_resource type="Resource" uid="uid://dinrbyapfo14q" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_hunter_shortsword.tres" id="47_yic5e"]
 [ext_resource type="Resource" uid="uid://sfhe6svwus3e" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_mage_dagger.tres" id="48_ex7s8"]
 [ext_resource type="Resource" uid="uid://dla615q11it6b" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_priest_mace.tres" id="49_4clwk"]
@@ -65,6 +67,7 @@
 [ext_resource type="Resource" uid="uid://fgvs1onm3prx" path="res://Resources/Regions/TrainingRegion.tres" id="52_semxg"]
 [ext_resource type="Script" uid="uid://bi3msg7aodwjr" path="res://Controllers/IncapacitationChoicePopupController.cs" id="54_3133c"]
 [ext_resource type="Script" uid="uid://fgfei303hnli" path="res://Scripts/Services/CombatHitResolver.cs" id="56_vvjo1"]
+[ext_resource type="Script" uid="uid://dej5wuxbbqnxm" path="res://Controllers/CharacterWindowController.cs" id="68_yic5e"]
 
 [sub_resource type="Theme" id="Theme_d8m2u"]
 
@@ -111,7 +114,7 @@ z_index = -100
 [node name="ScalableWorld" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1379885866]
 
 [node name="SceneLeftBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=972278134]
-position = Vector2(20, 168)
+position = Vector2(55.555553, 168)
 
 [node name="SceneRightBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=481286879]
 position = Vector2(780, 168)
@@ -333,6 +336,8 @@ text = "Revive"
 layout_mode = 2
 text = "Incapacitate"
 
+[node name="CharacterWindow" parent="PopupWindows" unique_id=411267466 instance=ExtResource("7_yn2g2")]
+
 [node name="Services" type="Node" parent="." unique_id=1409283487]
 
 [node name="JourneyStateService" type="Node" parent="Services" unique_id=2091345235]
@@ -397,7 +402,7 @@ GroundBottomBoundary = NodePath("../../RegionViewportContainer/RegionViewport/Sc
 
 [node name="WeaponContentRegistry" type="Node" parent="Services" unique_id=1270571163]
 script = ExtResource("45_1bbis")
-Definitions = [ExtResource("47_yic5e"), ExtResource("48_ex7s8"), ExtResource("49_4clwk"), ExtResource("50_h2tpa"), ExtResource("51_nkjwg")]
+Definitions = Array[ExtResource("47_ex7s8")]([ExtResource("47_yic5e"), ExtResource("48_ex7s8"), ExtResource("49_4clwk"), ExtResource("50_h2tpa"), ExtResource("51_nkjwg")])
 
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 
@@ -493,5 +498,16 @@ IncapacitateButton = NodePath("../../PopupWindows/IncapacitationChoiceWindow/Mar
 [node name="CombatHitResolver" type="Node" parent="Controllers" unique_id=921140515]
 script = ExtResource("56_vvjo1")
 
+[node name="CharacterWindowController" type="Node" parent="Controllers" unique_id=2116314171 node_paths=PackedStringArray("Party", "SelectedHeroLabel", "PartySlot1Button", "PartySlot2Button", "PartySlot3Button", "PartySlot4Button", "PartySlot5Button")]
+script = ExtResource("68_yic5e")
+Party = NodePath("../PartyController")
+SelectedHeroLabel = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/SelectedHeroLabel")
+PartySlot1Button = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow/PartySlot1Button")
+PartySlot2Button = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow/PartySlot2Button")
+PartySlot3Button = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow/PartySlot3Button")
+PartySlot4Button = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow/PartySlot4Button")
+PartySlot5Button = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow/PartySlot5Button")
+
 [editable path="PopupWindows/WindowSettingsPopup"]
 [editable path="PopupWindows/DebugConsoleWindow"]
+[editable path="PopupWindows/CharacterWindow"]

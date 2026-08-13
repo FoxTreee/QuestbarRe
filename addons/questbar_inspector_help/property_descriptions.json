@@ -5,5 +5,14 @@
   },
   "res://Scripts/Content/Definitions/ShieldDefinition.cs": {
     "ArmorValue": "Raw Armor contributed to the hero's resolved TotalArmor while this shield is equipped in Off Hand. Stored and aggregated now; damage mitigation is intentionally not implemented yet."
+  },
+  "res://Controllers/CharacterWindowController.cs": {
+    "Party": "Runtime PartyController whose five authored party slots populate the Character Window hero selector.",
+    "SelectedHeroLabel": "Header label updated with the currently selected hero's real authored DisplayName. Level remains intentionally unbound until authoritative level data exists.",
+    "PartySlot1Button": "Clickable selector for authored party slot 1.",
+    "PartySlot2Button": "Clickable selector for authored party slot 2.",
+    "PartySlot3Button": "Clickable selector for authored party slot 3.",
+    "PartySlot4Button": "Clickable selector for authored party slot 4.",
+    "PartySlot5Button": "Clickable selector for authored party slot 5."
   }
 }

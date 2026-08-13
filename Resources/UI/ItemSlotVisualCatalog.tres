@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="ItemSlotVisualCatalog" format=3 uid="uid://c7aa8cq63wwda"]
+
+[ext_resource type="Script" uid="uid://blsjr6siu7aqg" path="res://Scenes/UI/Items/ItemSlotVisualCatalog.cs" id="1_t7m77"]
+[ext_resource type="Texture2D" uid="uid://cp0yfljkaxgke" path="res://Assets/UI/ItemSlots/Empty/slot_empty_back.png" id="1_wafvb"]
+[ext_resource type="Texture2D" uid="uid://cavfqi3kq07ma" path="res://Assets/UI/ItemSlots/Empty/slot_empty_belt.png" id="2_nan2p"]
+[ext_resource type="Texture2D" uid="uid://cywv75dg0edr1" path="res://Assets/UI/ItemSlots/Empty/slot_empty_boots.png" id="3_eyc6y"]
+[ext_resource type="Texture2D" uid="uid://dyj6gx4dgm3ci" path="res://Assets/UI/ItemSlots/Empty/slot_empty_chest.png" id="4_chicf"]
+[ext_resource type="Texture2D" uid="uid://64r6uvf6u0wb" path="res://Assets/UI/ItemSlots/Empty/slot_empty_hands.png" id="5_l1kjm"]
+[ext_resource type="Texture2D" uid="uid://xlmtgr8i8pi" path="res://Assets/UI/ItemSlots/Empty/slot_empty_head.png" id="6_7l7sh"]
+[ext_resource type="Texture2D" uid="uid://cuk3tfortig7s" path="res://Assets/UI/ItemSlots/Empty/slot_empty_legs.png" id="7_uegw2"]
+[ext_resource type="Texture2D" uid="uid://ctl3j8wagxh58" path="res://Assets/UI/ItemSlots/Empty/slot_empty_main_hand.png" id="8_o1mnx"]
+[ext_resource type="Texture2D" uid="uid://cuy4a5l7i4iff" path="res://Assets/UI/ItemSlots/Empty/slot_empty_necklace.png" id="9_vs6d5"]
+[ext_resource type="Texture2D" uid="uid://dvtixigu7bbad" path="res://Assets/UI/ItemSlots/Empty/slot_empty_off_hand.png" id="10_odqo4"]
+[ext_resource type="Texture2D" uid="uid://1qcu6646hiwq" path="res://Assets/UI/ItemSlots/Empty/slot_empty_ranged.png" id="11_bjxjk"]
+[ext_resource type="Texture2D" uid="uid://bxnwycyxxdb1d" path="res://Assets/UI/ItemSlots/Empty/slot_empty_ring.png" id="12_coorf"]
+[ext_resource type="Texture2D" uid="uid://depu7o87xn3hm" path="res://Assets/UI/ItemSlots/Empty/slot_empty_shoulders.png" id="13_5482f"]
+[ext_resource type="Texture2D" uid="uid://d73p7q3mo47o" path="res://Assets/UI/ItemSlots/Empty/slot_empty_trinket.png" id="14_6cjva"]
+[ext_resource type="Texture2D" uid="uid://bjh54560076ga" path="res://Assets/UI/ItemSlots/Empty/slot_empty_wrists.png" id="15_od7jo"]
+
+[resource]
+script = ExtResource("1_t7m77")
+Head = ExtResource("6_7l7sh")
+Necklace = ExtResource("9_vs6d5")
+Shoulders = ExtResource("13_5482f")
+Chest = ExtResource("4_chicf")
+Back = ExtResource("1_wafvb")
+Wrists = ExtResource("15_od7jo")
+Hands = ExtResource("5_l1kjm")
+Belt = ExtResource("2_nan2p")
+Legs = ExtResource("7_uegw2")
+Boots = ExtResource("3_eyc6y")
+Ring = ExtResource("12_coorf")
+Trinket = ExtResource("14_6cjva")
+MainHand = ExtResource("8_o1mnx")
+OffHand = ExtResource("10_odqo4")
+Ranged = ExtResource("11_bjxjk")
+metadata/_custom_type_script = "uid://blsjr6siu7aqg"

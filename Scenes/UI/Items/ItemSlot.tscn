@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://c7vhsd7xshavb"]
+
+[ext_resource type="Script" uid="uid://61f1mu5vpklt" path="res://Scenes/UI/Items/ItemSlotView.cs" id="1_8jub0"]
+[ext_resource type="Resource" uid="uid://c7aa8cq63wwda" path="res://Resources/UI/ItemSlotVisualCatalog.tres" id="2_cpt7h"]
+
+[node name="ItemSlot" type="PanelContainer" unique_id=1502368664]
+custom_minimum_size = Vector2(52, 52)
+custom_maximum_size = Vector2(52, 52)
+clip_contents = true
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_8jub0")
+DragPreviewSize = Vector2(52, 52)
+ValidDropHighlightColor = Color(0.8487068, 0.9227773, 1, 1)
+VisualCatalog = ExtResource("2_cpt7h")
+
+[node name="SlotMargin" type="MarginContainer" parent="." unique_id=51804284]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="SlotContents" type="Control" parent="SlotMargin" unique_id=1478117586]
+clip_contents = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="EmptySlotIcon" type="TextureRect" parent="SlotMargin/SlotContents" unique_id=469235249]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ItemIcon" type="TextureRect" parent="SlotMargin/SlotContents" unique_id=2055964975]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="QuantityLabel" type="Label" parent="SlotMargin/SlotContents" unique_id=1890818615]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -23.0
+grow_horizontal = 0
+grow_vertical = 0
+horizontal_alignment = 2
+vertical_alignment = 2
