@@ -1,0 +1,21 @@
+public enum EquipmentSlot
+{
+    Head,
+    Necklace,
+    Shoulders,
+    Chest,
+    Back,
+    GuildTabard,
+    Wrists,
+    Hands,
+    Belt,
+    Legs,
+    Boots,
+    Ring1,
+    Ring2,
+    Trinket1,
+    Trinket2,
+    MainHand,
+    OffHand,
+    Ranged
+}

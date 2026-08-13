@@ -138,25 +138,22 @@ public partial class WeaponDefinition : EquipmentDefinition
     /// hero equipment slot. Character/talent restrictions are intentionally
     /// separate from item eligibility.
     /// </summary>
-    public bool CanEquipInSlot(HeroWeaponSlot slot)
+    public override bool CanEquipInSlot(EquipmentSlot slot)
     {
-        return slot switch
+        return EquipPosition switch
         {
-            HeroWeaponSlot.MainHand =>
-                EquipPosition
-                    == WeaponEquipPosition.MainHandOnly
-                || EquipPosition
-                    == WeaponEquipPosition.EitherHand,
+            WeaponEquipPosition.MainHandOnly =>
+                slot == EquipmentSlot.MainHand,
 
-            HeroWeaponSlot.OffHand =>
-                EquipPosition
-                    == WeaponEquipPosition.OffHandOnly
-                || EquipPosition
-                    == WeaponEquipPosition.EitherHand,
+            WeaponEquipPosition.OffHandOnly =>
+                slot == EquipmentSlot.OffHand,
 
-            HeroWeaponSlot.Ranged =>
-                EquipPosition
-                    == WeaponEquipPosition.Ranged,
+            WeaponEquipPosition.EitherHand =>
+                slot == EquipmentSlot.MainHand
+                || slot == EquipmentSlot.OffHand,
+
+            WeaponEquipPosition.Ranged =>
+                slot == EquipmentSlot.Ranged,
 
             _ => false
         };

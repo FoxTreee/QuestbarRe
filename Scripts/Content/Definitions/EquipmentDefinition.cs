@@ -108,4 +108,14 @@ public partial class EquipmentDefinition : Resource
 
         return errors;
     }
+
+    /// <summary>
+    /// Returns whether this item definition is eligible for the requested
+    /// equipment slot. Specific equipment types override this with their own
+    /// authored placement rules.
+    /// </summary>
+    public virtual bool CanEquipInSlot(EquipmentSlot slot)
+    {
+        return false;
+    }
 }

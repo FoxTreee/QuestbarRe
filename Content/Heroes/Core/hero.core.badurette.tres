@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="HeroDefinition" format=3 uid="uid://dv2fhelfoodu3"]
 
-[ext_resource type="PackedScene" uid="uid://cudeye6bri0fl" path="res://Rook.tscn" id="1_fciy1"]
+[ext_resource type="PackedScene" uid="uid://cudeye6bri0fl" path="res://Badurette.tscn" id="1_fciy1"]
 [ext_resource type="Resource" uid="uid://hvqeum2sq2xp" path="res://Content/HeroClasses/Core/class.core.rogue.tres" id="2_rho48"]
 [ext_resource type="Script" uid="uid://b38xxk3rax5nx" path="res://Scripts/Content/Definitions/HeroDefinition.cs" id="3_cs8h8"]
 

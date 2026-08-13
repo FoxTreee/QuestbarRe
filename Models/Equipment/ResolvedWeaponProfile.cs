@@ -1,9 +1,15 @@
 using System.Collections.Generic;
+using System.Linq;
 
-public sealed class ResolvedWeaponProfile
+public sealed class ResolvedWeaponProfile : IResolvedEquipmentProfile
 {
     public string DefinitionContentId { get; }
     public string DisplayName { get; }
+    public int RequiredLevel { get; }
+
+    public IReadOnlyList<ResolvedEquipmentPercentageModifier>
+        PercentageModifiers
+    { get; }
 
     public WeaponAttackStyle AttackStyle { get; }
     public WeaponType WeaponType { get; }
@@ -29,6 +35,9 @@ public sealed class ResolvedWeaponProfile
     public ResolvedWeaponProfile(
         string definitionContentId,
         string displayName,
+        int requiredLevel,
+        IReadOnlyList<ResolvedEquipmentPercentageModifier>
+            percentageModifiers,
         WeaponAttackStyle attackStyle,
         WeaponType weaponType,
         WeaponHandedness handedness,
@@ -44,6 +53,8 @@ public sealed class ResolvedWeaponProfile
     {
         DefinitionContentId = definitionContentId;
         DisplayName = displayName;
+        RequiredLevel = requiredLevel;
+        PercentageModifiers = percentageModifiers;
         AttackStyle = attackStyle;
         WeaponType = weaponType;
         Handedness = handedness;
@@ -58,12 +69,40 @@ public sealed class ResolvedWeaponProfile
         Spirit = spirit;
     }
 
+    public bool CanEquipInSlot(EquipmentSlot slot)
+    {
+        return EquipPosition switch
+        {
+            WeaponEquipPosition.MainHandOnly =>
+                slot == EquipmentSlot.MainHand,
+
+            WeaponEquipPosition.OffHandOnly =>
+                slot == EquipmentSlot.OffHand,
+
+            WeaponEquipPosition.EitherHand =>
+                slot == EquipmentSlot.MainHand
+                || slot == EquipmentSlot.OffHand,
+
+            WeaponEquipPosition.Ranged =>
+                slot == EquipmentSlot.Ranged,
+
+            _ => false
+        };
+    }
+
+
     public static ResolvedWeaponProfile FromDefinition(
         WeaponDefinition definition)
     {
         return new ResolvedWeaponProfile(
             definition.ContentId,
             definition.DisplayName,
+            definition.RequiredLevel,
+            definition.PercentageModifiers
+                .Select(
+                    ResolvedEquipmentPercentageModifier
+                        .FromDefinition)
+                .ToArray(),
             definition.AttackStyle,
             definition.WeaponType,
             definition.Handedness,

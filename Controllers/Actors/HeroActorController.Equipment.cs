@@ -11,6 +11,20 @@ public partial class HeroActorController
     public HeroEquipmentLoadout Equipment { get; } = new();
 
     /// <summary>
+    /// Current aggregate core stats supplied by this hero's equipped gear.
+    /// These values are intentionally not applied to combat yet.
+    /// </summary>
+    public EquipmentStatTotals EquipmentStats =>
+        Equipment.TotalStats;
+
+    /// <summary>
+    /// Raw Armor currently supplied by equipped armor-bearing items.
+    /// Armor does not reduce damage until its formula is explicitly designed.
+    /// </summary>
+    public int EquipmentArmor =>
+        Equipment.TotalArmor;
+
+    /// <summary>
     /// Determines which equipped weapon supplies normal-attack weapon damage
     /// and attack speed. Off Hand is intentionally not part of normal attack
     /// selection until Dual Wield is implemented as its own mechanic.
@@ -26,10 +40,10 @@ public partial class HeroActorController
         WeaponPreference switch
         {
             HeroWeaponPreference.Melee =>
-                Equipment.MainHand,
+                Equipment.MainHandWeapon,
 
             HeroWeaponPreference.Ranged =>
-                Equipment.Ranged,
+                Equipment.RangedWeapon,
 
             _ => null
         };
@@ -42,7 +56,7 @@ public partial class HeroActorController
         out string error)
     {
         bool configured =
-            Equipment.TryConfigure(
+            Equipment.TryConfigureWeapons(
                 mainHand,
                 offHand,
                 ranged,
@@ -61,11 +75,16 @@ public partial class HeroActorController
 
         DebugLog.Print(
             $"{Name} weapon loadout: " +
-            $"MainHand={FormatWeapon(Equipment.MainHand)}, " +
-            $"OffHand={FormatWeapon(Equipment.OffHand)}, " +
-            $"Ranged={FormatWeapon(Equipment.Ranged)}, " +
+            $"MainHand={FormatWeapon(Equipment.MainHandWeapon)}, " +
+            $"OffHand={FormatWeapon(Equipment.OffHandWeapon)}, " +
+            $"Ranged={FormatWeapon(Equipment.RangedWeapon)}, " +
             $"Preference={WeaponPreference}, " +
             $"Active={FormatWeapon(ActiveNormalAttackWeapon)}.");
+
+        DebugLog.Print(
+            $"{Name} equipment stats: " +
+            $"{EquipmentStats}, " +
+            $"Armor={EquipmentArmor}.");
 
         return true;
     }
@@ -94,10 +113,10 @@ public partial class HeroActorController
             preference switch
             {
                 HeroWeaponPreference.Melee =>
-                    Equipment.MainHand,
+                    Equipment.MainHandWeapon,
 
                 HeroWeaponPreference.Ranged =>
-                    Equipment.Ranged,
+                    Equipment.RangedWeapon,
 
                 _ => null
             };

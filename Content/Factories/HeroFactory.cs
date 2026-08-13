@@ -102,17 +102,17 @@ public partial class HeroFactory : Node
 
         if (!TryResolveStartingWeapon(
             definition.StartingMainHandWeaponContentId,
-            HeroWeaponSlot.MainHand,
+            EquipmentSlot.MainHand,
             out WeaponDefinition? mainHand,
             out error)
             || !TryResolveStartingWeapon(
                 definition.StartingOffHandWeaponContentId,
-                HeroWeaponSlot.OffHand,
+                EquipmentSlot.OffHand,
                 out WeaponDefinition? offHand,
                 out error)
             || !TryResolveStartingWeapon(
                 definition.StartingRangedWeaponContentId,
-                HeroWeaponSlot.Ranged,
+                EquipmentSlot.Ranged,
                 out WeaponDefinition? ranged,
                 out error))
         {
@@ -144,7 +144,7 @@ public partial class HeroFactory : Node
 
     private bool TryResolveStartingWeapon(
         string weaponContentId,
-        HeroWeaponSlot slot,
+        EquipmentSlot slot,
         out WeaponDefinition? weapon,
         out string error)
     {

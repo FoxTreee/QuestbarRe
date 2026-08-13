@@ -30,7 +30,7 @@
 [ext_resource type="Resource" uid="uid://b4bj78ei20u0o" path="res://Content/Heroes/Core/hero.core.chet.tres" id="13_f7hdo"]
 [ext_resource type="PackedScene" uid="uid://bnrollfc0yukf" path="res://Scenes/Combat/ProjectileActor.tscn" id="14_1p5hy"]
 [ext_resource type="Script" uid="uid://ccrxqm3siu1tm" path="res://Content/Registries/EncounterContentRegistry.cs" id="14_5jffn"]
-[ext_resource type="Resource" uid="uid://dv2fhelfoodu3" path="res://Content/Heroes/Core/hero.core.rook.tres" id="14_clvyn"]
+[ext_resource type="Resource" uid="uid://dv2fhelfoodu3" path="res://Content/Heroes/Core/hero.core.badurette.tres" id="14_clvyn"]
 [ext_resource type="Resource" uid="uid://dk2o50nyo823k" path="res://Content/Monsters/Core/monster.core.training_monster.tres" id="14_erwvk"]
 [ext_resource type="Script" uid="uid://j08orv8sgbi4" path="res://Scripts/Content/Definitions/EncounterDefinition.cs" id="15_kpo4j"]
 [ext_resource type="Resource" uid="uid://cvojm6bgn34m6" path="res://Content/Encounters/Core/encounter.core.training_mix.tres" id="16_4n42c"]
@@ -56,7 +56,6 @@
 [ext_resource type="Script" uid="uid://dwnavkiixraok" path="res://Scripts/Services/RewardLedgerService.cs" id="40_ep8v8"]
 [ext_resource type="Script" uid="uid://cte4v1w5xrc6j" path="res://Scripts/Services/SceneBoundaryService.cs" id="43_rgw24"]
 [ext_resource type="Script" uid="uid://bntu3gf7et4cn" path="res://Content/Registries/WeaponContentRegistry.cs" id="45_1bbis"]
-[ext_resource type="Script" uid="uid://c7t5joojna4re" path="res://Scripts/Content/Definitions/WeaponDefinition.cs" id="46_yn2g2"]
 [ext_resource type="Resource" uid="uid://dinrbyapfo14q" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_hunter_shortsword.tres" id="47_yic5e"]
 [ext_resource type="Resource" uid="uid://sfhe6svwus3e" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_mage_dagger.tres" id="48_ex7s8"]
 [ext_resource type="Resource" uid="uid://dla615q11it6b" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_priest_mace.tres" id="49_4clwk"]
@@ -398,7 +397,7 @@ GroundBottomBoundary = NodePath("../../RegionViewportContainer/RegionViewport/Sc
 
 [node name="WeaponContentRegistry" type="Node" parent="Services" unique_id=1270571163]
 script = ExtResource("45_1bbis")
-Definitions = Array[ExtResource("46_yn2g2")]([ExtResource("47_yic5e"), ExtResource("48_ex7s8"), ExtResource("49_4clwk"), ExtResource("50_h2tpa"), ExtResource("51_nkjwg")])
+Definitions = [ExtResource("47_yic5e"), ExtResource("48_ex7s8"), ExtResource("49_4clwk"), ExtResource("50_h2tpa"), ExtResource("51_nkjwg")]
 
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 
