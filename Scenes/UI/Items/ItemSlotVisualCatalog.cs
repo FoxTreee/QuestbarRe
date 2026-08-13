@@ -22,10 +22,31 @@ public partial class ItemSlotVisualCatalog : Resource
     [Export] public Texture2D? Ring { get; set; }
     [Export] public Texture2D? Trinket { get; set; }
 
+    [ExportCategory("Bags")]
+    [Export] public Texture2D? Bag { get; set; }
+
     [ExportCategory("Weapons")]
     [Export] public Texture2D? MainHand { get; set; }
     [Export] public Texture2D? OffHand { get; set; }
     [Export] public Texture2D? Ranged { get; set; }
+
+    /// <summary>
+    /// Returns the authored empty-slot artwork for a non-character slot purpose.
+    /// BagEquipment uses the dedicated faded bag silhouette while ordinary
+    /// storage uses the generic empty-slot artwork.
+    /// </summary>
+    public Texture2D? GetEmptySlotTexture(
+        ItemSlotView.SlotPurpose purpose)
+    {
+        return purpose switch
+        {
+            ItemSlotView.SlotPurpose.BagEquipment =>
+                Bag,
+
+            _ =>
+                GenericEmptySlot
+        };
+    }
 
     /// <summary>
     /// Returns the authored empty-slot artwork for a character equipment slot.

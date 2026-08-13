@@ -1,0 +1,172 @@
+[gd_scene format=3 uid="uid://ceypdit8pmiiw"]
+
+[ext_resource type="PackedScene" uid="uid://c7vhsd7xshavb" path="res://Scenes/UI/Items/ItemSlot.tscn" id="1_yoivq"]
+
+[node name="BackpackWindow" type="Window" unique_id=479665022]
+oversampling_override = 1.0
+title = "Backpack"
+initial_position = 1
+size = Vector2i(311, 310)
+wrap_controls = true
+unresizable = true
+minimize_disabled = true
+maximize_disabled = true
+
+[node name="RootMargin" type="MarginContainer" parent="." unique_id=1904208727]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="RootHBox" type="HBoxContainer" parent="RootMargin" unique_id=816126659]
+layout_mode = 2
+
+[node name="BagColumn" type="VBoxContainer" parent="RootMargin/RootHBox" unique_id=1549008949]
+layout_mode = 2
+
+[node name="BagSlot1" parent="RootMargin/RootHBox/BagColumn" unique_id=1502368664 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialPurpose = 1
+InitialSlotIndex = 0
+
+[node name="BagSlot2" parent="RootMargin/RootHBox/BagColumn" unique_id=742906335 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialPurpose = 1
+InitialSlotIndex = 1
+
+[node name="BagSlot3" parent="RootMargin/RootHBox/BagColumn" unique_id=1080095325 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialPurpose = 1
+InitialSlotIndex = 2
+
+[node name="BagSlot4" parent="RootMargin/RootHBox/BagColumn" unique_id=939730754 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialPurpose = 1
+InitialSlotIndex = 3
+
+[node name="BagDivider" type="VSeparator" parent="RootMargin/RootHBox" unique_id=1974747881]
+layout_mode = 2
+
+[node name="InventoryPane" type="VBoxContainer" parent="RootMargin/RootHBox" unique_id=831677808]
+layout_mode = 2
+
+[node name="SearchEdit" type="LineEdit" parent="RootMargin/RootHBox/InventoryPane" unique_id=1806141441]
+layout_mode = 2
+placeholder_text = "Search"
+
+[node name="StorageArea" type="VBoxContainer" parent="RootMargin/RootHBox/InventoryPane" unique_id=1588687187]
+layout_mode = 2
+
+[node name="UpperStorageRow" type="HBoxContainer" parent="RootMargin/RootHBox/InventoryPane/StorageArea" unique_id=1470332379]
+layout_mode = 2
+
+[node name="InventorySlotGrid" type="GridContainer" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow" unique_id=1656301031]
+layout_mode = 2
+columns = 4
+
+[node name="InventorySlot1" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=496821899 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 0
+
+[node name="InventorySlot2" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=311107979 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 1
+
+[node name="InventorySlot3" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=1155866675 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 2
+
+[node name="InventorySlot4" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=1067401369 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 3
+
+[node name="InventorySlot5" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=55146316 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 4
+
+[node name="InventorySlot6" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=905326643 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 5
+
+[node name="InventorySlot7" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=178025408 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 6
+
+[node name="InventorySlot8" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=1382292501 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 7
+
+[node name="InventorySlot9" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=1252307743 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 8
+
+[node name="InventorySlot10" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=1327226120 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 9
+
+[node name="InventorySlot11" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=126474390 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 10
+
+[node name="InventorySlot12" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=881509429 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 11
+
+[node name="InventorySlot13" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=264799697 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 12
+
+[node name="InventorySlot14" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=829157913 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 13
+
+[node name="InventorySlot15" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=1664029552 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 14
+
+[node name="InventorySlot16" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/InventorySlotGrid" unique_id=2051910620 instance=ExtResource("1_yoivq")]
+layout_mode = 2
+InitialSlotIndex = 15
+
+[node name="UpperExpansionColumns" type="HBoxContainer" parent="RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow" unique_id=1017745153]
+layout_mode = 2
+
+[node name="LowerExpansionGrid" type="GridContainer" parent="RootMargin/RootHBox/InventoryPane/StorageArea" unique_id=538956346]
+layout_mode = 2
+columns = 8
+
+[node name="CurrencyRow" type="HBoxContainer" parent="RootMargin/RootHBox/InventoryPane" unique_id=949123761]
+layout_mode = 2
+alignment = 2
+
+[node name="CurrencySpacer" type="Control" parent="RootMargin/RootHBox/InventoryPane/CurrencyRow" unique_id=1189147040]
+layout_mode = 2
+
+[node name="GoldValue" type="Label" parent="RootMargin/RootHBox/InventoryPane/CurrencyRow" unique_id=271694793]
+layout_mode = 2
+text = "0"
+
+[node name="GoldIcon" type="Label" parent="RootMargin/RootHBox/InventoryPane/CurrencyRow" unique_id=2059963000]
+layout_mode = 2
+text = "G"
+
+[node name="SilverValue" type="Label" parent="RootMargin/RootHBox/InventoryPane/CurrencyRow" unique_id=139157510]
+layout_mode = 2
+text = "0"
+
+[node name="SilverIcon" type="Label" parent="RootMargin/RootHBox/InventoryPane/CurrencyRow" unique_id=1185897182]
+layout_mode = 2
+text = "S"
+
+[node name="CopperValue" type="Label" parent="RootMargin/RootHBox/InventoryPane/CurrencyRow" unique_id=986183820]
+layout_mode = 2
+text = "0"
+
+[node name="CopperIcon" type="Label" parent="RootMargin/RootHBox/InventoryPane/CurrencyRow" unique_id=712674254]
+layout_mode = 2
+text = "C"

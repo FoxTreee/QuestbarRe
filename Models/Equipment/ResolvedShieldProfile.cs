@@ -1,3 +1,4 @@
+using Godot;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,6 +9,7 @@ public sealed class ResolvedShieldProfile :
     public string DefinitionContentId { get; }
     public string DisplayName { get; }
     public int RequiredLevel { get; }
+    public Texture2D? IconTexture { get; }
 
     public int ArmorValue { get; }
 
@@ -26,6 +28,7 @@ public sealed class ResolvedShieldProfile :
         string definitionContentId,
         string displayName,
         int requiredLevel,
+        Texture2D? iconTexture,
         int armorValue,
         int strength,
         int agility,
@@ -38,6 +41,7 @@ public sealed class ResolvedShieldProfile :
         DefinitionContentId = definitionContentId;
         DisplayName = displayName;
         RequiredLevel = requiredLevel;
+        IconTexture = iconTexture;
         ArmorValue = armorValue;
 
         Strength = strength;
@@ -64,6 +68,7 @@ public sealed class ResolvedShieldProfile :
             definition.ContentId,
             definition.DisplayName,
             definition.RequiredLevel,
+            definition.IconTexture,
             definition.ArmorValue,
             definition.Strength,
             definition.Agility,

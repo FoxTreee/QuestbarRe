@@ -161,6 +161,19 @@ public sealed class HeroEquipmentLoadout
         EquipmentSlot slot,
         out string error)
     {
+        if (!CanEquipResolved(item, slot, out error))
+            return false;
+
+        _equippedItems[slot] = item;
+        RebuildEquipmentTotals();
+        return true;
+    }
+
+    public bool CanEquipResolved(
+        IResolvedEquipmentProfile item,
+        EquipmentSlot slot,
+        out string error)
+    {
         error = string.Empty;
 
         if (item is null)
@@ -205,10 +218,31 @@ public sealed class HeroEquipmentLoadout
             return false;
         }
 
-        _equippedItems[slot] = item;
-        RebuildEquipmentTotals();
-
         return true;
+    }
+
+    /// <summary>
+    /// Applies hero level and authored class permissions before using the
+    /// existing authoritative slot and two-handed/off-hand loadout rules.
+    /// </summary>
+    public bool TryEquipResolved(
+        IResolvedEquipmentProfile item,
+        EquipmentSlot slot,
+        HeroClassDefinition heroClass,
+        int heroLevel,
+        out string error)
+    {
+        if (!HeroEquipmentEligibility.CanEquip(
+            heroClass,
+            heroLevel,
+            item,
+            slot,
+            out error))
+        {
+            return false;
+        }
+
+        return TryEquipResolved(item, slot, out error);
     }
 
 

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://blsjr6siu7aqg" path="res://Scenes/UI/Items/ItemSlotVisualCatalog.cs" id="1_t7m77"]
 [ext_resource type="Texture2D" uid="uid://cp0yfljkaxgke" path="res://Assets/UI/ItemSlots/Empty/slot_empty_back.png" id="1_wafvb"]
+[ext_resource type="Texture2D" uid="uid://cpg6n4k8ufrh3" path="res://Assets/UI/ItemSlots/Empty/ChatGPT Image Aug 13, 2026, 05_58_52 PM.png" id="2_eyc6y"]
 [ext_resource type="Texture2D" uid="uid://cavfqi3kq07ma" path="res://Assets/UI/ItemSlots/Empty/slot_empty_belt.png" id="2_nan2p"]
 [ext_resource type="Texture2D" uid="uid://cywv75dg0edr1" path="res://Assets/UI/ItemSlots/Empty/slot_empty_boots.png" id="3_eyc6y"]
 [ext_resource type="Texture2D" uid="uid://dyj6gx4dgm3ci" path="res://Assets/UI/ItemSlots/Empty/slot_empty_chest.png" id="4_chicf"]
@@ -31,6 +32,7 @@ Legs = ExtResource("7_uegw2")
 Boots = ExtResource("3_eyc6y")
 Ring = ExtResource("12_coorf")
 Trinket = ExtResource("14_6cjva")
+Bag = ExtResource("2_eyc6y")
 MainHand = ExtResource("8_o1mnx")
 OffHand = ExtResource("10_odqo4")
 Ranged = ExtResource("11_bjxjk")

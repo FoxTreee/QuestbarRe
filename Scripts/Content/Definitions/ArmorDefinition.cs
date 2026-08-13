@@ -17,6 +17,14 @@ public partial class ArmorDefinition : EquipmentDefinition
         ArmorEquipPosition.Head;
 
     /// <summary>
+    /// Armor proficiency required to wear this item. Use None for necklaces,
+    /// backs, tabards, rings, trinkets, and other unrestricted accessories.
+    /// </summary>
+    [Export]
+    public ArmorCategory ArmorCategory { get; set; } =
+        ArmorCategory.None;
+
+    /// <summary>
     /// Raw armor supplied by this item.
     /// Armor mitigation is intentionally not implemented yet.
     /// </summary>
@@ -42,6 +50,12 @@ public partial class ArmorDefinition : EquipmentDefinition
         {
             errors.Add(
                 $"{ContentId}: EquipPosition is invalid.");
+        }
+
+        if (!Enum.IsDefined(ArmorCategory))
+        {
+            errors.Add(
+                $"{ContentId}: ArmorCategory is invalid.");
         }
 
         if (ArmorValue < 0)

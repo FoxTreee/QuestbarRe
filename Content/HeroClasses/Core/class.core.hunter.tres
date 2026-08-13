@@ -12,5 +12,7 @@ script = ExtResource("1_1q8nu")
 ContentId = "class.core.hunter"
 DisplayName = "Hunter"
 ResourceDefinition = SubResource("HeroResourceDefinition_hunter")
+AllowedArmorCategories = Array[int]([1, 2])
+AllowedWeaponTypes = Array[int]([0, 1, 2, 3, 4, 5])
 AbilityContentIds = Array[String](["ability.core.serpent_shot"])
 metadata/_custom_type_script = "uid://djb803f4i720b"

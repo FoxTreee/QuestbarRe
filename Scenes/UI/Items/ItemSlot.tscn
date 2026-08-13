@@ -10,6 +10,7 @@ clip_contents = true
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("1_8jub0")
+DragHoldSeconds = 0.25
 DragPreviewSize = Vector2(52, 52)
 ValidDropHighlightColor = Color(0.8487068, 0.9227773, 1, 1)
 VisualCatalog = ExtResource("2_cpt7h")

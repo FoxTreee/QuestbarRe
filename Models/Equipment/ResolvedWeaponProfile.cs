@@ -1,3 +1,4 @@
+using Godot;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,6 +7,7 @@ public sealed class ResolvedWeaponProfile : IResolvedEquipmentProfile
     public string DefinitionContentId { get; }
     public string DisplayName { get; }
     public int RequiredLevel { get; }
+    public Texture2D? IconTexture { get; }
 
     public IReadOnlyList<ResolvedEquipmentPercentageModifier>
         PercentageModifiers
@@ -36,6 +38,7 @@ public sealed class ResolvedWeaponProfile : IResolvedEquipmentProfile
         string definitionContentId,
         string displayName,
         int requiredLevel,
+        Texture2D? iconTexture,
         IReadOnlyList<ResolvedEquipmentPercentageModifier>
             percentageModifiers,
         WeaponAttackStyle attackStyle,
@@ -54,6 +57,7 @@ public sealed class ResolvedWeaponProfile : IResolvedEquipmentProfile
         DefinitionContentId = definitionContentId;
         DisplayName = displayName;
         RequiredLevel = requiredLevel;
+        IconTexture = iconTexture;
         PercentageModifiers = percentageModifiers;
         AttackStyle = attackStyle;
         WeaponType = weaponType;
@@ -98,6 +102,7 @@ public sealed class ResolvedWeaponProfile : IResolvedEquipmentProfile
             definition.ContentId,
             definition.DisplayName,
             definition.RequiredLevel,
+            definition.IconTexture,
             definition.PercentageModifiers
                 .Select(
                     ResolvedEquipmentPercentageModifier

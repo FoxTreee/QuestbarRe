@@ -12,5 +12,7 @@ script = ExtResource("1_hg2ve")
 ContentId = "class.core.priest"
 DisplayName = "Priest"
 ResourceDefinition = SubResource("HeroResourceDefinition_priest")
+AllowedArmorCategories = Array[int]([1])
+AllowedWeaponTypes = Array[int]([1, 2, 6])
 AbilityContentIds = Array[String](["ability.core.heal"])
 metadata/_custom_type_script = "uid://djb803f4i720b"

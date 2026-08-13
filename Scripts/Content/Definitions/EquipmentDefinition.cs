@@ -32,6 +32,18 @@ public partial class EquipmentDefinition : Resource
     public int RequiredLevel { get; set; } = 1;
 
 
+    [ExportCategory("Presentation")]
+
+    /// <summary>
+    /// Optional authored icon for this equipment template.
+    /// If a future authoritative item payload does not supply an icon,
+    /// UI can fall back to this local definition icon or to a global
+    /// unknown-item icon.
+    /// </summary>
+    [Export]
+    public Texture2D? IconTexture { get; set; }
+
+
     [ExportCategory("Core Stats")]
 
     [Export]

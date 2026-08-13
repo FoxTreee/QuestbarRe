@@ -13,5 +13,7 @@ script = ExtResource("1_xpwx3")
 ContentId = "class.core.rogue"
 DisplayName = "Rogue"
 ResourceDefinition = SubResource("HeroResourceDefinition_rogue")
+AllowedArmorCategories = Array[int]([1, 2])
+AllowedWeaponTypes = Array[int]([0, 2, 4, 5])
 AbilityContentIds = Array[String](["ability.core.sinister_strike"])
 metadata/_custom_type_script = "uid://djb803f4i720b"

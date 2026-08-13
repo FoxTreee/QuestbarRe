@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://cxklmvye8ghgt" path="res://Scripts/Services/DebugCommandService.cs" id="7_h1m7h"]
 [ext_resource type="PackedScene" uid="uid://b1scwnwktr8ej" path="res://Scenes/UI/Character/CharacterWindow.tscn" id="7_yn2g2"]
 [ext_resource type="Script" uid="uid://s3pr1p2lapds" path="res://Content/Registries/MonsterContentRegistry.cs" id="8_346fj"]
+[ext_resource type="PackedScene" uid="uid://ceypdit8pmiiw" path="res://Scenes/UI/BackpackWindow.tscn" id="8_as1io"]
 [ext_resource type="Resource" path="res://Content/CombatStances/Core/stance.core.passive.tres" id="8_off7b"]
 [ext_resource type="Script" uid="uid://bwnluygsef150" path="res://Scripts/Content/Definitions/MonsterDefinition.cs" id="9_0sclb"]
 [ext_resource type="Resource" path="res://Content/CombatStances/Core/stance.core.defensive.tres" id="9_lfh1j"]
@@ -68,6 +69,12 @@
 [ext_resource type="Script" uid="uid://bi3msg7aodwjr" path="res://Controllers/IncapacitationChoicePopupController.cs" id="54_3133c"]
 [ext_resource type="Script" uid="uid://fgfei303hnli" path="res://Scripts/Services/CombatHitResolver.cs" id="56_vvjo1"]
 [ext_resource type="Script" uid="uid://dej5wuxbbqnxm" path="res://Controllers/CharacterWindowController.cs" id="68_yic5e"]
+[ext_resource type="Script" uid="uid://dga8oqplnp0kh" path="res://Controllers/CharacterWindowCharacterTabController.cs" id="69_ex7s8"]
+[ext_resource type="Script" uid="uid://h4ns2qy3ejk1" path="res://Controllers/CharacterWindowEquipmentPanelController.cs" id="70_h2tpa"]
+[ext_resource type="Texture2D" uid="uid://cn1el14logo4j" path="res://Assets/UI/Items/FallbackUnknownItemIcon.png" id="71_nkjwg"]
+[ext_resource type="Script" uid="uid://bqir4rruqxi24" path="res://Controllers/BackpackWindowController.cs" id="72_8n4h5"]
+[ext_resource type="Resource" uid="uid://byn6kray5xjaw" path="res://Content/Equipment/Bags/Core/bag.core.small_pouch.tres" id="74_as1io"]
+[ext_resource type="PackedScene" uid="uid://c7vhsd7xshavb" path="res://Scenes/UI/Items/ItemSlot.tscn" id="74_xd5mi"]
 
 [sub_resource type="Theme" id="Theme_d8m2u"]
 
@@ -338,6 +345,60 @@ text = "Incapacitate"
 
 [node name="CharacterWindow" parent="PopupWindows" unique_id=411267466 instance=ExtResource("7_yn2g2")]
 
+[node name="HeadSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" parent_id_path=PackedInt32Array(411267466, 480289721) index="0" unique_id=1502368664]
+tooltip_text = "Head"
+
+[node name="NecklaceSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" parent_id_path=PackedInt32Array(411267466, 480289721) index="1" unique_id=1193285647]
+tooltip_text = "Necklace"
+
+[node name="ShouldersSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" parent_id_path=PackedInt32Array(411267466, 480289721) index="2" unique_id=1343440655]
+tooltip_text = "Shoulders"
+
+[node name="ChestSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" parent_id_path=PackedInt32Array(411267466, 480289721) index="3" unique_id=233190699]
+tooltip_text = "Chest"
+
+[node name="BackSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" parent_id_path=PackedInt32Array(411267466, 480289721) index="4" unique_id=1525106886]
+tooltip_text = "Back"
+
+[node name="WristsSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" parent_id_path=PackedInt32Array(411267466, 480289721) index="5" unique_id=894833465]
+tooltip_text = "Wrist"
+
+[node name="HandsSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" parent_id_path=PackedInt32Array(411267466, 480289721) index="6" unique_id=262714549]
+tooltip_text = "Hands"
+
+[node name="MainHandSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection/WeaponSlots" parent_id_path=PackedInt32Array(411267466, 191075152) index="1" unique_id=1134062033]
+tooltip_text = "Main-Hand Weapon"
+
+[node name="OffHandSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection/WeaponSlots" parent_id_path=PackedInt32Array(411267466, 191075152) index="2" unique_id=761232019]
+tooltip_text = "Off-Hand Weapon"
+
+[node name="RangedSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/CenterSection/WeaponSlots" parent_id_path=PackedInt32Array(411267466, 191075152) index="3" unique_id=2043588045]
+tooltip_text = "Ranged Weapon"
+
+[node name="BeltSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" parent_id_path=PackedInt32Array(411267466, 722238747) index="0" unique_id=1650188705]
+tooltip_text = "Belt"
+
+[node name="LegsSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" parent_id_path=PackedInt32Array(411267466, 722238747) index="1" unique_id=1272350275]
+tooltip_text = "Legs"
+
+[node name="BootsSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" parent_id_path=PackedInt32Array(411267466, 722238747) index="2" unique_id=716419071]
+tooltip_text = "Boots"
+
+[node name="Ring1Slot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" parent_id_path=PackedInt32Array(411267466, 722238747) index="3" unique_id=1148061673]
+tooltip_text = "Ring"
+
+[node name="Ring2Slot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" parent_id_path=PackedInt32Array(411267466, 722238747) index="4" unique_id=1390311729]
+tooltip_text = "Ring"
+
+[node name="Trinket1Slot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" parent_id_path=PackedInt32Array(411267466, 722238747) index="5" unique_id=1342776420]
+tooltip_text = "Trinket"
+
+[node name="Trinket2Slot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/RightEquipmentslots" parent_id_path=PackedInt32Array(411267466, 722238747) index="6" unique_id=1275816116]
+tooltip_text = "Trinket"
+
+[node name="BackpackWindow" parent="PopupWindows" unique_id=479665022 instance=ExtResource("8_as1io")]
+size = Vector2i(312, 310)
+
 [node name="Services" type="Node" parent="." unique_id=1409283487]
 
 [node name="JourneyStateService" type="Node" parent="Services" unique_id=2091345235]
@@ -508,6 +569,36 @@ PartySlot3Button = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootV
 PartySlot4Button = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow/PartySlot4Button")
 PartySlot5Button = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow/PartySlot5Button")
 
+[node name="CharacterWindowCharacterTabController" type="Node" parent="Controllers" unique_id=445786787 node_paths=PackedStringArray("CharacterWindow", "CharacterTabRoot")]
+script = ExtResource("69_ex7s8")
+CharacterWindow = NodePath("../CharacterWindowController")
+CharacterTabRoot = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox")
+
+[node name="CharacterWindowEquipmentPanelController" type="Node" parent="Controllers" unique_id=1174856696 node_paths=PackedStringArray("CharacterWindow", "CharacterTabRoot", "Backpack")]
+script = ExtResource("70_h2tpa")
+CharacterWindow = NodePath("../CharacterWindowController")
+CharacterTabRoot = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character")
+Backpack = NodePath("../BackpackWindowController")
+FallbackItemIcon = ExtResource("71_nkjwg")
+
+[node name="BackpackWindowController" type="Node" parent="Controllers" unique_id=1001288604 node_paths=PackedStringArray("BackpackRoot", "SearchEdit", "UpperExpansionColumns", "LowerExpansionGrid", "GoldValueLabel", "SilverValueLabel", "CopperValueLabel")]
+script = ExtResource("72_8n4h5")
+BackpackRoot = NodePath("../../PopupWindows/BackpackWindow/RootMargin")
+SearchEdit = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/SearchEdit")
+ItemSlotScene = ExtResource("74_xd5mi")
+UpperExpansionColumns = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/UpperExpansionColumns")
+LowerExpansionGrid = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/StorageArea/LowerExpansionGrid")
+FallbackItemIcon = ExtResource("71_nkjwg")
+TestStartingItem = ExtResource("47_yic5e")
+TestSecondStartingItem = ExtResource("49_4clwk")
+TestStartingBag = ExtResource("74_as1io")
+TestStartingBagSlot = 3
+TestStoredBag = ExtResource("74_as1io")
+GoldValueLabel = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/CurrencyRow/GoldValue")
+SilverValueLabel = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/CurrencyRow/SilverValue")
+CopperValueLabel = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/CurrencyRow/CopperValue")
+
 [editable path="PopupWindows/WindowSettingsPopup"]
 [editable path="PopupWindows/DebugConsoleWindow"]
 [editable path="PopupWindows/CharacterWindow"]
+[editable path="PopupWindows/BackpackWindow"]

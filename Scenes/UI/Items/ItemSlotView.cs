@@ -500,8 +500,8 @@ public partial class ItemSlotView :
 
     // Configures slot for the reusable item-slot visuals, drag state, and input events.
     public void ConfigureSlot(
-        SlotPurpose purpose,
-        int slotIndex)
+    SlotPurpose purpose,
+    int slotIndex)
     {
         Purpose =
             purpose;
@@ -513,7 +513,9 @@ public partial class ItemSlotView :
         if (VisualCatalog != null)
         {
             EmptySlotTexture =
-                VisualCatalog.GenericEmptySlot;
+                VisualCatalog.GetEmptySlotTexture(
+                    purpose
+                );
         }
 
         ClearItemIdentity();

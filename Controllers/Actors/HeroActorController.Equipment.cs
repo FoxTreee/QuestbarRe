@@ -194,6 +194,12 @@ public partial class HeroActorController
             attackSpeedSeconds;
     }
 
+    public void NotifyRuntimeEquipmentChanged()
+    {
+        Equipment.RebuildEquipmentTotals();
+        RefreshActiveWeaponAttackTiming();
+    }
+
 
     private static string FormatWeapon(
         ResolvedWeaponProfile? weapon)

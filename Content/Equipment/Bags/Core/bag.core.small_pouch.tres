@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BagDefinition" format=3 uid="uid://byn6kray5xjaw"]
+
+[ext_resource type="Texture2D" uid="uid://eoa1438loch1" path="res://icon.svg" id="1_2qhqe"]
+[ext_resource type="Script" uid="uid://dvegn0qfvarlr" path="res://Scripts/Content/Definitions/EquipmentPercentageModifierDefinition.cs" id="1_o7xar"]
+[ext_resource type="Script" uid="uid://crhhqxqre0c5l" path="res://Scripts/Content/Definitions/BagDefinition.cs" id="2_2qhqe"]
+
+[resource]
+script = ExtResource("2_2qhqe")
+ContentId = "bag.core.small_pouch"
+DisplayName = "Small Pouch"
+Description = "A small pouch that adds four Backpack slots."
+IconTexture = ExtResource("1_2qhqe")
+metadata/_custom_type_script = "uid://crhhqxqre0c5l"

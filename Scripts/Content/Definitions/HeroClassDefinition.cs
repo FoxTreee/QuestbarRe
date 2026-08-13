@@ -29,6 +29,28 @@ public partial class HeroClassDefinition : Resource
     { get; set; }
 
 
+    [ExportCategory("Equipment Permissions")]
+
+    /// <summary>
+    /// Armor proficiencies this class may equip. ArmorCategory.None is for
+    /// accessories and does not need to be included.
+    /// </summary>
+    [Export]
+    public Godot.Collections.Array<ArmorCategory> AllowedArmorCategories
+    { get; set; } = new();
+
+    /// <summary>
+    /// Weapon families this class may equip. Permissions are content data and
+    /// are deliberately not hard-coded into inventory or drag/drop logic.
+    /// </summary>
+    [Export]
+    public Godot.Collections.Array<WeaponType> AllowedWeaponTypes
+    { get; set; } = new();
+
+    [Export]
+    public bool CanEquipShields { get; set; }
+
+
     [ExportCategory("Ability Pool")]
 
     /// <summary>
@@ -104,7 +126,46 @@ public partial class HeroClassDefinition : Resource
             }
         }
 
+        HashSet<ArmorCategory> seenArmorCategories = new();
+        foreach (ArmorCategory armorCategory in AllowedArmorCategories)
+        {
+            if (!Enum.IsDefined(armorCategory) || armorCategory == ArmorCategory.None)
+            {
+                errors.Add($"{ContentId}: invalid allowed armor category '{armorCategory}'.");
+                continue;
+            }
+
+            if (!seenArmorCategories.Add(armorCategory))
+                errors.Add($"{ContentId}: duplicate allowed armor category '{armorCategory}'.");
+        }
+
+        HashSet<WeaponType> seenWeaponTypes = new();
+        foreach (WeaponType weaponType in AllowedWeaponTypes)
+        {
+            if (!Enum.IsDefined(weaponType))
+            {
+                errors.Add($"{ContentId}: invalid allowed weapon type '{weaponType}'.");
+                continue;
+            }
+
+            if (!seenWeaponTypes.Add(weaponType))
+                errors.Add($"{ContentId}: duplicate allowed weapon type '{weaponType}'.");
+        }
+
         return errors;
+    }
+
+    public bool AllowsArmorCategory(ArmorCategory armorCategory)
+    {
+        if (armorCategory == ArmorCategory.None)
+            return true;
+
+        return AllowedArmorCategories.Contains(armorCategory);
+    }
+
+    public bool AllowsWeaponType(WeaponType weaponType)
+    {
+        return AllowedWeaponTypes.Contains(weaponType);
     }
 
     /// <summary>
