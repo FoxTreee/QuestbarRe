@@ -18,6 +18,12 @@ public partial class IncapacitationChoicePopupController : Node
 	public Window ChoiceWindow { get; set; } = null!;
 
 	/// <summary>
+	/// Places this critical modal at Questbar's dedicated formation anchor.
+	/// </summary>
+	[Export]
+	public PopupWindowFormationController Formation { get; set; } = null!;
+
+	/// <summary>
 	/// Inspector reference used by this component for its hero name label dependency.
 	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
 	/// </summary>
@@ -109,7 +115,9 @@ public partial class IncapacitationChoicePopupController : Node
 			? "Restore this hero and return them to the active party."
 			: "Requires a priest, revive potion, or another revive source.";
 
-		ChoiceWindow.PopupCentered(PopupSize);
+		ChoiceWindow.Size = PopupSize;
+		ChoiceWindow.Popup();
+		Formation.AnchorIncapacitationWindow();
 		ChoiceWindow.GrabFocus();
 	}
 
@@ -169,6 +177,7 @@ public partial class IncapacitationChoicePopupController : Node
 		bool valid = true;
 		valid &= Require(RegionRun, nameof(RegionRun));
 		valid &= Require(ChoiceWindow, nameof(ChoiceWindow));
+		valid &= Require(Formation, nameof(Formation));
 		valid &= Require(HeroNameLabel, nameof(HeroNameLabel));
 		valid &= Require(MessageLabel, nameof(MessageLabel));
 		valid &= Require(ReviveButton, nameof(ReviveButton));

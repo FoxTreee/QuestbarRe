@@ -2,6 +2,12 @@ using Godot;
 
 public partial class HeroActorController
 {
+    /// <summary>
+    /// Raised after runtime equipment, derived stats, armor, and active weapon
+    /// timing have all been rebuilt.
+    /// </summary>
+    public event System.Action<HeroActorController>? EquipmentChanged;
+
     private readonly RandomNumberGenerator
         _weaponDamageRandom = new();
 
@@ -198,6 +204,7 @@ public partial class HeroActorController
     {
         Equipment.RebuildEquipmentTotals();
         RefreshActiveWeaponAttackTiming();
+        EquipmentChanged?.Invoke(this);
     }
 
 

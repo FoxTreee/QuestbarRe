@@ -8,6 +8,7 @@ public partial class CharacterWindowEquipmentPanelController : Node
     [Export] public CharacterWindowController CharacterWindow { get; set; } = null!;
     [Export] public Control CharacterTabRoot { get; set; } = null!;
     [Export] public BackpackWindowController Backpack { get; set; } = null!;
+    [Export] public ItemTooltipController ItemTooltip { get; set; } = null!;
     [Export] public Texture2D? FallbackItemIcon { get; set; }
     [Export(PropertyHint.Range, "1,1000,1")]
     public int TemporaryHeroLevel { get; set; } = 1;
@@ -52,7 +53,7 @@ public partial class CharacterWindowEquipmentPanelController : Node
             BackpackItemState item = GetInstance(hero!, pair.Key, profile);
             pair.Value.SetUniqueItemIdentity(item.ItemId, item.UniqueInstanceId!.Value);
             pair.Value.SetItemTexture(item.IconTexture ?? FallbackItemIcon);
-            pair.Value.TooltipText = item.DisplayName;
+            pair.Value.TooltipText = string.Empty;
         }
     }
 
@@ -71,6 +72,7 @@ public partial class CharacterWindowEquipmentPanelController : Node
             view.DragEnabled = true;
             view.DropValidator = CanEquip;
             view.DropRequested += Equip;
+            ItemTooltip.RegisterSlot(view);
         }
         if (_views.Count == 0) GD.PushError("No Character equipment slots found.");
     }
@@ -194,6 +196,27 @@ public partial class CharacterWindowEquipmentPanelController : Node
         return item;
     }
 
+    public BackpackItemState GetEquipmentInstance(
+        HeroActorController hero,
+        EquipmentSlot slot,
+        IResolvedEquipmentProfile profile) =>
+        GetInstance(hero, slot, profile);
+
+    public void SetRestoredEquipmentInstance(
+        HeroActorController hero,
+        EquipmentSlot slot,
+        BackpackItemState? item)
+    {
+        Dictionary<EquipmentSlot, BackpackItemState> items = GetInstances(hero);
+        if (item is null) items.Remove(slot); else items[slot] = item;
+    }
+
+    public void RefreshAfterRestore()
+    {
+        HeroActorController? hero = CharacterWindow.SelectedHero;
+        if (GodotObject.IsInstanceValid(hero)) Refresh(hero);
+    }
+
     private Dictionary<EquipmentSlot, BackpackItemState> GetInstances(HeroActorController hero)
     {
         if (!_instances.TryGetValue(hero, out var items))
@@ -223,7 +246,8 @@ public partial class CharacterWindowEquipmentPanelController : Node
     private bool ValidateReferences() =>
         Require(CharacterWindow, nameof(CharacterWindow)) &
         Require(CharacterTabRoot, nameof(CharacterTabRoot)) &
-        Require(Backpack, nameof(Backpack));
+        Require(Backpack, nameof(Backpack)) &
+        Require(ItemTooltip, nameof(ItemTooltip));
 
     private static bool Require(GodotObject value, string name)
     {

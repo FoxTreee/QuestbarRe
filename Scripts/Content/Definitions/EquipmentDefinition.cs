@@ -2,27 +2,8 @@ using Godot;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class EquipmentDefinition : Resource
+public partial class EquipmentDefinition : ItemDefinition
 {
-    [ExportCategory("Identity")]
-
-    /// <summary>
-    /// Stable template/content identifier. This identifies what an item is,
-    /// not a player's future server-issued item instance.
-    /// </summary>
-    [Export(PropertyHint.PlaceholderText, "equipment.core.example")]
-    public string ContentId { get; set; } =
-        string.Empty;
-
-    [Export(PropertyHint.PlaceholderText, "Example Equipment")]
-    public string DisplayName { get; set; } =
-        "Unnamed Equipment";
-
-    [Export(PropertyHint.MultilineText)]
-    public string Description { get; set; } =
-        string.Empty;
-
-
     [ExportCategory("Requirements")]
 
     /// <summary>
@@ -30,18 +11,6 @@ public partial class EquipmentDefinition : Resource
     /// </summary>
     [Export(PropertyHint.Range, "1,1000,1")]
     public int RequiredLevel { get; set; } = 1;
-
-
-    [ExportCategory("Presentation")]
-
-    /// <summary>
-    /// Optional authored icon for this equipment template.
-    /// If a future authoritative item payload does not supply an icon,
-    /// UI can fall back to this local definition icon or to a global
-    /// unknown-item icon.
-    /// </summary>
-    [Export]
-    public Texture2D? IconTexture { get; set; }
 
 
     [ExportCategory("Core Stats")]
@@ -75,21 +44,12 @@ public partial class EquipmentDefinition : Resource
     { get; set; } = new();
 
 
-    public virtual IReadOnlyList<string> GetValidationErrors()
+    public override IReadOnlyList<string> GetValidationErrors()
     {
-        List<string> errors = new();
+        List<string> errors = new(base.GetValidationErrors());
 
-        if (!global::ContentId.IsValid(ContentId))
-        {
-            errors.Add(
-                $"Invalid equipment Content ID '{ContentId}'.");
-        }
-
-        if (string.IsNullOrWhiteSpace(DisplayName))
-        {
-            errors.Add(
-                $"{ContentId}: DisplayName is required.");
-        }
+        if (MaximumStackSize != 1)
+            errors.Add($"{ContentId}: Equipment must have MaximumStackSize 1.");
 
         if (RequiredLevel < 1)
         {

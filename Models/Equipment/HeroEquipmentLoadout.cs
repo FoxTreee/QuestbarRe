@@ -258,6 +258,12 @@ public sealed class HeroEquipmentLoadout
         return removed;
     }
 
+    public void ClearAll()
+    {
+        _equippedItems.Clear();
+        RebuildEquipmentTotals();
+    }
+
 
     /// <summary>
     /// Rebuilds all equipment-derived totals from every occupied slot.

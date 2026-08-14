@@ -4,6 +4,8 @@ using Godot;
 public partial class ItemSlotView :
     PanelContainer
 {
+    public event Action<ItemSlotView>? HoverStarted;
+    public event Action<ItemSlotView>? HoverEnded;
     /*
      * These keys identify values inside the drag payload.
      */
@@ -237,6 +239,15 @@ public partial class ItemSlotView :
     // Godot lifecycle
     // ---------------------------------------------------------
 
+    // Reconnects hover input whenever an existing slot is moved into another
+    // viewport. The shared popup formation reparents the authored Backpack and
+    // Character panels after their slots have already become ready.
+    public override void _EnterTree()
+    {
+        MouseExited += OnMouseExited;
+        MouseEntered += OnHoverEntered;
+    }
+
     // Initializes the reusable item-slot visuals, drag state, and input events when this node becomes ready.
     public override void _Ready()
     {
@@ -260,9 +271,6 @@ public partial class ItemSlotView :
 
         _normalSelfModulate =
             SelfModulate;
-
-        MouseExited +=
-            OnMouseExited;
 
         if (InitialPurpose ==
             SlotPurpose.CharacterEquipment)
@@ -291,9 +299,15 @@ public partial class ItemSlotView :
     {
         MouseExited -=
             OnMouseExited;
+        MouseEntered -= OnHoverEntered;
         _snapTween?.Kill();
         _snapTween =
             null;
+    }
+
+    private void OnHoverEntered()
+    {
+        HoverStarted?.Invoke(this);
     }
 
     // Responds to Godot lifecycle notifications that affect the reusable item-slot visuals, drag state, and input events.
@@ -1066,5 +1080,6 @@ public partial class ItemSlotView :
         SetDropHighlight(
             false
         );
+        HoverEnded?.Invoke(this);
     }
 }

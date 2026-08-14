@@ -37,6 +37,8 @@ public partial class CharacterWindowCharacterTabController : Node
     private Label _rangedAttackSpeedValue = null!;
     private Label _rangedDpsValue = null!;
 
+    private HeroActorController? _observedHero;
+
 
     /// <summary>
     /// Resolves the Character-tab labels once, subscribes to the shared hero
@@ -53,8 +55,7 @@ public partial class CharacterWindowCharacterTabController : Node
         CharacterWindow.SelectedHeroChanged +=
             OnSelectedHeroChanged;
 
-        Refresh(
-            CharacterWindow.SelectedHero);
+        ObserveHero(CharacterWindow.SelectedHero);
     }
 
 
@@ -69,6 +70,8 @@ public partial class CharacterWindowCharacterTabController : Node
             CharacterWindow.SelectedHeroChanged -=
                 OnSelectedHeroChanged;
         }
+
+        StopObservingHero();
     }
 
 
@@ -79,7 +82,38 @@ public partial class CharacterWindowCharacterTabController : Node
     private void OnSelectedHeroChanged(
         HeroActorController hero)
     {
+        ObserveHero(hero);
+    }
+
+    /// <summary>
+    /// Follows equipment changes only for the currently selected hero, avoiding
+    /// stale redraws and unnecessary listeners on the other party members.
+    /// </summary>
+    private void ObserveHero(HeroActorController? hero)
+    {
+        StopObservingHero();
+
+        if (GodotObject.IsInstanceValid(hero))
+        {
+            _observedHero = hero;
+            _observedHero!.EquipmentChanged += OnEquipmentChanged;
+        }
+
         Refresh(hero);
+    }
+
+    private void StopObservingHero()
+    {
+        if (GodotObject.IsInstanceValid(_observedHero))
+            _observedHero!.EquipmentChanged -= OnEquipmentChanged;
+
+        _observedHero = null;
+    }
+
+    private void OnEquipmentChanged(HeroActorController hero)
+    {
+        if (ReferenceEquals(hero, CharacterWindow.SelectedHero))
+            Refresh(hero);
     }
 
 

@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://gjgocnfbnihd"]
+
+[node name="StackSplitPopup" type="Window" unique_id=290862077]
+oversampling_override = 1.0
+position = Vector2i(0, 36)
+
+[node name="RootMargin" type="MarginContainer" parent="." unique_id=546345153]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="RootVBox" type="VBoxContainer" parent="RootMargin" unique_id=885429226]
+layout_mode = 2
+
+[node name="PromptLabel" type="Label" parent="RootMargin/RootVBox" unique_id=883728477]
+layout_mode = 2
+
+[node name="QuantityInput" type="SpinBox" parent="RootMargin/RootVBox" unique_id=637010466]
+layout_mode = 2
+
+[node name="ButtonRow" type="HBoxContainer" parent="RootMargin/RootVBox" unique_id=839862620]
+layout_mode = 2
+
+[node name="CancelButton" type="Button" parent="RootMargin/RootVBox/ButtonRow" unique_id=1163169954]
+layout_mode = 2
+
+[node name="ConfirmButton" type="Button" parent="RootMargin/RootVBox/ButtonRow" unique_id=1808385076]
+layout_mode = 2

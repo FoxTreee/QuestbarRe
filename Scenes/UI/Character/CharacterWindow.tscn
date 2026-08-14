@@ -1,27 +1,86 @@
 [gd_scene format=3 uid="uid://b1scwnwktr8ej"]
 
 [ext_resource type="PackedScene" uid="uid://c7vhsd7xshavb" path="res://Scenes/UI/Items/ItemSlot.tscn" id="1_7jhsc"]
+[ext_resource type="Texture2D" uid="uid://cn1el14logo4j" path="res://Assets/UI/Items/FallbackUnknownItemIcon.png" id="2_6nnco"]
+[ext_resource type="Script" uid="uid://d1xioidtxccdm" path="res://Controllers/AnchoredPanelCloseButton.cs" id="2_su66b"]
 
-[node name="CharacterWindow" type="Window" unique_id=411267466]
-oversampling_override = 1.0
-title = "Character Window"
-initial_position = 1
-size = Vector2i(592, 761)
-transient = true
-unresizable = true
-minimize_disabled = true
-maximize_disabled = true
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mx20r"]
+bg_color = Color(0.1882353, 0.1882353, 0.1882353, 0.84313726)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3137255, 0.32941177, 0.3529412, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mewr1"]
+bg_color = Color(0.105882354, 0.11764706, 0.13725491, 1)
+border_width_bottom = 1
+border_color = Color(0.3137255, 0.32941177, 0.3529412, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+
+[node name="CharacterWindow" type="Panel" unique_id=728315641]
+custom_minimum_size = Vector2(592, 797)
+offset_right = 592.0
+offset_bottom = 761.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_mx20r")
+
+[node name="TitleBar" type="PanelContainer" parent="." unique_id=142603518]
+z_index = 10
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 36.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mewr1")
+
+[node name="TitleMargin" type="MarginContainer" parent="TitleBar" unique_id=217375295]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="TitleRow" type="HBoxContainer" parent="TitleBar/TitleMargin" unique_id=598885258]
+layout_mode = 2
+
+[node name="WindowIcon" type="TextureRect" parent="TitleBar/TitleMargin/TitleRow" unique_id=250880374]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TitleLabel" type="Label" parent="TitleBar/TitleMargin/TitleRow" unique_id=556134210]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Character Window"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="TitleBar/TitleMargin/TitleRow" unique_id=1031290300 node_paths=PackedStringArray("PanelRoot")]
+custom_minimum_size = Vector2(28, 28)
+custom_maximum_size = Vector2(28, 28)
+layout_mode = 2
+icon = ExtResource("2_6nnco")
+flat = true
+icon_alignment = 1
+expand_icon = true
+script = ExtResource("2_su66b")
+PanelRoot = NodePath("../../../..")
 
 [node name="RootMargin" type="MarginContainer" parent="." unique_id=856065446]
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
+layout_mode = 1
+anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -592.0
-offset_top = -764.0
-grow_horizontal = 0
-grow_vertical = 0
+offset_top = 36.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12
@@ -58,7 +117,6 @@ layout_mode = 2
 
 [node name="HeadSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" unique_id=1502368664 instance=ExtResource("1_7jhsc")]
 layout_mode = 2
-tooltip_text = "HELMET"
 InitialPurpose = 2
 
 [node name="NecklaceSlot" parent="RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" unique_id=1193285647 instance=ExtResource("1_7jhsc")]

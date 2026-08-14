@@ -13,6 +13,13 @@ public sealed class BackpackInventoryState
 
     private readonly List<BackpackInventoryLocation> _storageLocations;
     private readonly List<BackpackInventoryLocation> _bagEquipmentLocations;
+    private long _nextSplitStackId = 289_000_000_000L;
+
+    public void AdvanceSplitStackIdentity(long maximumStackId)
+    {
+        if (maximumStackId >= _nextSplitStackId)
+            _nextSplitStackId = maximumStackId + 1;
+    }
 
     public IReadOnlyList<BackpackInventoryLocation> StorageLocations =>
         _storageLocations;
@@ -67,6 +74,116 @@ public sealed class BackpackInventoryState
         }
 
         return locations[index];
+    }
+
+    public bool TryFindItem(string itemId, out BackpackLocationKind kind, out int index)
+    {
+        foreach (BackpackInventoryLocation location in _storageLocations)
+        {
+            if (string.Equals(location.Item?.ItemId, itemId, StringComparison.OrdinalIgnoreCase))
+            {
+                kind = location.Kind; index = location.Index; return true;
+            }
+        }
+        foreach (BackpackInventoryLocation location in _bagEquipmentLocations)
+        {
+            if (string.Equals(location.Item?.ItemId, itemId, StringComparison.OrdinalIgnoreCase))
+            {
+                kind = location.Kind; index = location.Index; return true;
+            }
+        }
+        kind = default; index = -1; return false;
+    }
+
+    public bool TryRestore(
+        IReadOnlyList<BackpackItemState?> bags,
+        IReadOnlyList<BackpackItemState?> storage,
+        out string error)
+    {
+        error = string.Empty;
+        if (bags.Count != BagEquipmentSlotCount)
+        {
+            error = $"Save must contain exactly {BagEquipmentSlotCount} bag slots.";
+            return false;
+        }
+
+        int capacity = BaseStorageSlotCount;
+        foreach (BackpackItemState? bag in bags)
+        {
+            if (bag is not null && !bag.IsBag)
+            {
+                error = $"Saved bag slot contains non-bag '{bag.ItemId}'.";
+                return false;
+            }
+            capacity += bag?.AddedInventorySlots ?? 0;
+        }
+
+        if (storage.Count != capacity)
+        {
+            error = $"Saved storage count {storage.Count} does not match capacity {capacity}.";
+            return false;
+        }
+
+        for (int i = 0; i < bags.Count; i++)
+            _bagEquipmentLocations[i].SetItem(bags[i]);
+        while (_storageLocations.Count < capacity)
+            _storageLocations.Add(new BackpackInventoryLocation(BackpackLocationKind.Storage, _storageLocations.Count));
+        for (int i = 0; i < capacity; i++)
+            _storageLocations[i].SetItem(storage[i]);
+        if (_storageLocations.Count > capacity)
+            _storageLocations.RemoveRange(capacity, _storageLocations.Count - capacity);
+        return true;
+    }
+
+    public bool TryAcquire(
+        ItemDefinition definition,
+        int quantity,
+        ref long nextInstanceId,
+        ref long nextStackId,
+        out string error)
+    {
+        error = string.Empty;
+        BackpackItemState?[] proposed = SnapshotItems(_storageLocations);
+        int remaining = quantity;
+
+        if (definition.IsStackable)
+        {
+            for (int i = 0; i < proposed.Length && remaining > 0; i++)
+            {
+                BackpackItemState? stack = proposed[i];
+                if (stack is null || !stack.IsStackable ||
+                    !stack.ItemId.Equals(definition.ContentId, StringComparison.OrdinalIgnoreCase)) continue;
+                int added = Math.Min(remaining, definition.MaximumStackSize - stack.Quantity);
+                if (added <= 0) continue;
+                proposed[i] = stack.WithQuantity(stack.Quantity + added);
+                remaining -= added;
+            }
+        }
+
+        int requiredEmptySlots = definition.IsStackable
+            ? (remaining + definition.MaximumStackSize - 1) / definition.MaximumStackSize
+            : remaining;
+        int emptySlots = 0;
+        foreach (BackpackItemState? item in proposed) if (item is null) emptySlots++;
+        if (emptySlots < requiredEmptySlots)
+        {
+            error = $"Backpack needs {requiredEmptySlots} empty slot(s), but only {emptySlots} remain.";
+            return false;
+        }
+
+        for (int i = 0; i < proposed.Length && remaining > 0; i++)
+        {
+            if (proposed[i] is not null) continue;
+            int amount = definition.IsStackable
+                ? Math.Min(remaining, definition.MaximumStackSize) : 1;
+            long identity = definition.IsStackable ? nextStackId++ : nextInstanceId++;
+            proposed[i] = BackpackItemState.CreateInventoryItem(definition, identity, amount);
+            remaining -= amount;
+        }
+
+        for (int i = 0; i < proposed.Length; i++)
+            _storageLocations[i].SetItem(proposed[i]);
+        return true;
     }
 
     /// <summary>
@@ -172,8 +289,73 @@ public sealed class BackpackInventoryState
         }
 
         BackpackItemState? destinationItem = destination!.Item;
+
+        if (sourceItem.IsStackable &&
+            destinationItem?.IsStackable == true &&
+            sourceItem.ItemId.Equals(destinationItem.ItemId,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            int available = destinationItem.MaximumStackSize - destinationItem.Quantity;
+            if (available > 0)
+            {
+                int transferred = Math.Min(sourceItem.Quantity, available);
+                destination.SetItem(destinationItem.WithQuantity(
+                    destinationItem.Quantity + transferred));
+                int remaining = sourceItem.Quantity - transferred;
+                source.SetItem(remaining == 0
+                    ? null
+                    : sourceItem.WithQuantity(remaining));
+                return true;
+            }
+        }
+
         source.SetItem(destinationItem);
         destination.SetItem(sourceItem);
+        return true;
+    }
+
+    public bool TrySplitStack(
+        int sourceIndex,
+        long expectedStackId,
+        int splitQuantity,
+        out int destinationIndex,
+        out string error)
+    {
+        destinationIndex = -1;
+        error = string.Empty;
+
+        if (!TryGetStorageLocation(sourceIndex, out BackpackInventoryLocation? source) ||
+            source!.Item is not BackpackItemState item ||
+            !item.IsStackable || item.StackId != expectedStackId)
+        {
+            error = "The source stack no longer matches the split request.";
+            return false;
+        }
+
+        if (splitQuantity < 1 || splitQuantity >= item.Quantity)
+        {
+            error = $"Split quantity must be between 1 and {item.Quantity - 1}.";
+            return false;
+        }
+
+        for (int index = 0; index < _storageLocations.Count; index++)
+        {
+            if (_storageLocations[index].IsEmpty)
+            {
+                destinationIndex = index;
+                break;
+            }
+        }
+
+        if (destinationIndex < 0)
+        {
+            error = "No empty Backpack storage slot is available for the new stack.";
+            return false;
+        }
+
+        source.SetItem(item.WithQuantity(item.Quantity - splitQuantity));
+        _storageLocations[destinationIndex].SetItem(
+            item.CreateSplitStack(_nextSplitStackId++, splitQuantity));
         return true;
     }
 

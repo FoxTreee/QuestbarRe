@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://0yhkm7tmeykh"]
+
+[ext_resource type="Texture2D" uid="uid://cn1el14logo4j" path="res://Assets/UI/Items/FallbackUnknownItemIcon.png" id="1_8wcjo"]
+[ext_resource type="Script" uid="uid://do6q8e6i0vdjs" path="res://Scripts/Content/Definitions/ItemDefinition.cs" id="1_gricm"]
+
+[resource]
+script = ExtResource("1_gricm")
+ContentId = "material.core.test_dust"
+DisplayName = "Test Dust"
+Description = "A temporary material used to test inventory stacking."
+MaximumStackSize = 20
+IconTexture = ExtResource("1_8wcjo")
+metadata/_custom_type_script = "uid://do6q8e6i0vdjs"

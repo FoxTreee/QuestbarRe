@@ -1,23 +1,91 @@
 [gd_scene format=3 uid="uid://ceypdit8pmiiw"]
 
+[ext_resource type="Texture2D" uid="uid://cpg6n4k8ufrh3" path="res://Assets/UI/ItemSlots/Empty/ChatGPT Image Aug 13, 2026, 05_58_52 PM.png" id="1_tyyou"]
 [ext_resource type="PackedScene" uid="uid://c7vhsd7xshavb" path="res://Scenes/UI/Items/ItemSlot.tscn" id="1_yoivq"]
+[ext_resource type="Texture2D" uid="uid://cn1el14logo4j" path="res://Assets/UI/Items/FallbackUnknownItemIcon.png" id="2_mewr1"]
+[ext_resource type="Script" uid="uid://d1xioidtxccdm" path="res://Controllers/AnchoredPanelCloseButton.cs" id="3_mewr1"]
 
-[node name="BackpackWindow" type="Window" unique_id=479665022]
-oversampling_override = 1.0
-title = "Backpack"
-initial_position = 1
-size = Vector2i(311, 310)
-wrap_controls = true
-unresizable = true
-minimize_disabled = true
-maximize_disabled = true
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3k6d1"]
+bg_color = Color(0.1882353, 0.1882353, 0.1882353, 0.84313726)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3137255, 0.32941177, 0.3529412, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mewr1"]
+bg_color = Color(0.105882354, 0.11764706, 0.13725491, 1)
+border_width_bottom = 1
+border_color = Color(0.3137255, 0.32941177, 0.3529412, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+
+[node name="BackpackWindow" type="Panel" unique_id=224374737]
+custom_minimum_size = Vector2(311, 346)
+offset_right = 311.0
+offset_bottom = 346.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_3k6d1")
+
+[node name="TitleBar" type="PanelContainer" parent="." unique_id=1714319866]
+z_index = 10
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 0.066
+offset_bottom = 0.16399956
+offset_transform_enabled = true
+theme_override_styles/panel = SubResource("StyleBoxFlat_mewr1")
+
+[node name="TitleMargin" type="MarginContainer" parent="TitleBar" unique_id=49556022]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 4
+
+[node name="TitleRow" type="HBoxContainer" parent="TitleBar/TitleMargin" unique_id=1834658770]
+layout_mode = 2
+
+[node name="WindowIcon" type="TextureRect" parent="TitleBar/TitleMargin/TitleRow" unique_id=1093331978]
+custom_minimum_size = Vector2(28, 28)
+custom_maximum_size = Vector2(28, 28)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("1_tyyou")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TitleLabel" type="Label" parent="TitleBar/TitleMargin/TitleRow" unique_id=969243890]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Backpack"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="TitleBar/TitleMargin/TitleRow" unique_id=1578850733 node_paths=PackedStringArray("PanelRoot")]
+custom_minimum_size = Vector2(28, 28)
+custom_maximum_size = Vector2(28, 28)
+layout_mode = 2
+icon = ExtResource("2_mewr1")
+flat = true
+icon_alignment = 1
+expand_icon = true
+script = ExtResource("3_mewr1")
+PanelRoot = NodePath("../../../..")
 
 [node name="RootMargin" type="MarginContainer" parent="." unique_id=1904208727]
-anchors_preset = 15
+layout_mode = 1
+anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 36.0
 grow_horizontal = 2
 grow_vertical = 2
+offset_transform_enabled = true
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12

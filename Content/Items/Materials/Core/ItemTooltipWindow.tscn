@@ -1,0 +1,72 @@
+[gd_scene format=3 uid="uid://cnnh3sqoviekv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mewr1"]
+bg_color = Color(0.1882353, 0.1882353, 0.1882353, 0.84313726)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_u14n5"]
+bg_color = Color(0.06666667, 0.07450981, 0.09411765, 0.9490196)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4509804, 0.46666667, 0.5019608, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="ItemTooltipWindow" type="PanelContainer" unique_id=1686970984]
+z_index = 999
+offset_top = 36.0
+offset_right = 562.0
+offset_bottom = 136.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mewr1")
+
+[node name="RootMargin" type="MarginContainer" parent="." unique_id=1082419192]
+layout_mode = 2
+
+[node name="TooltipRow" type="HBoxContainer" parent="RootMargin" unique_id=165033247]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ComparisonPanel" type="PanelContainer" parent="RootMargin/TooltipRow" unique_id=704899939]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u14n5")
+
+[node name="ComparisonMargin" type="MarginContainer" parent="RootMargin/TooltipRow/ComparisonPanel" unique_id=355719637]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="ComparisonText" type="RichTextLabel" parent="RootMargin/TooltipRow/ComparisonPanel/ComparisonMargin" unique_id=1846783558]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+mouse_filter = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="HoveredPanel" type="PanelContainer" parent="RootMargin/TooltipRow" unique_id=1039553360]
+layout_mode = 2
+
+[node name="HoveredMargin" type="MarginContainer" parent="RootMargin/TooltipRow/HoveredPanel" unique_id=1632920014]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HoveredText" type="RichTextLabel" parent="RootMargin/TooltipRow/HoveredPanel/HoveredMargin" unique_id=344233325]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+mouse_filter = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false

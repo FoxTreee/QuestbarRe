@@ -24,6 +24,13 @@ public partial class BackpackWindowController : Node
     [ExportCategory("Backpack UI")]
 
     /// <summary>
+    /// Complete custom Backpack panel, including its authored title bar.
+    /// Its size follows BackpackRoot's content minimum size.
+    /// </summary>
+    [Export]
+    public Control BackpackPanelRoot { get; set; } = null!;
+
+    /// <summary>
     /// Root Control of the manually authored Backpack window. All Storage and
     /// BagEquipment ItemSlotView descendants are discovered beneath this node.
     /// </summary>
@@ -59,48 +66,9 @@ public partial class BackpackWindowController : Node
     [Export]
     public Texture2D? FallbackItemIcon { get; set; }
 
-    [ExportCategory("28A2 Runtime Test")]
-
-    /// <summary>
-    /// Optional local equipment definition placed in one Backpack storage slot
-    /// so the authority-to-presentation path can be tested. Clear this
-    /// assignment after 28A2 is verified.
-    /// </summary>
-    [Export]
-    public EquipmentDefinition? TestStartingItem { get; set; }
-
-    [Export(PropertyHint.Range, "0,15,1")]
-    public int TestStartingStorageSlot { get; set; } = 0;
-
-    /// <summary>
-    /// Optional second unique item used to verify occupied-slot swaps. It is
-    /// test seeding only and can be cleared after checkpoint 28A4.
-    /// </summary>
-    [Export]
-    public EquipmentDefinition? TestSecondStartingItem { get; set; }
-
-    [Export(PropertyHint.Range, "0,15,1")]
-    public int TestSecondStartingStorageSlot { get; set; } = 1;
-
-    /// <summary>
-    /// Optional BagDefinition used to verify bag-only placement and calculated
-    /// capacity without generating any additional UI slots yet.
-    /// </summary>
-    [Export]
-    public BagDefinition? TestStartingBag { get; set; }
-
-    [Export(PropertyHint.Range, "0,3,1")]
-    public int TestStartingBagSlot { get; set; } = 0;
-
-    /// <summary>
-    /// Optional second bag seeded into ordinary storage for testing runtime
-    /// bag equipping, replacement, removal, and bag-slot swapping.
-    /// </summary>
-    [Export]
-    public BagDefinition? TestStoredBag { get; set; }
-
-    [Export(PropertyHint.Range, "0,15,1")]
-    public int TestStoredBagStorageSlot { get; set; } = 2;
+    [ExportCategory("Stack Splitting")]
+    [Export] public StackSplitPopupController StackSplitPopup { get; set; } = null!;
+    [Export] public ItemTooltipController ItemTooltip { get; set; } = null!;
 
     [ExportCategory("Currency Display")]
 
@@ -113,13 +81,26 @@ public partial class BackpackWindowController : Node
     [Export]
     public Label CopperValueLabel { get; set; } = null!;
 
+    [ExportCategory("Custom Panel")]
+
+    /// <summary>
+    /// Height reserved above BackpackRoot for the reusable custom title bar.
+    /// </summary>
+    [Export(PropertyHint.Range, "24,64,1")]
+    public float CustomTitleBarHeight { get; set; } = 36.0f;
+
     private readonly Dictionary<int, ItemSlotView>
         _storageSlotViews = new();
 
     private readonly Dictionary<int, ItemSlotView>
         _bagSlotViews = new();
 
+    private int _pendingSplitSourceIndex = -1;
+    private long _pendingSplitStackId;
+    private string _storageSearchText = string.Empty;
+
     public BackpackInventoryState Inventory { get; private set; } = new();
+    public CurrencyWallet Currency { get; } = new();
 
     /// <summary>
     /// Maps authored Backpack slots to authoritative runtime locations,
@@ -133,12 +114,12 @@ public partial class BackpackWindowController : Node
         if (!DiscoverAndValidateSlots())
             return;
 
-        SeedOptionalTestItem();
-        SeedOptionalSecondTestItem();
-        SeedOptionalTestBag();
-        SeedOptionalStoredBag();
         BuildExpansionSlotViews();
         RefreshAllSlots();
+        StackSplitPopup.SplitConfirmed += HandleSplitConfirmed;
+        SearchEdit.TextChanged += HandleSearchTextChanged;
+        Currency.BalanceChanged += RefreshCurrencyDisplay;
+        RefreshCurrencyDisplay();
 
         DebugLog.Print(
             $"Backpack inventory initialized. BaseCapacity=" +
@@ -147,6 +128,23 @@ public partial class BackpackWindowController : Node
             $"TotalCapacity={Inventory.TotalStorageCapacity}, " +
             $"RuntimeStorageLocations=" +
             $"{Inventory.StorageLocations.Count}.");
+    }
+
+    public override void _ExitTree()
+    {
+        if (GodotObject.IsInstanceValid(StackSplitPopup))
+            StackSplitPopup.SplitConfirmed -= HandleSplitConfirmed;
+
+        if (GodotObject.IsInstanceValid(SearchEdit))
+            SearchEdit.TextChanged -= HandleSearchTextChanged;
+
+        Currency.BalanceChanged -= RefreshCurrencyDisplay;
+    }
+
+    private void HandleSearchTextChanged(string searchText)
+    {
+        _storageSearchText = searchText?.Trim() ?? string.Empty;
+        RefreshAllSlots();
     }
 
     /// <summary>
@@ -171,6 +169,45 @@ public partial class BackpackWindowController : Node
             storageIndex).Item;
     }
 
+    public BackpackItemState? GetBackpackItem(
+        ItemSlotView.SlotPurpose purpose,
+        int index)
+    {
+        BackpackLocationKind kind = purpose switch
+        {
+            ItemSlotView.SlotPurpose.Storage => BackpackLocationKind.Storage,
+            ItemSlotView.SlotPurpose.BagEquipment => BackpackLocationKind.BagEquipment,
+            _ => throw new System.ArgumentOutOfRangeException(nameof(purpose))
+        };
+        return Inventory.GetLocation(kind, index).Item;
+    }
+
+    public bool TryFindOwnedItem(string itemId, out string location)
+    {
+        if (Inventory.TryFindItem(itemId, out BackpackLocationKind kind, out int index))
+        {
+            location = $"Backpack/{kind}[{index}]";
+            return true;
+        }
+        location = string.Empty;
+        return false;
+    }
+
+    public bool TryAcquireItem(ItemDefinition definition, int quantity,
+        ref long nextInstanceId, ref long nextStackId, out string error)
+    {
+        bool added = Inventory.TryAcquire(definition, quantity,
+            ref nextInstanceId, ref nextStackId, out error);
+        if (added) RefreshAllSlots();
+        return added;
+    }
+
+    public void RebuildAfterRestore()
+    {
+        RebuildExpansionSlotViews();
+        RefreshAllSlots();
+    }
+
     public bool TryExchangeStorageItem(
         int storageIndex,
         BackpackItemState? expectedStorageItem,
@@ -191,14 +228,11 @@ public partial class BackpackWindowController : Node
         return succeeded;
     }
 
-    public void SetCurrencyDisplay(
-        int gold,
-        int silver,
-        int copper)
+    private void RefreshCurrencyDisplay()
     {
-        GoldValueLabel.Text = Mathf.Max(0, gold).ToString();
-        SilverValueLabel.Text = Mathf.Max(0, silver).ToString();
-        CopperValueLabel.Text = Mathf.Max(0, copper).ToString();
+        GoldValueLabel.Text = Currency.Gold.ToString();
+        SilverValueLabel.Text = Currency.Silver.ToString();
+        CopperValueLabel.Text = Currency.Copper.ToString();
     }
 
     private bool DiscoverAndValidateSlots()
@@ -265,46 +299,6 @@ public partial class BackpackWindowController : Node
         return valid;
     }
 
-    private void SeedOptionalTestItem()
-    {
-        if (!GodotObject.IsInstanceValid(TestStartingItem))
-            return;
-
-        BackpackItemState item = BackpackItemState.CreateEquipment(
-            TestStartingItem!,
-            BuildTestInstanceId(TestStartingItem.ContentId, 1));
-
-        if (!Inventory.TryPlaceInEmptyLocation(
-            BackpackLocationKind.Storage,
-            TestStartingStorageSlot,
-            item,
-            out string error))
-        {
-            GD.PushError(
-                $"Could not seed the 28A2 Backpack test item: {error}");
-        }
-    }
-
-    private void SeedOptionalSecondTestItem()
-    {
-        if (!GodotObject.IsInstanceValid(TestSecondStartingItem))
-            return;
-
-        BackpackItemState item = BackpackItemState.CreateEquipment(
-            TestSecondStartingItem!,
-            BuildTestInstanceId(TestSecondStartingItem.ContentId, 2));
-
-        if (!Inventory.TryPlaceInEmptyLocation(
-            BackpackLocationKind.Storage,
-            TestSecondStartingStorageSlot,
-            item,
-            out string error))
-        {
-            GD.PushError(
-                $"Could not seed the 28A4 second test item: {error}");
-        }
-    }
-
     private void RefreshGroup(
         BackpackLocationKind kind,
         IReadOnlyDictionary<int, ItemSlotView> slotViews)
@@ -314,71 +308,51 @@ public partial class BackpackWindowController : Node
             BackpackInventoryLocation location =
                 Inventory.GetLocation(kind, pair.Key);
 
-            PresentLocation(pair.Value, location);
-        }
-    }
-
-    private void SeedOptionalTestBag()
-    {
-        if (!GodotObject.IsInstanceValid(TestStartingBag))
-            return;
-
-        IReadOnlyList<string> validationErrors =
-            TestStartingBag!.GetValidationErrors();
-
-        if (validationErrors.Count > 0)
-        {
-            foreach (string validationError in validationErrors)
+            if (kind == BackpackLocationKind.Storage &&
+                location.Item is BackpackItemState item &&
+                !MatchesStorageSearch(item))
             {
-                GD.PushError(
-                    $"Invalid 28A3 test bag: {validationError}");
+                PresentFilteredLocation(pair.Value);
+                continue;
             }
 
-            return;
-        }
-
-        BackpackItemState bag = BackpackItemState.CreateBag(
-            TestStartingBag,
-            BuildTestInstanceId(TestStartingBag.ContentId, 3));
-
-        if (!Inventory.TryPlaceInEmptyLocation(
-            BackpackLocationKind.BagEquipment,
-            TestStartingBagSlot,
-            bag,
-            out string error))
-        {
-            GD.PushError(
-                $"Could not seed the 28A3 Backpack test bag: {error}");
+            PresentLocation(pair.Value, location);
+            ConfigureSlotInteraction(pair.Value);
         }
     }
 
-    private void SeedOptionalStoredBag()
+    private bool MatchesStorageSearch(BackpackItemState item)
     {
-        if (!GodotObject.IsInstanceValid(TestStoredBag))
-            return;
+        if (string.IsNullOrEmpty(_storageSearchText))
+            return true;
 
-        IReadOnlyList<string> validationErrors =
-            TestStoredBag!.GetValidationErrors();
+        return
+            item.DisplayName.Contains(
+                _storageSearchText,
+                System.StringComparison.OrdinalIgnoreCase) ||
+            item.ItemId.Contains(
+                _storageSearchText,
+                System.StringComparison.OrdinalIgnoreCase);
+    }
 
-        if (validationErrors.Count > 0)
-        {
-            foreach (string validationError in validationErrors)
-                GD.PushError($"Invalid 28A5 stored test bag: {validationError}");
-            return;
-        }
+    private static void PresentFilteredLocation(ItemSlotView slotView)
+    {
+        slotView.ClearItemIdentity();
+        slotView.TooltipText = string.Empty;
+        slotView.DragEnabled = false;
+        slotView.DropValidator = RejectFilteredDrop;
+    }
 
-        BackpackItemState bag = BackpackItemState.CreateBag(
-            TestStoredBag,
-            BuildTestInstanceId(TestStoredBag.ContentId, 4));
-
-        if (!Inventory.TryPlaceInEmptyLocation(
-            BackpackLocationKind.Storage,
-            TestStoredBagStorageSlot,
-            bag,
-            out string error))
-        {
-            GD.PushError($"Could not seed the 28A5 stored test bag: {error}");
-        }
+    private static bool RejectFilteredDrop(
+        ItemSlotView destination,
+        ItemSlotView.SlotPurpose sourcePurpose,
+        ItemSlotView.SlotContent sourceContent,
+        int sourceSlotIndex,
+        string itemId,
+        long? stackId,
+        long? uniqueInstanceId)
+    {
+        return false;
     }
 
     /// <summary>
@@ -496,6 +470,47 @@ public partial class BackpackWindowController : Node
         slotView.DropValidator = CanAcceptBackpackDrop;
         slotView.DropRequested -= HandleBackpackDropRequested;
         slotView.DropRequested += HandleBackpackDropRequested;
+        slotView.SplitRequested -= HandleSplitRequested;
+        slotView.SplitRequested += HandleSplitRequested;
+        ItemTooltip.RegisterSlot(slotView);
+    }
+
+    private void HandleSplitRequested(ItemSlotView sourceView, long stackId)
+    {
+        if (sourceView.Purpose != ItemSlotView.SlotPurpose.Storage)
+            return;
+
+        BackpackItemState? item = GetStorageItem(sourceView.SlotIndex);
+        if (item is null || !item.IsStackable || item.StackId != stackId || item.Quantity < 2)
+        {
+            RefreshAllSlots();
+            return;
+        }
+
+        _pendingSplitSourceIndex = sourceView.SlotIndex;
+        _pendingSplitStackId = stackId;
+        StackSplitPopup.Open(item.DisplayName, item.Quantity);
+    }
+
+    private void HandleSplitConfirmed(int quantity)
+    {
+        int sourceIndex = _pendingSplitSourceIndex;
+        long stackId = _pendingSplitStackId;
+        _pendingSplitSourceIndex = -1;
+        _pendingSplitStackId = 0;
+
+        if (!Inventory.TrySplitStack(sourceIndex, stackId, quantity,
+            out int destinationIndex, out string error))
+        {
+            GD.PushWarning($"Stack split rejected: {error}");
+            RefreshAllSlots();
+            return;
+        }
+
+        RefreshAllSlots();
+        DebugLog.Print(
+            $"Split stack {stackId}: moved {quantity} from Storage[{sourceIndex}] " +
+            $"into new stack at Storage[{destinationIndex}].");
     }
 
     private bool CanAcceptBackpackDrop(
@@ -655,19 +670,24 @@ public partial class BackpackWindowController : Node
         BuildExpansionSlotViews();
 
         // QueueFree removes the old expansion controls at the end of the
-        // frame. Reset the Window afterward so Wrap Controls recalculates both
-        // growth and shrinkage from the Backpack's new minimum content size.
+        // frame. Resize the custom panel afterward so capacity changes still
+        // grow and shrink the Backpack in both directions.
         Callable.From(ResetBackpackWindowSize).CallDeferred();
     }
 
     private void ResetBackpackWindowSize()
     {
-        Window backpackWindow = BackpackRoot.GetWindow();
-
-        if (!GodotObject.IsInstanceValid(backpackWindow))
+        if (!GodotObject.IsInstanceValid(BackpackPanelRoot)
+            || !GodotObject.IsInstanceValid(BackpackRoot))
             return;
 
-        backpackWindow.ResetSize();
+        Vector2 contentMinimum = BackpackRoot.GetCombinedMinimumSize();
+        Vector2 panelMinimum = new(
+            contentMinimum.X,
+            contentMinimum.Y + CustomTitleBarHeight);
+
+        BackpackPanelRoot.CustomMinimumSize = panelMinimum;
+        BackpackPanelRoot.Size = panelMinimum;
     }
 
     private static void FreeContainerChildren(Control container)
@@ -727,7 +747,7 @@ public partial class BackpackWindowController : Node
         }
 
         slotView.SetItemTexture(item.IconTexture ?? FallbackItemIcon);
-        slotView.TooltipText = item.DisplayName;
+        slotView.TooltipText = string.Empty;
     }
 
     private static void CollectItemSlots(
@@ -762,6 +782,7 @@ public partial class BackpackWindowController : Node
     {
         bool valid = true;
 
+        valid &= Require(BackpackPanelRoot, nameof(BackpackPanelRoot));
         valid &= Require(BackpackRoot, nameof(BackpackRoot));
         valid &= Require(SearchEdit, nameof(SearchEdit));
         valid &= Require(ItemSlotScene, nameof(ItemSlotScene));
@@ -771,6 +792,8 @@ public partial class BackpackWindowController : Node
         valid &= Require(
             LowerExpansionGrid,
             nameof(LowerExpansionGrid));
+        valid &= Require(StackSplitPopup, nameof(StackSplitPopup));
+        valid &= Require(ItemTooltip, nameof(ItemTooltip));
         valid &= Require(GoldValueLabel, nameof(GoldValueLabel));
         valid &= Require(SilverValueLabel, nameof(SilverValueLabel));
         valid &= Require(CopperValueLabel, nameof(CopperValueLabel));
@@ -792,11 +815,4 @@ public partial class BackpackWindowController : Node
         return false;
     }
 
-    private static long BuildTestInstanceId(string itemId, int seedNumber)
-    {
-        return
-            280_200_000_000L +
-            seedNumber * 10_000_000_000L +
-            (uint)itemId.GetHashCode();
-    }
 }

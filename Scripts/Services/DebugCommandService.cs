@@ -18,6 +18,11 @@ public partial class DebugCommandService : Node
 		".kill partySlot <1-5>",
 		".testResource <hero_id> <mana|energy|rage|none> [spend]",
 		".useAbility <hero_id> <ability_id>",
+		".addItem <item_id> [quantity]",
+		".addCurrency <copper_amount>",
+		".spendCurrency <copper_amount>",
+		".saveInventory",
+		".loadInventory",
 		".spawnMonster <monster_id> [count]",
 		".addMonsters <count>",
 		".setMonsterCount <count>",
@@ -54,6 +59,15 @@ public partial class DebugCommandService : Node
 	/// </summary>
 	[Export]
 	public DebugConsoleController Console { get; set; } = null!;
+
+	[Export]
+	public ItemAcquisitionService ItemAcquisition { get; set; } = null!;
+
+	[Export]
+	public BackpackWindowController Backpack { get; set; } = null!;
+
+	[Export]
+	public InventoryPersistenceService InventoryPersistence { get; set; } = null!;
 
 	/// <summary>
 	/// Performs the input operation for Debug Command Service.
@@ -372,6 +386,8 @@ public partial class DebugCommandService : Node
 
 		AppendCommandReference(output);
 
+		AppendItemReference(output, ItemAcquisition.Registry);
+
 		HeroContentRegistry heroRegistry =
 			Party.Factory.Registry;
 
@@ -627,6 +643,9 @@ public partial class DebugCommandService : Node
 					&& completedTokens.Length > 1 =>
 					GetHeroAbilityIds(completedTokens[1]),
 
+				".additem" when argumentIndex == 0 =>
+					ItemAcquisition.Registry.GetRegisteredIds(),
+
 				".spawnmonster" when argumentIndex == 0 =>
 					Encounter.MonsterFactory.Registry
 						.GetRegisteredIds(),
@@ -850,6 +869,18 @@ public partial class DebugCommandService : Node
 		output.AppendLine(
 			"Press Tab / Shift+Tab to cycle command and ID " +
 			"completions.");
+	}
+
+	private static void AppendItemReference(
+		StringBuilder output,
+		ItemContentRegistry registry)
+	{
+		AppendSectionHeader(output, "ITEMS");
+		foreach (string contentId in GetSortedIds(registry.GetRegisteredIds()))
+		{
+			if (registry.TryGet(contentId, out ItemDefinition definition))
+				output.AppendLine($"{definition.ContentId} - {definition.DisplayName}");
+		}
 	}
 
 	/// <summary>
@@ -1529,6 +1560,21 @@ public partial class DebugCommandService : Node
 			".useability" =>
 				ExecuteUseAbility(parts),
 
+			".additem" =>
+				ExecuteAddItem(parts),
+
+			".addcurrency" =>
+				ExecuteCurrencyChange(parts, spend: false),
+
+			".spendcurrency" =>
+				ExecuteCurrencyChange(parts, spend: true),
+
+			".saveinventory" =>
+				parts.Length == 1 ? InventoryPersistence.Save() : "Usage: .saveInventory",
+
+			".loadinventory" =>
+				parts.Length == 1 ? InventoryPersistence.Load() : "Usage: .loadInventory",
+
 			".spawnmonster" or "monster.spawn" =>
 				ExecuteSpawnMonster(parts),
 
@@ -1554,6 +1600,43 @@ public partial class DebugCommandService : Node
 				$"Unknown command: {parts[0]}\n" +
                 "Type '.help' for available commands."
 		};
+	}
+
+	private string ExecuteAddItem(string[] parts)
+	{
+		if (parts.Length < 2 || parts.Length > 3)
+			return "Usage: .addItem <item_id> [quantity]";
+
+		int quantity = 1;
+		if (parts.Length == 3 && (!int.TryParse(parts[2], out quantity) || quantity < 1))
+			return "Quantity must be a positive whole number.";
+
+		ItemAcquisition.TryAcquire(parts[1], quantity, out string result);
+		return result;
+	}
+
+	private string ExecuteCurrencyChange(string[] parts, bool spend)
+	{
+		string command = spend ? ".spendCurrency" : ".addCurrency";
+		if (parts.Length != 2 ||
+			!long.TryParse(parts[1], NumberStyles.Integer,
+				CultureInfo.InvariantCulture, out long amount) ||
+			amount <= 0)
+		{
+			return $"Usage: {command} <positive_copper_amount>";
+		}
+
+		string error;
+		bool succeeded = spend
+			? Backpack.Currency.TrySpend(amount, out error)
+			: Backpack.Currency.TryAdd(amount, out error);
+
+		if (!succeeded)
+			return error;
+
+		return
+			$"{(spend ? "Spent" : "Added")} {amount} copper. " +
+			$"Balance={Backpack.Currency}.";
 	}
 
 	/// <summary>

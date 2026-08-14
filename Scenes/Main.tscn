@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://c6q0hofeka2rq" path="res://Assets/Enviornment/Ground/Questbar_Cobblestone_Ground_Deep_611x51.png" id="4_lfh1j"]
 [ext_resource type="PackedScene" uid="uid://2wrinnpuj3lv" path="res://Scenes/Debug/DebugConsoleWindow.tscn" id="5_erwvk"]
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
+[ext_resource type="PackedScene" uid="uid://gjgocnfbnihd" path="res://StackSplitPopup.tscn" id="5_tbeql"]
 [ext_resource type="Script" uid="uid://ccdcfymdch8h5" path="res://Scripts/Services/TargetingService.cs" id="6_frkhe"]
 [ext_resource type="Script" uid="uid://cxklmvye8ghgt" path="res://Scripts/Services/DebugCommandService.cs" id="7_h1m7h"]
 [ext_resource type="PackedScene" uid="uid://b1scwnwktr8ej" path="res://Scenes/UI/Character/CharacterWindow.tscn" id="7_yn2g2"]
@@ -21,6 +22,7 @@
 [ext_resource type="Script" uid="uid://bqkrhs8lutydd" path="res://Content/Registries/HeroContentRegistry.cs" id="9_vs04g"]
 [ext_resource type="Script" uid="uid://b38xxk3rax5nx" path="res://Scripts/Content/Definitions/HeroDefinition.cs" id="10_6ehlx"]
 [ext_resource type="Resource" path="res://Content/CombatStances/Core/stance.core.aggressive.tres" id="10_7sj7i"]
+[ext_resource type="PackedScene" uid="uid://cnnh3sqoviekv" path="res://Content/Items/Materials/Core/ItemTooltipWindow.tscn" id="10_52a0j"]
 [ext_resource type="Resource" uid="uid://cnylohmad3s8r" path="res://Content/Heroes/Core/hero.core.huntard.tres" id="11_6ehlx"]
 [ext_resource type="Script" uid="uid://ccuo54036wfjb" path="res://Controllers/EncounterController.cs" id="11_grg3l"]
 [ext_resource type="Resource" uid="uid://bnb4dy32spiuv" path="res://Content/Monsters/Core/monster.core.heavy_training_monster.tres" id="11_sxkr1"]
@@ -66,8 +68,13 @@
 [ext_resource type="Script" uid="uid://dphwrvuij0an5" path="res://Controllers/RegionRunController.cs" id="51_7sj7i"]
 [ext_resource type="Resource" uid="uid://d1ovf4dv10c4l" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_warrior_longsword.tres" id="51_nkjwg"]
 [ext_resource type="Resource" uid="uid://fgvs1onm3prx" path="res://Resources/Regions/TrainingRegion.tres" id="52_semxg"]
+[ext_resource type="Script" uid="uid://cnhn7m5bqds23" path="res://Content/Registries/ItemContentRegistry.cs" id="54_2wrh7"]
 [ext_resource type="Script" uid="uid://bi3msg7aodwjr" path="res://Controllers/IncapacitationChoicePopupController.cs" id="54_3133c"]
+[ext_resource type="Script" uid="uid://do6q8e6i0vdjs" path="res://Scripts/Content/Definitions/ItemDefinition.cs" id="55_atu2d"]
 [ext_resource type="Script" uid="uid://fgfei303hnli" path="res://Scripts/Services/CombatHitResolver.cs" id="56_vvjo1"]
+[ext_resource type="Script" uid="uid://bh3u4yli62qwn" path="res://Scripts/Services/ItemAcquisitionService.cs" id="57_atu2d"]
+[ext_resource type="Resource" uid="uid://0yhkm7tmeykh" path="res://Content/Items/Materials/Core/material.core.test_dust.tres" id="58_c5nnb"]
+[ext_resource type="Script" uid="uid://bm4k13q5itvi3" path="res://Scripts/Services/InventoryPersistenceService.cs" id="60_fsd2l"]
 [ext_resource type="Script" uid="uid://dej5wuxbbqnxm" path="res://Controllers/CharacterWindowController.cs" id="68_yic5e"]
 [ext_resource type="Script" uid="uid://dga8oqplnp0kh" path="res://Controllers/CharacterWindowCharacterTabController.cs" id="69_ex7s8"]
 [ext_resource type="Script" uid="uid://h4ns2qy3ejk1" path="res://Controllers/CharacterWindowEquipmentPanelController.cs" id="70_h2tpa"]
@@ -75,8 +82,15 @@
 [ext_resource type="Script" uid="uid://bqir4rruqxi24" path="res://Controllers/BackpackWindowController.cs" id="72_8n4h5"]
 [ext_resource type="Resource" uid="uid://byn6kray5xjaw" path="res://Content/Equipment/Bags/Core/bag.core.small_pouch.tres" id="74_as1io"]
 [ext_resource type="PackedScene" uid="uid://c7vhsd7xshavb" path="res://Scenes/UI/Items/ItemSlot.tscn" id="74_xd5mi"]
+[ext_resource type="Script" uid="uid://2wuht8hd3kjm" path="res://Controllers/StackSplitPopupController.cs" id="80_c5nnb"]
+[ext_resource type="Script" uid="uid://blbto2wpx4nt4" path="res://Controllers/ItemTooltipController.cs" id="84_mx20r"]
+[ext_resource type="Script" uid="uid://d0dowskxsjxqv" path="res://Controllers/PopupWindowFormationController.cs" id="85_mx20r"]
 
 [sub_resource type="Theme" id="Theme_d8m2u"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_52a0j"]
+bg_color = Color(0.06666667, 0.07450981, 0.09411765, 0.75686276)
+border_color = Color(0.4509804, 0.46666667, 0.5019608, 0.8509804)
 
 [node name="Main" type="Node" unique_id=644726071]
 
@@ -244,6 +258,30 @@ color = Color(0, 1, 1, 0.26666668)
 
 [node name="PopupWindows" type="Node" parent="." unique_id=165967780]
 
+[node name="StackSplitPopup" parent="PopupWindows" unique_id=290862077 instance=ExtResource("5_tbeql")]
+title = "Split Stack"
+initial_position = 2
+size = Vector2i(107, 100)
+visible = false
+wrap_controls = true
+unresizable = true
+maximize_disabled = true
+
+[node name="PromptLabel" parent="PopupWindows/StackSplitPopup/RootMargin/RootVBox" parent_id_path=PackedInt32Array(290862077, 885429226) index="0" unique_id=883728477]
+text = "Split Stack"
+
+[node name="QuantityInput" parent="PopupWindows/StackSplitPopup/RootMargin/RootVBox" parent_id_path=PackedInt32Array(290862077, 885429226) index="1" unique_id=637010466]
+update_on_text_changed = true
+
+[node name="ButtonRow" parent="PopupWindows/StackSplitPopup/RootMargin/RootVBox" parent_id_path=PackedInt32Array(290862077, 885429226) index="2" unique_id=839862620]
+alignment = 2
+
+[node name="CancelButton" parent="PopupWindows/StackSplitPopup/RootMargin/RootVBox/ButtonRow" index="0" unique_id=1163169954]
+text = "Cancel"
+
+[node name="ConfirmButton" parent="PopupWindows/StackSplitPopup/RootMargin/RootVBox/ButtonRow" index="1" unique_id=1808385076]
+text = "Split"
+
 [node name="WindowSettingsPopup" parent="PopupWindows" unique_id=1207381413 instance=ExtResource("1_rgh2o")]
 visible = false
 
@@ -397,7 +435,17 @@ tooltip_text = "Trinket"
 tooltip_text = "Trinket"
 
 [node name="BackpackWindow" parent="PopupWindows" unique_id=479665022 instance=ExtResource("8_as1io")]
-size = Vector2i(312, 310)
+offset_right = 312.0
+
+[node name="ItemTooltipWindow" parent="PopupWindows" unique_id=2033741815 instance=ExtResource("10_52a0j")]
+offset_right = 558.0
+
+[node name="ComparisonPanel" parent="PopupWindows/ItemTooltipWindow/RootMargin/TooltipRow" parent_id_path=PackedInt32Array(2033741815, 165033247) index="0" unique_id=704899939]
+theme_override_styles/panel = SubResource("StyleBoxFlat_52a0j")
+
+[node name="PopupFormationHost" type="Window" parent="PopupWindows" unique_id=1384746712]
+oversampling_override = 1.0
+visible = false
 
 [node name="Services" type="Node" parent="." unique_id=1409283487]
 
@@ -444,12 +492,15 @@ script = ExtResource("21_u7mjy")
 EncounterRegistry = NodePath("../EncounterContentRegistry")
 Definitions = Array[ExtResource("22_4yxf6")]([ExtResource("23_qta6b")])
 
-[node name="DebugCommandService" type="Node" parent="Services" unique_id=67226220 node_paths=PackedStringArray("Encounter", "Combat", "Party", "Console")]
+[node name="DebugCommandService" type="Node" parent="Services" unique_id=67226220 node_paths=PackedStringArray("Encounter", "Combat", "Party", "Console", "ItemAcquisition", "Backpack", "InventoryPersistence")]
 script = ExtResource("7_h1m7h")
 Encounter = NodePath("../../Controllers/EncounterController")
 Combat = NodePath("../../Controllers/CombatController")
 Party = NodePath("../../Controllers/PartyController")
 Console = NodePath("../../PopupWindows/DebugConsoleWindow")
+ItemAcquisition = NodePath("../ItemAcquisitionService")
+Backpack = NodePath("../../Controllers/BackpackWindowController")
+InventoryPersistence = NodePath("../InventoryPersistenceService")
 
 [node name="RewardLedgerService" type="Node" parent="Services" unique_id=1372524594]
 script = ExtResource("40_ep8v8")
@@ -464,6 +515,24 @@ GroundBottomBoundary = NodePath("../../RegionViewportContainer/RegionViewport/Sc
 [node name="WeaponContentRegistry" type="Node" parent="Services" unique_id=1270571163]
 script = ExtResource("45_1bbis")
 Definitions = Array[ExtResource("47_ex7s8")]([ExtResource("47_yic5e"), ExtResource("48_ex7s8"), ExtResource("49_4clwk"), ExtResource("50_h2tpa"), ExtResource("51_nkjwg")])
+
+[node name="ItemContentRegistry" type="Node" parent="Services" unique_id=317897893]
+script = ExtResource("54_2wrh7")
+Definitions = Array[ExtResource("55_atu2d")]([ExtResource("74_as1io"), ExtResource("48_ex7s8"), ExtResource("49_4clwk"), ExtResource("50_h2tpa"), ExtResource("47_yic5e"), ExtResource("51_nkjwg"), ExtResource("58_c5nnb")])
+
+[node name="ItemAcquisitionService" type="Node" parent="Services" unique_id=1238429487 node_paths=PackedStringArray("Registry", "Backpack", "Party")]
+script = ExtResource("57_atu2d")
+Registry = NodePath("../ItemContentRegistry")
+Backpack = NodePath("../../Controllers/BackpackWindowController")
+Party = NodePath("../../Controllers/PartyController")
+
+[node name="InventoryPersistenceService" type="Node" parent="Services" unique_id=1073064237 node_paths=PackedStringArray("Backpack", "Registry", "Party", "EquipmentPanel", "ItemAcquisition")]
+script = ExtResource("60_fsd2l")
+Backpack = NodePath("../../Controllers/BackpackWindowController")
+Registry = NodePath("../ItemContentRegistry")
+Party = NodePath("../../Controllers/PartyController")
+EquipmentPanel = NodePath("../../Controllers/CharacterWindowEquipmentPanelController")
+ItemAcquisition = NodePath("../ItemAcquisitionService")
 
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 
@@ -547,10 +616,11 @@ RewardLedger = NodePath("../../Services/RewardLedgerService")
 RegionPresentation = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/RegionPresentation")
 ActiveRegion = ExtResource("52_semxg")
 
-[node name="IncapacitationChoicePopupController" type="Node" parent="Controllers" unique_id=239960428 node_paths=PackedStringArray("RegionRun", "ChoiceWindow", "HeroNameLabel", "MessageLabel", "ReviveButton", "IncapacitateButton")]
+[node name="IncapacitationChoicePopupController" type="Node" parent="Controllers" unique_id=239960428 node_paths=PackedStringArray("RegionRun", "ChoiceWindow", "Formation", "HeroNameLabel", "MessageLabel", "ReviveButton", "IncapacitateButton")]
 script = ExtResource("54_3133c")
 RegionRun = NodePath("../RegionRunController")
 ChoiceWindow = NodePath("../../PopupWindows/IncapacitationChoiceWindow")
+Formation = NodePath("../PopupWindowFormationController")
 HeroNameLabel = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/HeroNameLabel")
 MessageLabel = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/MessageLabel")
 ReviveButton = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/ButtonRow/ReviveButton")
@@ -574,31 +644,61 @@ script = ExtResource("69_ex7s8")
 CharacterWindow = NodePath("../CharacterWindowController")
 CharacterTabRoot = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox")
 
-[node name="CharacterWindowEquipmentPanelController" type="Node" parent="Controllers" unique_id=1174856696 node_paths=PackedStringArray("CharacterWindow", "CharacterTabRoot", "Backpack")]
+[node name="CharacterWindowEquipmentPanelController" type="Node" parent="Controllers" unique_id=1174856696 node_paths=PackedStringArray("CharacterWindow", "CharacterTabRoot", "Backpack", "ItemTooltip")]
 script = ExtResource("70_h2tpa")
 CharacterWindow = NodePath("../CharacterWindowController")
 CharacterTabRoot = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character")
 Backpack = NodePath("../BackpackWindowController")
+ItemTooltip = NodePath("../ItemTooltipController")
 FallbackItemIcon = ExtResource("71_nkjwg")
 
-[node name="BackpackWindowController" type="Node" parent="Controllers" unique_id=1001288604 node_paths=PackedStringArray("BackpackRoot", "SearchEdit", "UpperExpansionColumns", "LowerExpansionGrid", "GoldValueLabel", "SilverValueLabel", "CopperValueLabel")]
+[node name="BackpackWindowController" type="Node" parent="Controllers" unique_id=1001288604 node_paths=PackedStringArray("BackpackPanelRoot", "BackpackRoot", "SearchEdit", "UpperExpansionColumns", "LowerExpansionGrid", "StackSplitPopup", "ItemTooltip", "GoldValueLabel", "SilverValueLabel", "CopperValueLabel")]
 script = ExtResource("72_8n4h5")
+BackpackPanelRoot = NodePath("../../PopupWindows/BackpackWindow")
 BackpackRoot = NodePath("../../PopupWindows/BackpackWindow/RootMargin")
 SearchEdit = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/SearchEdit")
 ItemSlotScene = ExtResource("74_xd5mi")
 UpperExpansionColumns = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/StorageArea/UpperStorageRow/UpperExpansionColumns")
 LowerExpansionGrid = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/StorageArea/LowerExpansionGrid")
 FallbackItemIcon = ExtResource("71_nkjwg")
-TestStartingItem = ExtResource("47_yic5e")
-TestSecondStartingItem = ExtResource("49_4clwk")
-TestStartingBag = ExtResource("74_as1io")
-TestStartingBagSlot = 3
-TestStoredBag = ExtResource("74_as1io")
+StackSplitPopup = NodePath("../StackSplitPopupController")
+ItemTooltip = NodePath("../ItemTooltipController")
 GoldValueLabel = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/CurrencyRow/GoldValue")
 SilverValueLabel = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/CurrencyRow/SilverValue")
 CopperValueLabel = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/CurrencyRow/CopperValue")
 
+[node name="StackSplitPopupController" type="Node" parent="Controllers" unique_id=626931148 node_paths=PackedStringArray("Popup", "PromptLabel", "QuantityInput", "ConfirmButton", "CancelButton")]
+script = ExtResource("80_c5nnb")
+Popup = NodePath("../../PopupWindows/StackSplitPopup")
+PromptLabel = NodePath("../../PopupWindows/StackSplitPopup/RootMargin/RootVBox/PromptLabel")
+QuantityInput = NodePath("../../PopupWindows/StackSplitPopup/RootMargin/RootVBox/QuantityInput")
+ConfirmButton = NodePath("../../PopupWindows/StackSplitPopup/RootMargin/RootVBox/ButtonRow/ConfirmButton")
+CancelButton = NodePath("../../PopupWindows/StackSplitPopup/RootMargin/RootVBox/ButtonRow/CancelButton")
+
+[node name="ItemTooltipController" type="Node" parent="Controllers" unique_id=493083567 node_paths=PackedStringArray("Backpack", "CharacterWindow", "FormationHost", "TooltipWindow", "ComparisonPanel", "ComparisonText", "HoveredText")]
+script = ExtResource("84_mx20r")
+Backpack = NodePath("../BackpackWindowController")
+CharacterWindow = NodePath("../CharacterWindowController")
+FormationHost = NodePath("../../PopupWindows/PopupFormationHost")
+TooltipWindow = NodePath("../../PopupWindows/ItemTooltipWindow")
+ComparisonPanel = NodePath("../../PopupWindows/ItemTooltipWindow/RootMargin/TooltipRow/ComparisonPanel")
+ComparisonText = NodePath("../../PopupWindows/ItemTooltipWindow/RootMargin/TooltipRow/ComparisonPanel/ComparisonMargin/ComparisonText")
+HoveredText = NodePath("../../PopupWindows/ItemTooltipWindow/RootMargin/TooltipRow/HoveredPanel/HoveredMargin/HoveredText")
+MouseOffset = Vector2i(15, 45)
+
+[node name="PopupWindowFormationController" type="Node" parent="Controllers" unique_id=97382793 node_paths=PackedStringArray("WindowHost", "FormationHost", "CharacterWindow", "BackpackWindow", "ItemTooltipPanel", "IncapacitationWindow")]
+script = ExtResource("85_mx20r")
+WindowHost = NodePath("../DesktopWindowHostController")
+FormationHost = NodePath("../../PopupWindows/PopupFormationHost")
+CharacterWindow = NodePath("../../PopupWindows/CharacterWindow")
+BackpackWindow = NodePath("../../PopupWindows/BackpackWindow")
+ItemTooltipPanel = NodePath("../../PopupWindows/ItemTooltipWindow")
+IncapacitationWindow = NodePath("../../PopupWindows/IncapacitationChoiceWindow")
+ManagementOffset = Vector2i(-8, 0)
+
+[editable path="PopupWindows/StackSplitPopup"]
 [editable path="PopupWindows/WindowSettingsPopup"]
 [editable path="PopupWindows/DebugConsoleWindow"]
 [editable path="PopupWindows/CharacterWindow"]
 [editable path="PopupWindows/BackpackWindow"]
+[editable path="PopupWindows/ItemTooltipWindow"]
