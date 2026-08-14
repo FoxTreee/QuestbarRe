@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://b1u1unxjnvcqm" path="res://Controllers/RegionPresentationController.cs" id="1_v1gob"]
 [ext_resource type="Script" uid="uid://exf22iqixcxv" path="res://Scripts/Services/JourneyStateService.cs" id="3_jw32o"]
 [ext_resource type="Script" uid="uid://qtqjk5w6ybmn" path="res://Controllers/WindowSettingsPanelController.cs" id="3_kln2b"]
+[ext_resource type="Script" uid="uid://ce1dcat8gcow5" path="res://Controllers/CombatCameraPanController.cs" id="3_rpc3w"]
 [ext_resource type="Texture2D" uid="uid://c6q0hofeka2rq" path="res://Assets/Enviornment/Ground/Questbar_Cobblestone_Ground_Deep_611x51.png" id="4_lfh1j"]
 [ext_resource type="PackedScene" uid="uid://2wrinnpuj3lv" path="res://Scenes/Debug/DebugConsoleWindow.tscn" id="5_erwvk"]
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
@@ -128,6 +129,16 @@ size = Vector2i(1152, 648)
 size_2d_override = Vector2i(800, 192)
 size_2d_override_stretch = true
 render_target_update_mode = 4
+
+[node name="CombatCameraPan" type="Camera2D" parent="RegionViewportContainer/RegionViewport" unique_id=963801010 node_paths=PackedStringArray("JourneyState", "Party", "TravelingGround")]
+position = Vector2(400, 96)
+script = ExtResource("3_rpc3w")
+CombatPanOffsetX = -200.0
+PanStartDelay = 0.6
+PanDuration = 3.25
+JourneyState = NodePath("../../../Services/JourneyStateService")
+Party = NodePath("../../../Controllers/PartyController")
+TravelingGround = NodePath("../ScalableWorld/GroundLayer/TravelingGround")
 
 [node name="BackgroundLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=186591288]
 z_index = -100
