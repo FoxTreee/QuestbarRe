@@ -1,0 +1,74 @@
+[gd_scene format=3 uid="uid://dmf5gyyvno2w7"]
+
+[ext_resource type="Texture2D" uid="uid://cn1el14logo4j" path="res://Assets/UI/Items/FallbackUnknownItemIcon.png" id="1_y8ohi"]
+[ext_resource type="Script" uid="uid://d1xioidtxccdm" path="res://Controllers/AnchoredPanelCloseButton.cs" id="2_acdow"]
+[ext_resource type="PackedScene" uid="uid://uwsky2rfe8pf" path="res://StonebannerHighlandsMap.tscn" id="3_acdow"]
+
+[node name="MapWindow" type="Panel" unique_id=1339367170]
+custom_minimum_size = Vector2(420, 797)
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="TitleBar" type="PanelContainer" parent="." unique_id=2104483478]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 36.0
+grow_horizontal = 2
+
+[node name="TitleMargin" type="MarginContainer" parent="TitleBar" unique_id=42101629]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="TitleRow" type="HBoxContainer" parent="TitleBar/TitleMargin" unique_id=1045423408]
+layout_mode = 2
+
+[node name="WindowIcon" type="TextureRect" parent="TitleBar/TitleMargin/TitleRow" unique_id=816640221]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RegionNameLabel" type="Label" parent="TitleBar/TitleMargin/TitleRow" unique_id=1776709554]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Stonebanner Highlands"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="TitleBar/TitleMargin/TitleRow" unique_id=1328892370 node_paths=PackedStringArray("PanelRoot")]
+custom_minimum_size = Vector2(28, 28)
+custom_maximum_size = Vector2(28, 28)
+layout_mode = 2
+icon = ExtResource("1_y8ohi")
+flat = true
+icon_alignment = 1
+expand_icon = true
+script = ExtResource("2_acdow")
+PanelRoot = NodePath("../../../..")
+
+[node name="MapMargin" type="MarginContainer" parent="." unique_id=1498288924]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 36.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="MapContentHost" type="Control" parent="MapMargin" unique_id=32474934]
+clip_contents = true
+layout_mode = 2
+
+[node name="StonebannerHighlandsMap" parent="MapMargin/MapContentHost" unique_id=869682675 instance=ExtResource("3_acdow")]
+layout_mode = 1
+
+[editable path="MapMargin/MapContentHost/StonebannerHighlandsMap"]

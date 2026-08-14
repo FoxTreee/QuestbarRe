@@ -11,6 +11,7 @@ public partial class DebugCommandService : Node
 		".help",
 		".status",
 		".statusTimers [on|off|toggle]",
+		".completeRegionExploration",
 		".clear",
 		".revive <hero_id>",
 		".reviveAll",
@@ -68,6 +69,12 @@ public partial class DebugCommandService : Node
 
 	[Export]
 	public InventoryPersistenceService InventoryPersistence { get; set; } = null!;
+
+	/// <summary>
+	/// Saved per-region Traveling time used by map fog and destination reveals.
+	/// </summary>
+	[Export]
+	public RegionExplorationService RegionExploration { get; set; } = null!;
 
 	/// <summary>
 	/// Performs the input operation for Debug Command Service.
@@ -251,6 +258,9 @@ public partial class DebugCommandService : Node
 			(DebugPresentationSettings.StatusEffectTimersVisible
 				? "ON"
 				: "OFF"));
+
+		if (GodotObject.IsInstanceValid(RegionExploration))
+			output.AppendLine(RegionExploration.BuildActiveRegionStatusText());
 
 		output.AppendLine();
 		output.AppendLine("Heroes:");
@@ -1240,6 +1250,12 @@ public partial class DebugCommandService : Node
 			"      .statusTimers on\n" +
 			"      .statusTimers toggle\n\n" +
 
+			".completeRegionExploration\n" +
+			"    Set the active region's saved Traveling time to its authored maximum.\n" +
+			"    Fog and destinations then reveal through the normal exploration system.\n" +
+			"    This is not a visual fog bypass and the resulting progress is saved.\n" +
+			"    Example: .completeRegionExploration\n\n" +
+
 			".clear\n" +
 			"    Clear visible console history without changing game state. Chainable with &&.\n" +
 			"    Examples:\n" +
@@ -1545,6 +1561,9 @@ public partial class DebugCommandService : Node
 			".statustimers" =>
 				ExecuteStatusTimers(parts),
 
+			".completeregionexploration" =>
+				ExecuteCompleteRegionExploration(parts),
+
 			".revive" =>
 				ExecuteReviveHero(parts),
 
@@ -1600,6 +1619,25 @@ public partial class DebugCommandService : Node
 				$"Unknown command: {parts[0]}\n" +
                 "Type '.help' for available commands."
 		};
+	}
+
+	/// <summary>
+	/// Completes the active region by setting its saved Traveling time to the
+	/// same authored maximum reached through ordinary idle exploration.
+	/// </summary>
+	private string ExecuteCompleteRegionExploration(string[] parts)
+	{
+		if (parts.Length != 1)
+			return "Usage: .completeRegionExploration";
+
+		if (!GodotObject.IsInstanceValid(RegionExploration))
+		{
+			return
+				"RegionExplorationService is not assigned to " +
+				"DebugCommandService.";
+		}
+
+		return RegionExploration.CompleteActiveRegionExploration();
 	}
 
 	private string ExecuteAddItem(string[] parts)

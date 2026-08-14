@@ -42,6 +42,15 @@ public partial class RegionDefinition : Resource
 	[Export(PropertyHint.Range, "1,100,1")]
 	public int MonsterGroupCount { get; set; } = 4;
 
+	[ExportCategory("Exploration")]
+
+	/// <summary>
+	/// Traveling-state seconds required to uncover the complete region map.
+	/// Combat and other Journey states do not advance this timer.
+	/// </summary>
+	[Export(PropertyHint.Range, "1,86400,1,suffix:s")]
+	public float FullExplorationTravelSeconds { get; set; } = 7200.0f;
+
 	[ExportCategory("Completion Reward")]
 	/// <summary>
 	/// Stable content identifier for completion reward; other systems use this value to find the same game data.
@@ -103,6 +112,13 @@ public partial class RegionDefinition : Resource
 		{
 			errors.Add(
 				$"{ContentId}: MonsterGroupCount must be " +
+				"greater than zero.");
+		}
+
+		if (FullExplorationTravelSeconds <= 0.0f)
+		{
+			errors.Add(
+				$"{ContentId}: FullExplorationTravelSeconds must be " +
 				"greater than zero.");
 		}
 

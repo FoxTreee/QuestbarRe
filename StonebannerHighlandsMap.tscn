@@ -1,0 +1,195 @@
+[gd_scene format=3 uid="uid://uwsky2rfe8pf"]
+
+[ext_resource type="Texture2D" uid="uid://165c6uikucyx" path="res://StoneBannerRegionMap.png" id="1_lmheg"]
+[ext_resource type="PackedScene" uid="uid://dmu7tld80u3wq" path="res://RegionMapNode.tscn" id="2_1bcxu"]
+[ext_resource type="Shader" uid="uid://bv6iikrotsexa" path="res://Shaders/RegionMapFog.gdshader" id="3_e8v56"]
+[ext_resource type="Script" uid="uid://cqe1nohjrgtdj" path="res://Controllers/RegionMapFogRevealArea.cs" id="4_e8v56"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4ecod"]
+shader = ExtResource("3_e8v56")
+shader_parameter/fog_color = Color(0.025, 0.03, 0.04, 0.97)
+shader_parameter/map_size = Vector2(404, 745)
+shader_parameter/edge_variation_pixels = 4.0
+shader_parameter/reveal_count = 0
+shader_parameter/reveal_centers = PackedVector2Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/reveal_radii = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/reveal_feathers = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+[node name="StonebannerHighlandsMap" type="Control" unique_id=869682675]
+clip_contents = true
+layout_mode = 3
+anchors_preset = 0
+offset_right = 404.0
+offset_bottom = 745.0
+
+[node name="MapArt" type="TextureRect" parent="." unique_id=220913494]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_lmheg")
+expand_mode = 1
+
+[node name="DestinationLayer" type="Control" parent="." unique_id=1923666376]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StartingLocation" parent="DestinationLayer" unique_id=357066327 instance=ExtResource("2_1bcxu")]
+layout_mode = 0
+offset_left = 175.0
+offset_top = 681.0
+offset_right = 219.0
+offset_bottom = 725.0
+tooltip_text = "Bandits Hideaway (StartingLocation)"
+NodeContentId = "map_node.stonebanner_highlands.warrior_start"
+NodeType = 0
+
+[node name="HorsethiefHideout" parent="DestinationLayer" unique_id=57733449 instance=ExtResource("2_1bcxu")]
+layout_mode = 0
+offset_left = 90.0
+offset_top = 320.0
+offset_right = 134.0
+offset_bottom = 364.0
+tooltip_text = "Horsethief Hideout (Subregion)"
+NodeContentId = "map_node.stonebanner_highlands.horsethief_hideout"
+DisplayName = "Horsethief Hideout"
+RevealAtTravelSeconds = 1200.0
+
+[node name="AbandonedMine" parent="DestinationLayer" unique_id=1118075603 instance=ExtResource("2_1bcxu")]
+layout_mode = 0
+offset_left = 249.0
+offset_top = 294.0
+offset_right = 293.0
+offset_bottom = 338.0
+tooltip_text = "Abandoned Mine (Subregion)"
+NodeContentId = "map_node.stonebanner_highlands.abandoned_mine"
+DisplayName = "Abandoned Mine"
+RevealAtTravelSeconds = 2400.0
+
+[node name="PiratesCove" parent="DestinationLayer" unique_id=1556288106 instance=ExtResource("2_1bcxu")]
+layout_mode = 0
+offset_left = 99.0
+offset_top = 182.0
+offset_right = 143.0
+offset_bottom = 226.0
+tooltip_text = "Pirate's Cove (Subregion)"
+NodeContentId = "map_node.stonebanner_highlands.pirates_cove"
+DisplayName = "Pirate's Cove"
+RevealAtTravelSeconds = 3600.0
+
+[node name="WestGateway" parent="DestinationLayer" unique_id=171004283 instance=ExtResource("2_1bcxu")]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 510.0
+offset_right = 52.0
+offset_bottom = 554.0
+tooltip_text = "Bandits Hideaway (RegionGateway)"
+NodeType = 4
+RevealAtTravelSeconds = 4800.0
+
+[node name="EastGateway" parent="DestinationLayer" unique_id=1211622618 instance=ExtResource("2_1bcxu")]
+layout_mode = 0
+offset_left = 325.0
+offset_top = 515.0
+offset_right = 369.0
+offset_bottom = 559.0
+tooltip_text = "Bandits Hideaway (RegionGateway)"
+NodeType = 4
+RevealAtTravelSeconds = 6000.0
+
+[node name="StonebannerTown" parent="DestinationLayer" unique_id=1053079453 instance=ExtResource("2_1bcxu")]
+layout_mode = 0
+offset_left = 185.0
+offset_top = 57.0
+offset_right = 229.0
+offset_bottom = 101.0
+tooltip_text = "Stone (Town)"
+NodeContentId = "map_node.stonebanner_highlands.stonebanner_town"
+DisplayName = "Stone"
+NodeType = 3
+RevealAtTravelSeconds = 7200.0
+
+[node name="FogOverlay" type="ColorRect" parent="." unique_id=814935618]
+visible = false
+material = SubResource("ShaderMaterial_4ecod")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="RevealAreas" type="Node2D" parent="." unique_id=2140902960]
+
+[node name="Node2D" type="Node2D" parent="RevealAreas" unique_id=945527461]
+position = Vector2(198, 697)
+script = ExtResource("4_e8v56")
+GrowDurationSeconds = 0.0
+RadiusPixels = 137.0
+FeatherPixels = 38.0
+
+[node name="Node2D2" type="Node2D" parent="RevealAreas" unique_id=1271661118]
+position = Vector2(305, 531)
+script = ExtResource("4_e8v56")
+RevealAtTravelSeconds = 300.0
+GrowDurationSeconds = 200.0
+
+[node name="Node2D3" type="Node2D" parent="RevealAreas" unique_id=1013647199]
+position = Vector2(208, 463)
+script = ExtResource("4_e8v56")
+RevealAtTravelSeconds = 1200.0
+GrowDurationSeconds = 300.0
+RadiusPixels = 107.0
+FeatherPixels = 38.0
+
+[node name="Node2D4" type="Node2D" parent="RevealAreas" unique_id=1143864746]
+position = Vector2(125, 337)
+script = ExtResource("4_e8v56")
+RevealAtTravelSeconds = 2400.0
+GrowDurationSeconds = 300.0
+FeatherPixels = 38.0
+
+[node name="Node2D5" type="Node2D" parent="RevealAreas" unique_id=1483445564]
+position = Vector2(250, 336)
+script = ExtResource("4_e8v56")
+RevealAtTravelSeconds = 3600.0
+GrowDurationSeconds = 300.0
+FeatherPixels = 38.0
+
+[node name="Node2D6" type="Node2D" parent="RevealAreas" unique_id=1909364733]
+position = Vector2(164, 221)
+script = ExtResource("4_e8v56")
+RevealAtTravelSeconds = 4800.0
+GrowDurationSeconds = 300.0
+FeatherPixels = 38.0
+
+[node name="Node2D7" type="Node2D" parent="RevealAreas" unique_id=1064760138]
+position = Vector2(283, 183)
+script = ExtResource("4_e8v56")
+RevealAtTravelSeconds = 6000.0
+GrowDurationSeconds = 300.0
+FeatherPixels = 38.0
+
+[node name="Node2D8" type="Node2D" parent="RevealAreas" unique_id=9756961]
+position = Vector2(212, 55)
+script = ExtResource("4_e8v56")
+RevealAtTravelSeconds = 7200.0
+GrowDurationSeconds = 300.0
+RadiusPixels = 102.0
+FeatherPixels = 38.0
+
+[node name="Node2D9" type="Node2D" parent="RevealAreas" unique_id=1639381489]
+position = Vector2(78, 476)
+script = ExtResource("4_e8v56")
+RevealAtTravelSeconds = 7200.0
+GrowDurationSeconds = 300.0
+RadiusPixels = 117.0
+FeatherPixels = 38.0
