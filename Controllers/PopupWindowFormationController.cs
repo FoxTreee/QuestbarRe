@@ -71,6 +71,14 @@ public partial class PopupWindowFormationController : Node
     [Export]
     public Vector2I IncapacitationOffset { get; set; } = Vector2I.Zero;
 
+    /// <summary>
+    /// Maximum number of four-slot columns that Backpack may add beside its
+    /// authored 4x4 storage grid. Reserved invisibly by the native host so bag
+    /// changes never reposition Character.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,8,1")]
+    public int ReservedBackpackExpansionColumns { get; set; } = 4;
+
     [ExportCategory("Formation Lock")]
 
     /// <summary>
@@ -87,6 +95,7 @@ public partial class PopupWindowFormationController : Node
     private bool _anchorsInitialized;
     private bool _lastCharacterVisible;
     private bool _lastBackpackVisible;
+    private Rect2I? _lastMouseInputRegion;
 
     /// <summary>
     /// Subscribes to host placement and window-size changes, then applies the
@@ -103,6 +112,9 @@ public partial class PopupWindowFormationController : Node
         WindowHost.WindowPlacementApplied += ApplyFormation;
         CharacterWindow.Resized += ApplyManagementFormation;
         BackpackWindow.Resized += ApplyManagementFormation;
+        CharacterWindow.VisibilityChanged += ApplyManagementFormation;
+        BackpackWindow.VisibilityChanged += ApplyManagementFormation;
+        FormationHost.WindowInput += OnFormationHostWindowInput;
 
         Callable.From(ApplyFormation).CallDeferred();
     }
@@ -116,11 +128,70 @@ public partial class PopupWindowFormationController : Node
             WindowHost.WindowPlacementApplied -= ApplyFormation;
 
         if (GodotObject.IsInstanceValid(CharacterWindow))
+        {
             CharacterWindow.Resized -= ApplyManagementFormation;
+            CharacterWindow.VisibilityChanged -= ApplyManagementFormation;
+        }
 
         if (GodotObject.IsInstanceValid(BackpackWindow))
+        {
             BackpackWindow.Resized -= ApplyManagementFormation;
+            BackpackWindow.VisibilityChanged -= ApplyManagementFormation;
+        }
 
+        if (GodotObject.IsInstanceValid(FormationHost))
+            FormationHost.WindowInput -= OnFormationHostWindowInput;
+
+    }
+
+    /// <summary>
+    /// Provides temporary keyboard access to the management panels until the
+    /// Questbar game-window buttons are authored.
+    /// </summary>
+    public override void _UnhandledKeyInput(InputEvent @event)
+    {
+        TryHandleManagementShortcut(@event, GetViewport().GuiGetFocusOwner());
+    }
+
+    private void OnFormationHostWindowInput(InputEvent @event)
+    {
+        if (TryHandleManagementShortcut(
+                @event,
+                FormationHost.GuiGetFocusOwner()))
+        {
+            FormationHost.SetInputAsHandled();
+        }
+    }
+
+    private bool TryHandleManagementShortcut(
+        InputEvent @event,
+        Control? focusOwner)
+    {
+        if (@event is not InputEventKey keyEvent
+            || !keyEvent.Pressed
+            || keyEvent.Echo
+            || keyEvent.CtrlPressed
+            || keyEvent.AltPressed
+            || keyEvent.ShiftPressed
+            || focusOwner is LineEdit
+            || focusOwner is TextEdit)
+        {
+            return false;
+        }
+
+        Control? panel = keyEvent.Keycode switch
+        {
+            Key.I => BackpackWindow,
+            Key.C => CharacterWindow,
+            _ => null
+        };
+
+        if (panel is null)
+            return false;
+
+        panel.Visible = !panel.Visible;
+        ApplyManagementFormation();
+        return true;
     }
 
     /// <summary>
@@ -130,6 +201,8 @@ public partial class PopupWindowFormationController : Node
     /// </summary>
     public override void _Process(double delta)
     {
+        UpdateMousePassthroughRegion();
+
         if (ReferencesAreUsable()
             && (_lastCharacterVisible != CharacterWindow.Visible
                 || _lastBackpackVisible != BackpackWindow.Visible))
@@ -191,6 +264,9 @@ public partial class PopupWindowFormationController : Node
             Mathf.RoundToInt(BackpackWindow.Size.X),
             Mathf.RoundToInt(BackpackWindow.Size.Y));
 
+        int reservedBackpackWidth = GetReservedBackpackWidth(
+            backpackSize.X);
+
         int characterX =
             questbarWindow.Position.X
             + questbarWindow.Size.X
@@ -213,6 +289,11 @@ public partial class PopupWindowFormationController : Node
             - WindowGap
             - backpackSize.X;
 
+        int reservedBackpackX =
+            characterPosition.X
+            - WindowGap
+            - reservedBackpackWidth;
+
         Vector2I backpackPosition = ClampToArea(
             new Vector2I(backpackX, characterPosition.Y),
             backpackSize,
@@ -221,24 +302,24 @@ public partial class PopupWindowFormationController : Node
         _lastCharacterVisible = CharacterWindow.Visible;
         _lastBackpackVisible = BackpackWindow.Visible;
 
-        bool characterParticipates = CharacterWindow.Visible;
-        bool backpackParticipates = BackpackWindow.Visible;
+        bool anyManagementPanelVisible =
+            CharacterWindow.Visible || BackpackWindow.Visible;
 
-        if (!characterParticipates && !backpackParticipates)
+        if (!anyManagementPanelVisible)
         {
             FormationHost.Hide();
             return;
         }
 
-        Rect2I visibleBounds = characterParticipates
-            ? new Rect2I(characterPosition, characterSize)
-            : new Rect2I(backpackPosition, backpackSize);
-
-        if (characterParticipates && backpackParticipates)
-        {
-            visibleBounds = visibleBounds.Merge(
-                new Rect2I(backpackPosition, backpackSize));
-        }
+        // Reserve the complete management formation whenever either panel is
+        // open. Toggling Backpack can then show or hide only its child Control
+        // without moving/resizing the native host underneath Character.
+        Rect2I visibleBounds = new Rect2I(
+            characterPosition,
+            characterSize).Merge(
+                new Rect2I(
+                    new Vector2I(reservedBackpackX, backpackPosition.Y),
+                    new Vector2I(reservedBackpackWidth, backpackSize.Y)));
 
         _formationHostAnchor = visibleBounds.Position;
         FormationHost.CurrentScreen = questbarWindow.CurrentScreen;
@@ -251,10 +332,143 @@ public partial class PopupWindowFormationController : Node
         CharacterWindow.Position = _characterAnchor;
         BackpackWindow.Position = _backpackAnchor;
 
+        _lastMouseInputRegion = null;
+        UpdateMousePassthroughRegion();
+
         if (!FormationHost.Visible)
             FormationHost.Show();
 
         _anchorsInitialized = true;
+    }
+
+    /// <summary>
+    /// Restricts native mouse input to visible Questbar panels while allowing
+    /// clicks in the host's reserved transparent space to reach desktop apps.
+    /// During item dragging the full host remains active so previews and drop
+    /// validation can cross freely between Backpack and Character.
+    /// </summary>
+    private void UpdateMousePassthroughRegion()
+    {
+        if (!ReferencesAreUsable() || !FormationHost.Visible)
+            return;
+
+        Rect2I inputRegion;
+        if (FormationHost.GuiIsDragging())
+        {
+            inputRegion = new Rect2I(Vector2I.Zero, FormationHost.Size);
+        }
+        else
+        {
+            bool hasRegion = false;
+            inputRegion = new Rect2I();
+
+            IncludeVisibleControl(
+                CharacterWindow,
+                ref inputRegion,
+                ref hasRegion);
+            IncludeVisibleControl(
+                BackpackWindow,
+                ref inputRegion,
+                ref hasRegion);
+            IncludeVisibleControl(
+                ItemTooltipPanel,
+                ref inputRegion,
+                ref hasRegion);
+
+            if (!hasRegion)
+                return;
+        }
+
+        if (_lastMouseInputRegion.HasValue
+            && _lastMouseInputRegion.Value == inputRegion)
+        {
+            return;
+        }
+
+        _lastMouseInputRegion = inputRegion;
+        Vector2 topLeft = new(
+            inputRegion.Position.X,
+            inputRegion.Position.Y);
+        Vector2 topRight = new(inputRegion.End.X, inputRegion.Position.Y);
+        Vector2 bottomRight = new(inputRegion.End.X, inputRegion.End.Y);
+        Vector2 bottomLeft = new(inputRegion.Position.X, inputRegion.End.Y);
+
+        FormationHost.MousePassthroughPolygon = new[]
+        {
+            topLeft,
+            topRight,
+            bottomRight,
+            bottomLeft
+        };
+    }
+
+    private static void IncludeVisibleControl(
+        Control control,
+        ref Rect2I region,
+        ref bool hasRegion)
+    {
+        if (!control.Visible)
+            return;
+
+        Rect2I controlRect = new(
+            new Vector2I(
+                Mathf.RoundToInt(control.Position.X),
+                Mathf.RoundToInt(control.Position.Y)),
+            new Vector2I(
+                Mathf.RoundToInt(control.Size.X),
+                Mathf.RoundToInt(control.Size.Y)));
+
+        region = hasRegion ? region.Merge(controlRect) : controlRect;
+        hasRegion = true;
+    }
+
+    /// <summary>
+    /// Calculates Backpack's fully expanded horizontal footprint from its
+    /// live generated columns and authored item-slot sizing.
+    /// </summary>
+    private int GetReservedBackpackWidth(int currentWidth)
+    {
+        HBoxContainer? expansionColumns =
+            BackpackWindow.FindChild(
+                "UpperExpansionColumns",
+                true,
+                false) as HBoxContainer;
+
+        if (!GodotObject.IsInstanceValid(expansionColumns))
+            return currentWidth;
+
+        int currentColumnCount = expansionColumns!.GetChildCount();
+        int missingColumnCount = Mathf.Max(
+            0,
+            ReservedBackpackExpansionColumns - currentColumnCount);
+
+        if (missingColumnCount == 0)
+            return currentWidth;
+
+        ItemSlotView? sampleSlot = BackpackWindow.FindChild(
+            "InventorySlot1",
+            true,
+            false) as ItemSlotView;
+
+        int columnWidth = GodotObject.IsInstanceValid(sampleSlot)
+            ? Mathf.CeilToInt(sampleSlot!.GetCombinedMinimumSize().X)
+            : 52;
+
+        int columnSeparation = expansionColumns.GetThemeConstant(
+            "separation");
+
+        // When no expansion column exists yet, account for the separation
+        // that appears between the authored grid and the first new column.
+        int firstColumnSeparation = currentColumnCount == 0
+            && expansionColumns.GetParent() is Container upperStorageRow
+                ? upperStorageRow.GetThemeConstant("separation")
+                : 0;
+
+        return currentWidth
+            + firstColumnSeparation
+            + missingColumnCount * columnWidth
+            + Mathf.Max(0, missingColumnCount - (currentColumnCount == 0 ? 1 : 0))
+                * columnSeparation;
     }
 
     /// <summary>

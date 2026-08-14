@@ -24,6 +24,7 @@ public partial class ItemTooltipController : Node
 
     private readonly HashSet<ItemSlotView> _registered = new();
     private ItemSlotView? _hoveredSlot;
+    private bool _dragWasActive;
 
     public override void _Ready()
     {
@@ -36,6 +37,28 @@ public partial class ItemTooltipController : Node
         // has completed so their hover subscriptions cannot depend on scene
         // or controller startup order.
         Callable.From(RegisterExistingSlots).CallDeferred();
+        SetProcess(true);
+    }
+
+    public override void _Process(double delta)
+    {
+        bool dragging = FormationHost.GuiIsDragging();
+        if (dragging)
+        {
+            _dragWasActive = true;
+            TooltipWindow.Hide();
+            return;
+        }
+
+        if (!_dragWasActive)
+            return;
+
+        _dragWasActive = false;
+        ItemSlotView? slot = FindItemSlot(
+            FormationHost.GuiGetHoveredControl());
+
+        if (slot is not null && _registered.Contains(slot))
+            ShowForSlot(slot);
     }
 
     public override void _ExitTree()
@@ -80,10 +103,16 @@ public partial class ItemTooltipController : Node
 
     private void ShowForSlot(ItemSlotView slot)
     {
+        _hoveredSlot = slot;
+        if (FormationHost.GuiIsDragging())
+        {
+            TooltipWindow.Hide();
+            return;
+        }
+
         BackpackItemState? hovered = ResolveItem(slot);
         if (hovered is null) { TooltipWindow.Hide(); return; }
 
-        _hoveredSlot = slot;
         HoveredText.Text = BuildTooltip(hovered, false);
 
         BackpackItemState? equipped = ResolveComparison(hovered);
@@ -270,5 +299,19 @@ public partial class ItemTooltipController : Node
 
         foreach (Node child in parent.GetChildren())
             SetMouseIgnoreRecursively(child);
+    }
+
+    private static ItemSlotView? FindItemSlot(Control? control)
+    {
+        Node? current = control;
+        while (current is not null)
+        {
+            if (current is ItemSlotView slot)
+                return slot;
+
+            current = current.GetParent();
+        }
+
+        return null;
     }
 }

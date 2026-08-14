@@ -124,6 +124,14 @@ public partial class ItemSlotView :
         );
 
     /// <summary>
+    /// Tint applied to the dragged item while it is not above a destination
+    /// that can accept it.
+    /// </summary>
+    [Export]
+    public Color InvalidDragTintColor { get; set; } =
+        new Color(1.0f, 0.3f, 0.3f, 1.0f);
+
+    /// <summary>
     /// Optional artwork shown while this slot is empty.
     /// Character equipment slots will eventually receive these textures from
     /// a shared visual catalog rather than owning copied artwork.
@@ -230,10 +238,13 @@ public partial class ItemSlotView :
         _snapTween;
 
     private bool _dragStartedByThisSlot;
+    private CanvasItem? _dragPreviewIcon;
+    private ItemSlotView? _highlightedDropTarget;
 
     private TextureRect? _emptySlotIcon;
     private TextureRect? _itemIcon;
     private Label? _quantityLabel;
+    private static Texture2D? _forbiddenCursorTexture;
 
     // ---------------------------------------------------------
     // Godot lifecycle
@@ -253,6 +264,8 @@ public partial class ItemSlotView :
     {
         MouseFilter =
             MouseFilterEnum.Stop;
+
+        InstallForbiddenArrowCursor();
 
         _emptySlotIcon =
             GetNodeOrNull<TextureRect>(
@@ -322,6 +335,10 @@ public partial class ItemSlotView :
         }
         _dragStartedByThisSlot =
             false;
+
+        ClearTrackedDropTarget();
+        _dragPreviewIcon = null;
+
         Viewport viewport =
             GetViewport();
         if (viewport.GuiIsDragSuccessful())
@@ -357,6 +374,12 @@ public partial class ItemSlotView :
     public override void _Process(
         double delta)
     {
+        if (_dragStartedByThisSlot)
+        {
+            UpdateDragFeedback();
+            return;
+        }
+
         if (!_pressActive)
         {
             SetProcess(
@@ -781,10 +804,14 @@ public partial class ItemSlotView :
         CancelPendingDrag();
         _dragStartedByThisSlot =
             true;
+
+        HoverEnded?.Invoke(this);
+
         ForceDrag(
             dragData,
             dragPreview
         );
+        SetProcess(true);
     }
 
     // Creates drag data for the reusable item-slot visuals, drag state, and input events.
@@ -835,7 +862,9 @@ public partial class ItemSlotView :
             new()
             {
                 MouseFilter =
-                    MouseFilterEnum.Ignore
+                    MouseFilterEnum.Ignore,
+                ZIndex = 4096,
+                ZAsRelative = false
             };
         Texture2D? texture =
             currentIcon?.Texture;
@@ -886,10 +915,126 @@ public partial class ItemSlotView :
                     currentIcon?.TextureFilter ??
                     CanvasItem.TextureFilterEnum.Nearest
             };
+        previewIcon.Modulate = InvalidDragTintColor;
+        _dragPreviewIcon = previewIcon;
         previewRoot.AddChild(
             previewIcon
         );
         return previewRoot;
+    }
+
+    /// <summary>
+    /// Keeps the preview red over invalid space and preserves the highlight on
+    /// the one item slot that can currently accept the dragged item.
+    /// </summary>
+    private void UpdateDragFeedback()
+    {
+        ItemSlotView? target = FindItemSlot(
+            GetViewport().GuiGetHoveredControl());
+
+        bool valid = target is not null && target.CanAcceptDrop(
+            Purpose,
+            Content,
+            SlotIndex,
+            ItemId,
+            StackId,
+            UniqueInstanceId);
+
+        if (!ReferenceEquals(target, _highlightedDropTarget))
+            ClearTrackedDropTarget();
+
+        if (valid && target is not null)
+        {
+            _highlightedDropTarget = target;
+            target.SetDropHighlight(true);
+        }
+
+        if (GodotObject.IsInstanceValid(_dragPreviewIcon))
+            _dragPreviewIcon!.Modulate = valid
+                ? Colors.White
+                : InvalidDragTintColor;
+    }
+
+    private void ClearTrackedDropTarget()
+    {
+        if (GodotObject.IsInstanceValid(_highlightedDropTarget))
+            _highlightedDropTarget!.SetDropHighlight(false);
+
+        _highlightedDropTarget = null;
+    }
+
+    private static ItemSlotView? FindItemSlot(Control? control)
+    {
+        Node? current = control;
+        while (current is not null)
+        {
+            if (current is ItemSlotView slot)
+                return slot;
+
+            current = current.GetParent();
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Replaces only Godot's forbidden cursor artwork with an arrow. Godot may
+    /// still change cursor state during drag validation, but valid and invalid
+    /// states now look consistent while the item tint communicates validity.
+    /// </summary>
+    private static void InstallForbiddenArrowCursor()
+    {
+        if (_forbiddenCursorTexture is null)
+        {
+            string[] pixels =
+            {
+                "K...............",
+                "KW..............",
+                "KWW.............",
+                "KWWW............",
+                "KWWWW...........",
+                "KWWWWW..........",
+                "KWWWWWW.........",
+                "KWWWWWWW........",
+                "KWWWWWWWW.......",
+                "KWWWWKKKKK......",
+                "KWWWK...........",
+                "KWWK.K..........",
+                "KWK..K..........",
+                "KK...K..........",
+                "K....K..........",
+                ".....K.........."
+            };
+
+            Image image = Image.CreateEmpty(
+                16,
+                pixels.Length,
+                false,
+                Image.Format.Rgba8);
+
+            for (int y = 0; y < pixels.Length; y++)
+            {
+                for (int x = 0; x < pixels[y].Length; x++)
+                {
+                    image.SetPixel(
+                        x,
+                        y,
+                        pixels[y][x] switch
+                        {
+                            'K' => Colors.Black,
+                            'W' => Colors.White,
+                            _ => Colors.Transparent
+                        });
+                }
+            }
+
+            _forbiddenCursorTexture = ImageTexture.CreateFromImage(image);
+        }
+
+        Input.SetCustomMouseCursor(
+            _forbiddenCursorTexture,
+            Input.CursorShape.Forbidden,
+            Vector2.Zero);
     }
 
     // ---------------------------------------------------------
