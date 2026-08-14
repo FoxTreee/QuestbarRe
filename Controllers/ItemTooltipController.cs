@@ -23,7 +23,10 @@ public partial class ItemTooltipController : Node
     [Export] public Vector2I MouseOffset { get; set; } = new(18, 18);
 
     private readonly HashSet<ItemSlotView> _registered = new();
+    private readonly HashSet<RegionMapNodeController> _registeredMapNodes =
+        new();
     private ItemSlotView? _hoveredSlot;
+    private RegionMapNodeController? _hoveredMapNode;
     private bool _dragWasActive;
 
     public override void _Ready()
@@ -58,7 +61,10 @@ public partial class ItemTooltipController : Node
             FormationHost.GuiGetHoveredControl());
 
         if (slot is not null && _registered.Contains(slot))
+        {
             ShowForSlot(slot);
+            return;
+        }
     }
 
     public override void _ExitTree()
@@ -71,6 +77,16 @@ public partial class ItemTooltipController : Node
             slot.HoverStarted -= ShowForSlot;
             slot.HoverEnded -= HideForSlot;
         }
+
+        foreach (RegionMapNodeController mapNode in _registeredMapNodes)
+        {
+            if (!GodotObject.IsInstanceValid(mapNode))
+                continue;
+
+            mapNode.HoverStarted -= ShowForMapNode;
+            mapNode.HoverEnded -= HideForMapNode;
+            mapNode.ActionTooltipChanged -= RefreshForMapNode;
+        }
     }
 
     public void RegisterSlot(ItemSlotView slot)
@@ -78,6 +94,16 @@ public partial class ItemTooltipController : Node
         if (!_registered.Add(slot)) return;
         slot.HoverStarted += ShowForSlot;
         slot.HoverEnded += HideForSlot;
+    }
+
+    public void RegisterMapNode(RegionMapNodeController mapNode)
+    {
+        if (!_registeredMapNodes.Add(mapNode))
+            return;
+
+        mapNode.HoverStarted += ShowForMapNode;
+        mapNode.HoverEnded += HideForMapNode;
+        mapNode.ActionTooltipChanged += RefreshForMapNode;
     }
 
     /// <summary>
@@ -97,6 +123,9 @@ public partial class ItemTooltipController : Node
             if (child is ItemSlotView slot)
                 RegisterSlot(slot);
 
+            if (child is RegionMapNodeController mapNode)
+                RegisterMapNode(mapNode);
+
             RegisterSlotsRecursively(child);
         }
     }
@@ -104,6 +133,7 @@ public partial class ItemTooltipController : Node
     private void ShowForSlot(ItemSlotView slot)
     {
         _hoveredSlot = slot;
+        _hoveredMapNode = null;
         if (FormationHost.GuiIsDragging())
         {
             TooltipWindow.Hide();
@@ -130,6 +160,42 @@ public partial class ItemTooltipController : Node
         if (!ReferenceEquals(slot, _hoveredSlot)) return;
         _hoveredSlot = null;
         TooltipWindow.Hide();
+    }
+
+    private void ShowForMapNode(RegionMapNodeController mapNode)
+    {
+        _hoveredMapNode = mapNode;
+        _hoveredSlot = null;
+
+        if (FormationHost.GuiIsDragging()
+            || string.IsNullOrWhiteSpace(mapNode.ActionTooltipText))
+        {
+            TooltipWindow.Hide();
+            return;
+        }
+
+        HoveredText.Text = Escape(mapNode.ActionTooltipText);
+        ComparisonPanel.Hide();
+        ComparisonText.Text = string.Empty;
+
+        TooltipWindow.Show();
+        TooltipWindow.MoveToFront();
+        Callable.From(PositionTooltip).CallDeferred();
+    }
+
+    private void HideForMapNode(RegionMapNodeController mapNode)
+    {
+        if (!ReferenceEquals(mapNode, _hoveredMapNode))
+            return;
+
+        _hoveredMapNode = null;
+        TooltipWindow.Hide();
+    }
+
+    private void RefreshForMapNode(RegionMapNodeController mapNode)
+    {
+        if (ReferenceEquals(mapNode, _hoveredMapNode))
+            ShowForMapNode(mapNode);
     }
 
     private void OnSelectedHeroChanged(HeroActorController hero)

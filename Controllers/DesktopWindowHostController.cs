@@ -35,6 +35,13 @@ public partial class DesktopWindowHostController : Node
 
 	[ExportCategory("Windows")]
 	/// <summary>
+	/// Main gameplay Control that receives clicks behind authored UI buttons.
+	/// If left empty, RegionViewportContainer is resolved from the main scene.
+	/// </summary>
+	[Export]
+	public Control? ExpansionClickSurface { get; set; }
+
+	/// <summary>
 	/// Controls topmost refresh interval seconds, measured as seconds.
 	/// For example, changing 0.25 to 0.5 makes the affected action wait twice as long between uses.
 	/// </summary>
@@ -94,6 +101,7 @@ public partial class DesktopWindowHostController : Node
 			PlacementSettings.StartExpanded;
 
 		ConfigureNativeWindow();
+		ConnectExpansionClickSurface();
 		ApplyWindowPlacement();
 		EnforceNativeTopmost();
 		RefreshTaskbarGeometry(forceLog: true);
@@ -131,8 +139,48 @@ public partial class DesktopWindowHostController : Node
 	/// </summary>
 	public override void _ExitTree()
 	{
+		if (GodotObject.IsInstanceValid(ExpansionClickSurface))
+			ExpansionClickSurface.GuiInput -= OnExpansionSurfaceGuiInput;
+
 		if (PlacementSettings is not null)
 			PlacementSettings.Changed -= OnPlacementSettingsChanged;
+	}
+
+	/// <summary>
+	/// Resolves the region presentation as the background click surface. UI
+	/// buttons layered above it retain normal Godot input priority.
+	/// </summary>
+	private void ConnectExpansionClickSurface()
+	{
+		ExpansionClickSurface ??= GetTree().CurrentScene
+			.GetNodeOrNull<Control>("RegionViewportContainer");
+
+		if (!GodotObject.IsInstanceValid(ExpansionClickSurface))
+		{
+			GD.PushError(
+				"DesktopWindowHostController could not find the " +
+				"RegionViewportContainer expansion click surface.");
+			return;
+		}
+
+		ExpansionClickSurface.GuiInput += OnExpansionSurfaceGuiInput;
+	}
+
+	/// <summary>
+	/// Toggles Questbar when the region surface receives a left click. Buttons
+	/// above this Control consume their own clicks before they can reach it.
+	/// </summary>
+	private void OnExpansionSurfaceGuiInput(InputEvent @event)
+	{
+		if (@event is not InputEventMouseButton mouseButton
+			|| mouseButton.ButtonIndex != MouseButton.Left
+			|| !mouseButton.Pressed)
+		{
+			return;
+		}
+
+		ToggleExpanded();
+		ExpansionClickSurface!.AcceptEvent();
 	}
 
 	/// <summary>

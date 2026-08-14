@@ -43,6 +43,12 @@ public partial class RegionExplorationService : Node
     public ulong Revision { get; private set; }
 
     /// <summary>
+    /// True while the party is inside a subregion, dungeon, or town. Normal
+    /// Traveling time there must not advance the surrounding region's map.
+    /// </summary>
+    public bool IsDestinationExcursionActive { get; private set; }
+
+    /// <summary>
     /// Loads saved regional travel time and starts the independent timer.
     /// </summary>
     public override void _Ready()
@@ -63,7 +69,8 @@ public partial class RegionExplorationService : Node
     /// </summary>
     public override void _Process(double delta)
     {
-        if (JourneyState.CurrentState
+        if (!IsDestinationExcursionActive
+            && JourneyState.CurrentState
             == JourneyStateService.JourneyState.Traveling)
         {
             AddActiveRegionTravelTime(delta);
@@ -127,6 +134,23 @@ public partial class RegionExplorationService : Node
     }
 
     /// <summary>
+    /// Suspends or resumes only normal time accumulation. Debug commands may
+    /// still deliberately change the saved regional exploration value.
+    /// </summary>
+    public void SetDestinationExcursionActive(bool active)
+    {
+        if (IsDestinationExcursionActive == active)
+            return;
+
+        IsDestinationExcursionActive = active;
+
+        DebugLog.Print(
+            active
+                ? "Main-region exploration paused for destination excursion."
+                : "Main-region exploration resumed after destination excursion.");
+    }
+
+    /// <summary>
     /// Sets the current region to its normal authored maximum. This is not a
     /// presentation bypass: fog and destinations react to the same saved time
     /// value that ordinary Traveling accumulation changes.
@@ -151,6 +175,62 @@ public partial class RegionExplorationService : Node
             saveResult;
     }
 
+    /// <summary>
+    /// Resets the current region to zero saved Traveling seconds. Fog and
+    /// destinations return through their normal time-driven presentation.
+    /// </summary>
+    public string ResetActiveRegionExploration()
+    {
+        RegionDefinition? region = GetActiveRegion();
+
+        if (region is null)
+            return "No active region is available to reset.";
+
+        SetRegionTravelTime(region.ContentId, 0.0);
+
+        string saveResult = Save();
+
+        return
+            $"Reset exploration time for " +
+            $"{region.DisplayName} ({region.ContentId}) to 0s. " +
+            saveResult;
+    }
+
+    /// <summary>
+    /// Adds debug travel time to the active region without exceeding its
+    /// authored exploration maximum, then immediately saves the new value.
+    /// </summary>
+    public string AddActiveRegionExplorationTime(double secondsToAdd)
+    {
+        RegionDefinition? region = GetActiveRegion();
+
+        if (region is null)
+            return "No active region is available to advance.";
+
+        if (double.IsNaN(secondsToAdd)
+            || double.IsInfinity(secondsToAdd)
+            || secondsToAdd <= 0.0)
+        {
+            return "Exploration time to add must be greater than zero.";
+        }
+
+        double currentSeconds = GetActiveRegionTravelSeconds();
+        double newSeconds = Math.Min(
+            region.FullExplorationTravelSeconds,
+            currentSeconds + secondsToAdd);
+
+        SetRegionTravelTime(region.ContentId, newSeconds);
+
+        string saveResult = Save();
+
+        return
+            $"Added {secondsToAdd:0.###}s of exploration time to " +
+            $"{region.DisplayName} ({region.ContentId}). " +
+            $"Current time: {newSeconds:0.###}/" +
+            $"{region.FullExplorationTravelSeconds:0.###}s. " +
+            saveResult;
+    }
+
     public string BuildActiveRegionStatusText()
     {
         RegionDefinition? region = GetActiveRegion();
@@ -164,7 +244,10 @@ public partial class RegionExplorationService : Node
         return
             $"Region exploration: {region.DisplayName} " +
             $"{seconds:0.0}/{region.FullExplorationTravelSeconds:0.0}s " +
-            $"({progress:0.0}%)";
+            $"({progress:0.0}%)" +
+            (IsDestinationExcursionActive
+                ? " [PAUSED: destination excursion]"
+                : string.Empty);
     }
 
     public string Save()

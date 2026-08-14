@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SubregionDefinition" format=3 uid="uid://cp1sxrm2fipe5"]
+
+[ext_resource type="Script" uid="uid://brh8m1i057nm6" path="res://Scripts/Content/Definitions/SubregionDefinition.cs" id="1_ft2qm"]
+[ext_resource type="Texture2D" uid="uid://busgm1ujam4uh" path="res://Assets/Background/Horsethief_Hideout_Background_576x324.png" id="1_y7fg7"]
+[ext_resource type="Texture2D" uid="uid://dpakau6ify5k6" path="res://Assets/Enviornment/Ground/Horsethief_Hideout_Ground_611x51.png" id="2_20han"]
+
+[resource]
+script = ExtResource("1_ft2qm")
+ContentId = "subregion.stonebanner_highlands.horsethief_hideout"
+ParentRegionContentId = "region.core.training_region"
+DisplayName = "Horsethief Hideout"
+BackgroundTexture = ExtResource("1_y7fg7")
+GroundTexture = ExtResource("2_20han")
+metadata/_custom_type_script = "uid://brh8m1i057nm6"

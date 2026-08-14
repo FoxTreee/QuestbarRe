@@ -139,20 +139,57 @@ public partial class RegionPresentationController : Node2D
 			return;
 		}
 
-		if (!GodotObject.IsInstanceValid(region.BackgroundTexture)
-			|| !GodotObject.IsInstanceValid(region.GroundTexture))
+		ApplyEnvironment(
+			region.BackgroundTexture,
+			region.GroundTexture,
+			region.DisplayName,
+			region.ContentId,
+			"Region");
+	}
+
+	/// <summary>
+	/// Applies a subregion's authored environment without replacing the active
+	/// main-region run or its saved exploration state.
+	/// </summary>
+	public void ApplySubregion(SubregionDefinition subregion)
+	{
+		if (!GodotObject.IsInstanceValid(subregion))
 		{
 			GD.PushError(
-				$"Region '{region.ContentId}' requires both presentation " +
-				"textures before it can be displayed.");
+				"RegionPresentationController cannot apply a null " +
+				"subregion.");
 			return;
 		}
 
-		BackgroundPresentation.ApplyTexture(region.BackgroundTexture);
-		GroundSprite.Texture = region.GroundTexture;
+		ApplyEnvironment(
+			subregion.BackgroundTexture,
+			subregion.GroundTexture,
+			subregion.DisplayName,
+			subregion.ContentId,
+			"Subregion");
+	}
+
+	private void ApplyEnvironment(
+		Texture2D backgroundTexture,
+		Texture2D groundTexture,
+		string displayName,
+		string contentId,
+		string environmentType)
+	{
+		if (!GodotObject.IsInstanceValid(backgroundTexture)
+			|| !GodotObject.IsInstanceValid(groundTexture))
+		{
+			GD.PushError(
+				$"{environmentType} '{contentId}' requires both " +
+				"presentation textures before it can be displayed.");
+			return;
+		}
+
+		BackgroundPresentation.ApplyTexture(backgroundTexture);
+		GroundSprite.Texture = groundTexture;
 
 		float renderedGroundWidth =
-			region.GroundTexture.GetWidth()
+			groundTexture.GetWidth()
 			* Mathf.Abs(GroundSprite.Scale.X);
 
 		TravelingGround.RepeatSize = new Vector2(
@@ -160,8 +197,8 @@ public partial class RegionPresentationController : Node2D
 			TravelingGround.RepeatSize.Y);
 
 		DebugLog.Print(
-			$"Region visuals applied: {region.DisplayName} " +
-			$"({region.ContentId}), " +
+			$"{environmentType} visuals applied: {displayName} " +
+			$"({contentId}), " +
 			$"GroundRepeatWidth={renderedGroundWidth:0.###}.");
 	}
 

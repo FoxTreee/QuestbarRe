@@ -6,14 +6,12 @@
 [sub_resource type="Resource" id="EncounterMonsterEntry_regular"]
 script = ExtResource("2_entry")
 MonsterContentId = "monster.core.training_monster"
-MinimumCount = 0
+MinimumCount = 2
 MaximumCount = 2
 
 [sub_resource type="Resource" id="EncounterMonsterEntry_heavy"]
 script = ExtResource("2_entry")
 MonsterContentId = "monster.core.heavy_training_monster"
-MinimumCount = 2
-MaximumCount = 3
 
 [resource]
 script = ExtResource("1_encounter")

@@ -4,10 +4,30 @@
 [ext_resource type="Script" uid="uid://d1xioidtxccdm" path="res://Controllers/AnchoredPanelCloseButton.cs" id="2_acdow"]
 [ext_resource type="PackedScene" uid="uid://uwsky2rfe8pf" path="res://StonebannerHighlandsMap.tscn" id="3_acdow"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_acdow"]
+bg_color = Color(0.1882353, 0.1882353, 0.1882353, 0.84313726)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3137255, 0.32941177, 0.3529412, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_he124"]
+bg_color = Color(0.105882354, 0.11764706, 0.13725491, 1)
+border_width_bottom = 1
+border_color = Color(0.3137255, 0.32941177, 0.3529412, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+
 [node name="MapWindow" type="Panel" unique_id=1339367170]
-custom_minimum_size = Vector2(420, 797)
+custom_minimum_size = Vector2(400, 797)
 offset_right = 40.0
 offset_bottom = 40.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_acdow")
 
 [node name="TitleBar" type="PanelContainer" parent="." unique_id=2104483478]
 layout_mode = 1
@@ -15,6 +35,7 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 36.0
 grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_he124")
 
 [node name="TitleMargin" type="MarginContainer" parent="TitleBar" unique_id=42101629]
 layout_mode = 2
@@ -59,10 +80,10 @@ anchor_bottom = 1.0
 offset_top = 36.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
 
 [node name="MapContentHost" type="Control" parent="MapMargin" unique_id=32474934]
 clip_contents = true
@@ -70,5 +91,58 @@ layout_mode = 2
 
 [node name="StonebannerHighlandsMap" parent="MapMargin/MapContentHost" unique_id=869682675 instance=ExtResource("3_acdow")]
 layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EastGateway" parent="MapMargin/MapContentHost/StonebannerHighlandsMap/DestinationLayer" parent_id_path=PackedInt32Array(869682675, 1923666376) index="5" unique_id=1211622618]
+RevealAtTravelSeconds = 30.0
+
+[node name="Node2D" parent="MapMargin/MapContentHost/StonebannerHighlandsMap/RevealAreas" parent_id_path=PackedInt32Array(869682675, 2140902960) index="0" unique_id=945527461]
+FeatherPixels = 0.0
+
+[node name="Node2D2" parent="MapMargin/MapContentHost/StonebannerHighlandsMap/RevealAreas" parent_id_path=PackedInt32Array(869682675, 2140902960) index="1" unique_id=1271661118]
+RevealAtTravelSeconds = 30.0
+GrowDurationSeconds = 30.0
+FeatherPixels = 5.0
+
+[node name="Node2D3" parent="MapMargin/MapContentHost/StonebannerHighlandsMap/RevealAreas" parent_id_path=PackedInt32Array(869682675, 2140902960) index="2" unique_id=1013647199]
+RevealAtTravelSeconds = 50.0
+GrowDurationSeconds = 30.0
+FeatherPixels = 10.0
+
+[node name="Node2D4" parent="MapMargin/MapContentHost/StonebannerHighlandsMap/RevealAreas" parent_id_path=PackedInt32Array(869682675, 2140902960) index="3" unique_id=1143864746]
+RevealAtTravelSeconds = 80.0
+GrowDurationSeconds = 30.0
+FeatherPixels = 15.0
+
+[node name="Node2D5" parent="MapMargin/MapContentHost/StonebannerHighlandsMap/RevealAreas" parent_id_path=PackedInt32Array(869682675, 2140902960) index="4" unique_id=1483445564]
+RevealAtTravelSeconds = 75.0
+GrowDurationSeconds = 30.0
+FeatherPixels = 20.0
+
+[node name="Node2D6" parent="MapMargin/MapContentHost/StonebannerHighlandsMap/RevealAreas" parent_id_path=PackedInt32Array(869682675, 2140902960) index="5" unique_id=1909364733]
+RevealAtTravelSeconds = 95.0
+GrowDurationSeconds = 30.0
+FeatherPixels = 25.0
+
+[node name="Node2D7" parent="MapMargin/MapContentHost/StonebannerHighlandsMap/RevealAreas" parent_id_path=PackedInt32Array(869682675, 2140902960) index="6" unique_id=1064760138]
+RevealAtTravelSeconds = 115.0
+GrowDurationSeconds = 30.0
+FeatherPixels = 30.0
+
+[node name="Node2D8" parent="MapMargin/MapContentHost/StonebannerHighlandsMap/RevealAreas" parent_id_path=PackedInt32Array(869682675, 2140902960) index="7" unique_id=9756961]
+RevealAtTravelSeconds = 120.0
+GrowDurationSeconds = 45.0
+FeatherPixels = 35.0
+
+[node name="Node2D9" parent="MapMargin/MapContentHost/StonebannerHighlandsMap/RevealAreas" parent_id_path=PackedInt32Array(869682675, 2140902960) index="8" unique_id=1639381489]
+RevealAtTravelSeconds = 120.0
+GrowDurationSeconds = 25.0
+FeatherPixels = 40.0
 
 [editable path="MapMargin/MapContentHost/StonebannerHighlandsMap"]

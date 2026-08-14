@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
 [ext_resource type="PackedScene" uid="uid://gjgocnfbnihd" path="res://StackSplitPopup.tscn" id="5_tbeql"]
 [ext_resource type="Script" uid="uid://ccdcfymdch8h5" path="res://Scripts/Services/TargetingService.cs" id="6_frkhe"]
+[ext_resource type="Texture2D" uid="uid://d1ydjl2mhhuxi" path="res://Assets/UI/MainWindowFrame/QuestbarMainWindowBorder.png" id="6_ok4ge"]
 [ext_resource type="Script" uid="uid://cxklmvye8ghgt" path="res://Scripts/Services/DebugCommandService.cs" id="7_h1m7h"]
 [ext_resource type="PackedScene" uid="uid://b1scwnwktr8ej" path="res://Scenes/UI/Character/CharacterWindow.tscn" id="7_yn2g2"]
 [ext_resource type="Script" uid="uid://s3pr1p2lapds" path="res://Content/Registries/MonsterContentRegistry.cs" id="8_346fj"]
@@ -69,7 +70,7 @@
 [ext_resource type="Resource" uid="uid://cn2g2o2r78jph" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_rogue_dagger.tres" id="50_h2tpa"]
 [ext_resource type="Script" uid="uid://dphwrvuij0an5" path="res://Controllers/RegionRunController.cs" id="51_7sj7i"]
 [ext_resource type="Resource" uid="uid://d1ovf4dv10c4l" path="res://Content/Equipment/Weapons/Core/weapon.core.starter_warrior_longsword.tres" id="51_nkjwg"]
-[ext_resource type="Resource" uid="uid://fgvs1onm3prx" path="res://Resources/Regions/TrainingRegion.tres" id="52_semxg"]
+[ext_resource type="Resource" uid="uid://fgvs1onm3prx" path="res://Resources/Regions/training_region.tres" id="52_semxg"]
 [ext_resource type="Script" uid="uid://cnhn7m5bqds23" path="res://Content/Registries/ItemContentRegistry.cs" id="54_2wrh7"]
 [ext_resource type="Script" uid="uid://bi3msg7aodwjr" path="res://Controllers/IncapacitationChoicePopupController.cs" id="54_3133c"]
 [ext_resource type="Script" uid="uid://do6q8e6i0vdjs" path="res://Scripts/Content/Definitions/ItemDefinition.cs" id="55_atu2d"]
@@ -78,6 +79,9 @@
 [ext_resource type="Resource" uid="uid://0yhkm7tmeykh" path="res://Content/Items/Materials/Core/material.core.test_dust.tres" id="58_c5nnb"]
 [ext_resource type="Script" uid="uid://bm4k13q5itvi3" path="res://Scripts/Services/InventoryPersistenceService.cs" id="60_fsd2l"]
 [ext_resource type="Script" uid="uid://bbobvlvb01p3" path="res://Scripts/Services/RegionExplorationService.cs" id="64_he124"]
+[ext_resource type="Script" uid="uid://bvh7tyj4lq3d0" path="res://Content/Registries/SubregionContentRegistry.cs" id="65_hjjnx"]
+[ext_resource type="Script" uid="uid://brh8m1i057nm6" path="res://Scripts/Content/Definitions/SubregionDefinition.cs" id="66_ok4ge"]
+[ext_resource type="Resource" uid="uid://cp1sxrm2fipe5" path="res://Content/Subregions/Core/subregion.stonebanner_highlands.horsethief_hideout.tres" id="67_e2umn"]
 [ext_resource type="Script" uid="uid://dej5wuxbbqnxm" path="res://Controllers/CharacterWindowController.cs" id="68_yic5e"]
 [ext_resource type="Script" uid="uid://dga8oqplnp0kh" path="res://Controllers/CharacterWindowCharacterTabController.cs" id="69_ex7s8"]
 [ext_resource type="Script" uid="uid://h4ns2qy3ejk1" path="res://Controllers/CharacterWindowEquipmentPanelController.cs" id="70_h2tpa"]
@@ -89,6 +93,7 @@
 [ext_resource type="Script" uid="uid://blbto2wpx4nt4" path="res://Controllers/ItemTooltipController.cs" id="84_mx20r"]
 [ext_resource type="Script" uid="uid://d0dowskxsjxqv" path="res://Controllers/PopupWindowFormationController.cs" id="85_mx20r"]
 [ext_resource type="Script" uid="uid://b5nicdkoe184x" path="res://Controllers/RegionMapExplorationController.cs" id="89_478hk"]
+[ext_resource type="Script" uid="uid://bbfshoaybveed" path="res://Controllers/SubregionRunController.cs" id="93_k6daw"]
 
 [sub_resource type="Theme" id="Theme_d8m2u"]
 
@@ -244,6 +249,7 @@ z_index = 20
 z_index = 30
 
 [node name="ScreenEffects" type="CanvasLayer" parent="RegionViewportContainer" unique_id=1414903031]
+visible = false
 
 [node name="FogPlaceholder" type="ColorRect" parent="RegionViewportContainer/ScreenEffects" unique_id=1655118385]
 visible = false
@@ -269,6 +275,24 @@ offset_right = 835.0
 offset_bottom = 195.0
 scale = Vector2(0.9701331, 1.6670202)
 color = Color(0, 1, 1, 0.26666668)
+
+[node name="MainWindowBorder" type="NinePatchRect" parent="." unique_id=1002392106]
+z_index = 100
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource("6_ok4ge")
+
+[node name="ExpansionClickSurface" type="Control" parent="." unique_id=3418346]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="PopupWindows" type="Node" parent="." unique_id=165967780]
 
@@ -397,6 +421,10 @@ text = "Incapacitate"
 
 [node name="CharacterWindow" parent="PopupWindows" unique_id=411267466 instance=ExtResource("7_yn2g2")]
 visible = false
+offset_left = 346.0
+offset_top = -824.0
+offset_right = 938.0
+offset_bottom = -27.0
 
 [node name="HeadSlot" parent="PopupWindows/CharacterWindow/RootMargin/RootVBox/HeroTabs/Character/CharacterVBox/PaperDollrow/LeftEquipmentslots" parent_id_path=PackedInt32Array(411267466, 480289721) index="0" unique_id=1502368664]
 tooltip_text = "Head"
@@ -451,21 +479,30 @@ tooltip_text = "Trinket"
 
 [node name="BackpackWindow" parent="PopupWindows" unique_id=479665022 instance=ExtResource("8_as1io")]
 visible = false
-offset_right = 312.0
+offset_left = 20.0
+offset_top = -823.0
+offset_right = 332.0
+offset_bottom = -477.0
 
 [node name="ItemTooltipWindow" parent="PopupWindows" unique_id=2033741815 instance=ExtResource("10_52a0j")]
 visible = false
-offset_right = 558.0
+offset_left = 1207.0
+offset_top = 32.0
+offset_right = 1765.0
+offset_bottom = 132.0
 
 [node name="ComparisonPanel" parent="PopupWindows/ItemTooltipWindow/RootMargin/TooltipRow" parent_id_path=PackedInt32Array(2033741815, 165033247) index="0" unique_id=704899939]
 theme_override_styles/panel = SubResource("StyleBoxFlat_52a0j")
 
 [node name="MapWindow" parent="PopupWindows" unique_id=1339367170 instance=ExtResource("12_3k6d1")]
 visible = false
-offset_left = -5.0
-offset_top = -1.0
-offset_right = 415.0
-offset_bottom = 796.0
+offset_left = 953.0
+offset_top = -821.0
+offset_right = 1373.0
+offset_bottom = -24.0
+
+[node name="DestinationLayer" parent="PopupWindows/MapWindow/MapMargin/MapContentHost/StonebannerHighlandsMap" parent_id_path=PackedInt32Array(1339367170, 869682675) index="1" unique_id=1923666376]
+anchors_preset = -1
 
 [node name="PopupFormationHost" type="Window" parent="PopupWindows" unique_id=1384746712]
 oversampling_override = 1.0
@@ -564,10 +601,15 @@ script = ExtResource("64_he124")
 JourneyState = NodePath("../JourneyStateService")
 RegionRun = NodePath("../../Controllers/RegionRunController")
 
+[node name="SubregionContentRegistry" type="Node" parent="Services" unique_id=712385236]
+script = ExtResource("65_hjjnx")
+Definitions = Array[ExtResource("66_ok4ge")]([ExtResource("67_e2umn")])
+
 [node name="Controllers" type="Node" parent="." unique_id=1265139895]
 
-[node name="DesktopWindowHostController" type="Node" parent="Controllers" unique_id=1521543708]
+[node name="DesktopWindowHostController" type="Node" parent="Controllers" unique_id=1521543708 node_paths=PackedStringArray("ExpansionClickSurface")]
 script = ExtResource("1_r150o")
+ExpansionClickSurface = NodePath("../../ExpansionClickSurface")
 
 [node name="WindowSettingsPanelController" type="Node" parent="Controllers" unique_id=334099255 node_paths=PackedStringArray("WidthSlider", "WidthValue", "CollapsedHeightSlider", "CollapsedHeightValue", "ExpandedHeightSlider", "ExpandedHeightValue", "HorizontalAdjustmentSlider", "HorizontalAdjustmentValue")]
 script = ExtResource("3_kln2b")
@@ -621,6 +663,7 @@ WindowHost = NodePath("../DesktopWindowHostController")
 script = ExtResource("23_3tgeq")
 ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer")
 WindowHost = NodePath("../DesktopWindowHostController")
+CollapsedActorScale = 0.6000000000000001
 
 [node name="ActorGroundConstraintController" type="Node" parent="Controllers" unique_id=715707471 node_paths=PackedStringArray("ActorLayer", "GroundTopBoundary", "GroundBottomBoundary")]
 script = ExtResource("24_3tgeq")
@@ -725,7 +768,10 @@ BackpackWindow = NodePath("../../PopupWindows/BackpackWindow")
 MapWindow = NodePath("../../PopupWindows/MapWindow")
 ItemTooltipPanel = NodePath("../../PopupWindows/ItemTooltipWindow")
 IncapacitationWindow = NodePath("../../PopupWindows/IncapacitationChoiceWindow")
-ManagementOffset = Vector2i(-8, 0)
+WindowGap = 0
+MapWindowGap = 0
+QuestbarGap = 0
+ManagementOffset = Vector2i(-10, 0)
 
 [node name="RegionMapExplorationController" type="Node" parent="Controllers" unique_id=2022466574 node_paths=PackedStringArray("Exploration", "RegionRun", "FogOverlay", "DestinationLayer", "RevealAreasRoot")]
 script = ExtResource("89_478hk")
@@ -734,6 +780,13 @@ RegionRun = NodePath("../RegionRunController")
 FogOverlay = NodePath("../../PopupWindows/MapWindow/MapMargin/MapContentHost/StonebannerHighlandsMap/FogOverlay")
 DestinationLayer = NodePath("../../PopupWindows/MapWindow/MapMargin/MapContentHost/StonebannerHighlandsMap/DestinationLayer")
 RevealAreasRoot = NodePath("../../PopupWindows/MapWindow/MapMargin/MapContentHost/StonebannerHighlandsMap/RevealAreas")
+
+[node name="SubregionRunController" type="Node" parent="Controllers" unique_id=1681124645 node_paths=PackedStringArray("ContentRegistry", "RegionMap", "RegionRun", "RegionPresentation")]
+script = ExtResource("93_k6daw")
+ContentRegistry = NodePath("../../Services/SubregionContentRegistry")
+RegionMap = NodePath("../RegionMapExplorationController")
+RegionRun = NodePath("../RegionRunController")
+RegionPresentation = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/RegionPresentation")
 
 [editable path="PopupWindows/StackSplitPopup"]
 [editable path="PopupWindows/WindowSettingsPopup"]

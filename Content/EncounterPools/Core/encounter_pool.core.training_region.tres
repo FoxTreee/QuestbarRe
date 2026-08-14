@@ -11,12 +11,12 @@ Weight = 60
 [sub_resource type="Resource" id="EncounterPoolEntry_swarm"]
 script = ExtResource("2_entry")
 EncounterContentId = "encounter.core.training_swarm"
-Weight = 25
+Weight = 10
 
 [sub_resource type="Resource" id="EncounterPoolEntry_heavy"]
 script = ExtResource("2_entry")
 EncounterContentId = "encounter.core.heavy_patrol"
-Weight = 15
+Weight = 30
 
 [resource]
 script = ExtResource("1_pool")

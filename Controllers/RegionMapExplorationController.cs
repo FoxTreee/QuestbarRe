@@ -29,6 +29,10 @@ public partial class RegionMapExplorationController : Node
     public Node RevealAreasRoot { get; set; } = null!;
 
     public event Action<RegionMapNodeController>? DestinationDiscovered;
+    public event Action<RegionMapNodeController>? DestinationEntered;
+    public event Action<RegionMapNodeController>? DestinationRetreated;
+
+    public RegionMapNodeController? ActiveDestination { get; private set; }
 
     private readonly List<RegionMapNodeController> _destinations = new();
     private readonly List<RegionMapFogRevealArea> _revealAreas = new();
@@ -39,6 +43,7 @@ public partial class RegionMapExplorationController : Node
     private ulong _lastExplorationRevision = ulong.MaxValue;
     private Vector2 _lastFogSize = Vector2.Zero;
     private string _lastRegionContentId = string.Empty;
+    private JourneyStateService.JourneyState? _lastJourneyState;
     private bool _initialStateApplied;
     private bool _warnedAboutRevealAreaLimit;
 
@@ -69,12 +74,41 @@ public partial class RegionMapExplorationController : Node
         DiscoverDescendants(DestinationLayer, _destinations);
         DiscoverDescendants(RevealAreasRoot, _revealAreas);
 
+        if (_destinations.Count == 0)
+        {
+            GD.PushWarning(
+                "RegionMapExplorationController found no " +
+                "RegionMapNodeController descendants under DestinationLayer.");
+        }
+
+        foreach (RegionMapNodeController destination in _destinations)
+            destination.ActionPressed += OnDestinationActionPressed;
+
         _revealAreas.Sort(
             (left, right) => left.RevealAtTravelSeconds.CompareTo(
                 right.RevealAtTravelSeconds));
 
         RefreshPresentation(force: true);
         SetProcess(true);
+    }
+
+    /// <summary>
+    /// Disconnects authored map nodes and guarantees regional exploration is
+    /// not left paused if this presenter is removed while a destination is active.
+    /// </summary>
+    public override void _ExitTree()
+    {
+        foreach (RegionMapNodeController destination in _destinations)
+        {
+            if (GodotObject.IsInstanceValid(destination))
+                destination.ActionPressed -= OnDestinationActionPressed;
+        }
+
+        if (GodotObject.IsInstanceValid(Exploration))
+            Exploration.SetDestinationExcursionActive(false);
+
+        if (GodotObject.IsInstanceValid(RegionRun))
+            RegionRun.SetDestinationExcursionActive(false);
     }
 
     /// <summary>
@@ -94,9 +128,13 @@ public partial class RegionMapExplorationController : Node
         if (region is null || _fogMaterial is null)
             return;
 
+        JourneyStateService.JourneyState journeyState =
+            RegionRun.JourneyState.CurrentState;
+
         if (!force
             && _lastExplorationRevision == Exploration.Revision
             && _lastFogSize.IsEqualApprox(FogOverlay.Size)
+            && _lastJourneyState == journeyState
             && _lastRegionContentId.Equals(
                 region.ContentId,
                 StringComparison.OrdinalIgnoreCase))
@@ -107,14 +145,20 @@ public partial class RegionMapExplorationController : Node
         _lastExplorationRevision = Exploration.Revision;
         _lastFogSize = FogOverlay.Size;
         _lastRegionContentId = region.ContentId;
+        _lastJourneyState = journeyState;
 
         double travelSeconds = Exploration.GetActiveRegionTravelSeconds();
-        ApplyDestinationVisibility(travelSeconds);
-        ApplyFog(travelSeconds, Exploration.GetActiveRegionProgress());
+        float progress = Exploration.GetActiveRegionProgress();
+        ApplyDestinationVisibility(
+            travelSeconds,
+            progress >= 1.0f);
+        ApplyFog(travelSeconds, progress);
         _initialStateApplied = true;
     }
 
-    private void ApplyDestinationVisibility(double travelSeconds)
+    private void ApplyDestinationVisibility(
+        double travelSeconds,
+        bool regionFullyExplored)
     {
         foreach (RegionMapNodeController destination in _destinations)
         {
@@ -122,13 +166,42 @@ public partial class RegionMapExplorationController : Node
                 continue;
 
             bool shouldReveal =
-                travelSeconds >= destination.RevealAtTravelSeconds;
+                regionFullyExplored
+                || travelSeconds >= destination.RevealAtTravelSeconds
+                || ReferenceEquals(destination, ActiveDestination);
+
+            bool isActive = ReferenceEquals(
+                destination,
+                ActiveDestination);
+            bool canUse = isActive || CanEnterDestination(destination);
+            bool blockedByAnotherDestination =
+                ActiveDestination is not null
+                && !isActive;
 
             destination.Visible = shouldReveal;
-            destination.Disabled = !shouldReveal;
+            destination.Disabled =
+                !shouldReveal
+                || !canUse
+                || blockedByAnotherDestination;
 
-            if (!shouldReveal
-                || string.IsNullOrWhiteSpace(destination.NodeContentId)
+            ApplyDestinationActionPresentation(
+                destination,
+                shouldReveal,
+                canUse,
+                blockedByAnotherDestination);
+
+            if (!shouldReveal)
+            {
+                if (!string.IsNullOrWhiteSpace(destination.NodeContentId))
+                {
+                    _revealedDestinationIds.Remove(
+                        destination.NodeContentId);
+                }
+
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(destination.NodeContentId)
                 || !_revealedDestinationIds.Add(
                     destination.NodeContentId))
             {
@@ -145,6 +218,96 @@ public partial class RegionMapExplorationController : Node
                 DestinationDiscovered?.Invoke(destination);
             }
         }
+    }
+
+    private void OnDestinationActionPressed(
+        RegionMapNodeController destination)
+    {
+        if (!GodotObject.IsInstanceValid(destination)
+            || !destination.Visible
+            || destination.Disabled)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(destination, ActiveDestination))
+        {
+            RetreatActiveDestination();
+            return;
+        }
+
+        if (ActiveDestination is not null
+            || !CanEnterDestination(destination))
+        {
+            return;
+        }
+
+        ActiveDestination = destination;
+        Exploration.SetDestinationExcursionActive(true);
+        RegionRun.SetDestinationExcursionActive(true);
+        RefreshPresentation(force: true);
+
+        DebugLog.Print(
+            $"Entered map destination: " +
+            $"{destination.DisplayName} " +
+            $"({destination.DestinationContentId}).");
+
+        DestinationEntered?.Invoke(destination);
+    }
+
+    /// <summary>
+    /// Returns from the active destination through the same state transition
+    /// used by clicking its map node. Returns false when none is active.
+    /// </summary>
+    public bool RetreatActiveDestination()
+    {
+        if (!GodotObject.IsInstanceValid(ActiveDestination))
+            return false;
+
+        RegionMapNodeController destination = ActiveDestination!;
+        ActiveDestination = null;
+        Exploration.SetDestinationExcursionActive(false);
+        RegionRun.SetDestinationExcursionActive(false);
+        RefreshPresentation(force: true);
+
+        DebugLog.Print(
+            $"Retreated from map destination: " +
+            $"{destination.DisplayName} " +
+            $"({destination.DestinationContentId}).");
+
+        DestinationRetreated?.Invoke(destination);
+        return true;
+    }
+
+    private void ApplyDestinationActionPresentation(
+        RegionMapNodeController destination,
+        bool shouldReveal,
+        bool canEnter,
+        bool blockedByAnotherDestination)
+    {
+        if (!shouldReveal || !canEnter || blockedByAnotherDestination)
+        {
+            destination.ApplyUnavailableActionPresentation();
+            return;
+        }
+
+        if (ReferenceEquals(destination, ActiveDestination))
+        {
+            destination.ApplyRetreatActionPresentation(
+                RegionRun.ActiveRegion.DisplayName);
+            return;
+        }
+
+        destination.ApplyEnterActionPresentation();
+    }
+
+    private bool CanEnterDestination(
+        RegionMapNodeController destination)
+    {
+        return destination.NodeType == RegionMapNodeType.Subregion
+            && ContentId.IsValid(destination.DestinationContentId)
+            && RegionRun.JourneyState.CurrentState
+                == JourneyStateService.JourneyState.Traveling;
     }
 
     private void ApplyFog(double travelSeconds, float progress)

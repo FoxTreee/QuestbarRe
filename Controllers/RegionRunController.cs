@@ -67,6 +67,7 @@ public partial class RegionRunController : Node
 	public bool AutoStart { get; set; } = true;
 
 	public bool IsRunActive { get; private set; }
+	public bool IsDestinationExcursionActive { get; private set; }
 	public bool IsAwaitingIncapacitationChoice { get; private set; }
 	public int CompletedGroupCount { get; private set; }
 	public RegionCompletionResult? LastCompletionResult { get; private set; }
@@ -122,6 +123,9 @@ public partial class RegionRunController : Node
 	/// </summary>
 	public override void _Process(double delta)
 	{
+		if (IsDestinationExcursionActive)
+			return;
+
 		if (_waitingForSurvivorsToRegroup)
 		{
 			UpdateSurvivorRegroup();
@@ -143,6 +147,23 @@ public partial class RegionRunController : Node
 
 		_waitingForNextGroup = false;
 		StartNextGroup();
+	}
+
+	/// <summary>
+	/// Pauses or resumes the main-region encounter countdown without resetting
+	/// its current group progress or remaining travel time.
+	/// </summary>
+	public void SetDestinationExcursionActive(bool active)
+	{
+		if (IsDestinationExcursionActive == active)
+			return;
+
+		IsDestinationExcursionActive = active;
+
+		DebugLog.Print(
+			active
+				? "Main-region run paused for destination excursion."
+				: "Main-region run resumed after destination excursion.");
 	}
 
 	/// <summary>

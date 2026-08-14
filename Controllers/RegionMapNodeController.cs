@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -12,6 +13,21 @@ public partial class RegionMapNodeController : Button
 {
     private string _displayName = "Unnamed Destination";
     private RegionMapNodeType _nodeType = RegionMapNodeType.Subregion;
+
+    /// <summary>
+    /// Raised when this discovered map node is clicked. The map controller
+    /// decides whether that click enters or retreats from the destination.
+    /// </summary>
+    public event Action<RegionMapNodeController>? ActionPressed;
+    public event Action<RegionMapNodeController>? HoverStarted;
+    public event Action<RegionMapNodeController>? HoverEnded;
+    public event Action<RegionMapNodeController>? ActionTooltipChanged;
+
+    /// <summary>
+    /// Plain action text rendered by the existing custom item-tooltip panel.
+    /// The node itself never changes its authored text or icon.
+    /// </summary>
+    public string ActionTooltipText { get; private set; } = string.Empty;
 
     [ExportCategory("Identity")]
 
@@ -31,11 +47,7 @@ public partial class RegionMapNodeController : Button
     public string DisplayName
     {
         get => _displayName;
-        set
-        {
-            _displayName = value;
-            RefreshAuthoringPreview();
-        }
+        set => _displayName = value;
     }
 
     [ExportCategory("Destination")]
@@ -47,11 +59,7 @@ public partial class RegionMapNodeController : Button
     public RegionMapNodeType NodeType
     {
         get => _nodeType;
-        set
-        {
-            _nodeType = value;
-            RefreshAuthoringPreview();
-        }
+        set => _nodeType = value;
     }
 
     /// <summary>
@@ -80,12 +88,61 @@ public partial class RegionMapNodeController : Button
     public string DesignerNotes { get; set; } = string.Empty;
 
     /// <summary>
-    /// Applies a useful editor and runtime tooltip without replacing the
-    /// Button's manually authored text, icon, size, or style.
+    /// Reconnects hover and click input whenever popup formation reparents the
+    /// map into another viewport, exactly like the existing item-slot scene.
+    /// </summary>
+    public override void _EnterTree()
+    {
+        TooltipText = string.Empty;
+        Pressed += OnPressed;
+        MouseEntered += OnMouseEntered;
+        MouseExited += OnMouseExited;
+    }
+
+    /// <summary>
+    /// Forces map nodes to use custom-tooltip input and never Godot's default
+    /// tooltip presentation, including while the scene is being authored.
     /// </summary>
     public override void _Ready()
     {
-        RefreshAuthoringPreview();
+        TooltipText = string.Empty;
+        MouseFilter = MouseFilterEnum.Stop;
+    }
+
+    /// <summary>
+    /// Disconnects the runtime button event when the map leaves the tree.
+    /// </summary>
+    public override void _ExitTree()
+    {
+        Pressed -= OnPressed;
+        MouseEntered -= OnMouseEntered;
+        MouseExited -= OnMouseExited;
+    }
+
+    /// <summary>
+    /// Restores the node's authored appearance and presents only the action
+    /// instruction requested for an available destination.
+    /// </summary>
+    public void ApplyEnterActionPresentation()
+    {
+        SetActionTooltipText("CLICK TO ENTER");
+    }
+
+    /// <summary>
+    /// Turns this same map node into the return action for its parent region.
+    /// </summary>
+    public void ApplyRetreatActionPresentation(string mainRegionName)
+    {
+        SetActionTooltipText(
+            $"RETREAT\nRETURN TO {mainRegionName.ToUpperInvariant()}.");
+    }
+
+    /// <summary>
+    /// Removes action text from nodes that cannot currently be selected.
+    /// </summary>
+    public void ApplyUnavailableActionPresentation()
+    {
+        SetActionTooltipText(string.Empty);
     }
 
     /// <summary>
@@ -126,10 +183,29 @@ public partial class RegionMapNodeController : Button
         return errors;
     }
 
-    private void RefreshAuthoringPreview()
+    private void OnPressed()
     {
-        TooltipText = string.IsNullOrWhiteSpace(DisplayName)
-            ? NodeType.ToString()
-            : $"{DisplayName} ({NodeType})";
+        ActionPressed?.Invoke(this);
+    }
+
+    private void OnMouseEntered()
+    {
+        HoverStarted?.Invoke(this);
+    }
+
+    private void OnMouseExited()
+    {
+        HoverEnded?.Invoke(this);
+    }
+
+    private void SetActionTooltipText(string value)
+    {
+        TooltipText = string.Empty;
+
+        if (ActionTooltipText == value)
+            return;
+
+        ActionTooltipText = value;
+        ActionTooltipChanged?.Invoke(this);
     }
 }

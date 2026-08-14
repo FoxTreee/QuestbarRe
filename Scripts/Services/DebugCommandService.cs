@@ -12,6 +12,8 @@ public partial class DebugCommandService : Node
 		".status",
 		".statusTimers [on|off|toggle]",
 		".completeRegionExploration",
+		".resetRegionExploration",
+		".addExplorationTime <seconds>",
 		".clear",
 		".revive <hero_id>",
 		".reviveAll",
@@ -1234,7 +1236,7 @@ public partial class DebugCommandService : Node
 			"    Example: .help\n\n" +
 
 			".status\n" +
-			"    Print Journey/combat state, active hero/monster counts, and each hero's HP.\n" +
+			"    Print Journey/combat state, region exploration time, active hero/monster counts, and each hero's HP.\n" +
 			"    Useful for verifying cleanup, wipes, or apparently stuck fights.\n" +
 			"    Examples:\n" +
 			"      .status\n" +
@@ -1255,6 +1257,17 @@ public partial class DebugCommandService : Node
 			"    Fog and destinations then reveal through the normal exploration system.\n" +
 			"    This is not a visual fog bypass and the resulting progress is saved.\n" +
 			"    Example: .completeRegionExploration\n\n" +
+
+			".resetRegionExploration\n" +
+			"    Reset the active region's saved Traveling time to zero.\n" +
+			"    Fog and destinations return through the normal exploration system.\n" +
+			"    The reset is saved immediately.\n" +
+			"    Example: .resetRegionExploration\n\n" +
+
+			".addExplorationTime <seconds>\n" +
+			"    Add Traveling seconds to the active region's saved exploration time.\n" +
+			"    The result is clamped to the region maximum and saved immediately.\n" +
+			"    Example: .addExplorationTime 500\n\n" +
 
 			".clear\n" +
 			"    Clear visible console history without changing game state. Chainable with &&.\n" +
@@ -1564,6 +1577,12 @@ public partial class DebugCommandService : Node
 			".completeregionexploration" =>
 				ExecuteCompleteRegionExploration(parts),
 
+			".resetregionexploration" =>
+				ExecuteResetRegionExploration(parts),
+
+			".addexplorationtime" =>
+				ExecuteAddExplorationTime(parts),
+
 			".revive" =>
 				ExecuteReviveHero(parts),
 
@@ -1638,6 +1657,56 @@ public partial class DebugCommandService : Node
 		}
 
 		return RegionExploration.CompleteActiveRegionExploration();
+	}
+
+	/// <summary>
+	/// Resets the active region's saved Traveling time to zero so fog and
+	/// destination discovery can be tested again through the normal system.
+	/// </summary>
+	private string ExecuteResetRegionExploration(string[] parts)
+	{
+		if (parts.Length != 1)
+			return "Usage: .resetRegionExploration";
+
+		if (!GodotObject.IsInstanceValid(RegionExploration))
+		{
+			return
+				"RegionExplorationService is not assigned to " +
+				"DebugCommandService.";
+		}
+
+		return RegionExploration.ResetActiveRegionExploration();
+	}
+
+	/// <summary>
+	/// Adds positive Traveling seconds to the active region's saved progress.
+	/// The exploration service clamps the result and saves it immediately.
+	/// </summary>
+	private string ExecuteAddExplorationTime(string[] parts)
+	{
+		if (parts.Length != 2)
+			return "Usage: .addExplorationTime <seconds>";
+
+		if (!double.TryParse(
+				parts[1],
+				NumberStyles.Float,
+				CultureInfo.InvariantCulture,
+				out double seconds)
+			|| double.IsNaN(seconds)
+			|| double.IsInfinity(seconds)
+			|| seconds <= 0.0)
+		{
+			return "Seconds must be a positive number.";
+		}
+
+		if (!GodotObject.IsInstanceValid(RegionExploration))
+		{
+			return
+				"RegionExplorationService is not assigned to " +
+				"DebugCommandService.";
+		}
+
+		return RegionExploration.AddActiveRegionExplorationTime(seconds);
 	}
 
 	private string ExecuteAddItem(string[] parts)
