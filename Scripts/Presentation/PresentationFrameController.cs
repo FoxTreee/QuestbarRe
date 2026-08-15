@@ -92,8 +92,11 @@ public partial class PresentationFrameController : Node
         PresentationFrame.AnchorBottom = 0.0f;
         PresentationFrame.Stretch = true;
 
-        RegionViewport.Size2DOverride = LogicalSize;
-        RegionViewport.Size2DOverrideStretch = true;
+        // The container already gives the SubViewport its rendered size.
+        // Keeping a second logical-size override here created another hidden
+        // scaling stage that the editor could not represent honestly.
+        RegionViewport.Size2DOverride = Vector2I.Zero;
+        RegionViewport.Size2DOverrideStretch = false;
     }
 
     /// <summary>

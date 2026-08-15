@@ -2,6 +2,10 @@ using Godot;
 
 public partial class JourneyStateService : Node
 {
+	private const ulong ToggleInputGuardMsec = 100;
+	private ulong _lastToggleInputMsec;
+	private bool _hasHandledToggleInput;
+
 	public enum JourneyState
 	{
 		Traveling,
@@ -94,28 +98,23 @@ public partial class JourneyStateService : Node
 	/// </summary>
 	public void ToggleTestEncounter()
 	{
+		// A key pressed while a secondary native Window owns focus can be
+		// delivered through both WindowInput and the main viewport. Treat those
+		// callbacks as the same physical press so the state changes only once.
+		ulong nowMsec = Time.GetTicksMsec();
+		if (_hasHandledToggleInput
+			&& nowMsec - _lastToggleInputMsec < ToggleInputGuardMsec)
+		{
+			return;
+		}
+
+		_hasHandledToggleInput = true;
+		_lastToggleInputMsec = nowMsec;
+
 		SetState(
 			CurrentState == JourneyState.Traveling
 				? JourneyState.Encounter
 				: JourneyState.Traveling);
 	}
 	
-	/// <summary>
-	/// Performs the unhandled key input operation for Journey State Service.
-	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
-	/// </summary>
-	public override void _UnhandledKeyInput(InputEvent @event)
-{
-	if (@event is not InputEventKey keyEvent)
-		return;
-
-	if (!keyEvent.Pressed || keyEvent.Echo)
-		return;
-
-	if (keyEvent.Keycode != Key.E)
-		return;
-
-	ToggleTestEncounter();
-	GetViewport().SetInputAsHandled();
-}
 }

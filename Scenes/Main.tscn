@@ -13,7 +13,7 @@
 [ext_resource type="Script" uid="uid://bbm56o2eowh3d" path="res://Controllers/WindowSettingsPopupController.cs" id="5_pbw6q"]
 [ext_resource type="PackedScene" uid="uid://gjgocnfbnihd" path="res://StackSplitPopup.tscn" id="5_tbeql"]
 [ext_resource type="Script" uid="uid://ccdcfymdch8h5" path="res://Scripts/Services/TargetingService.cs" id="6_frkhe"]
-[ext_resource type="Texture2D" uid="uid://d1ydjl2mhhuxi" path="res://Assets/UI/MainWindowFrame/QuestbarMainWindowBorder.png" id="6_ok4ge"]
+[ext_resource type="Script" uid="uid://cg0aowq6bo7bd" path="res://Controllers/ManagementWindowsButton.cs" id="6_ok4ge"]
 [ext_resource type="Script" uid="uid://cxklmvye8ghgt" path="res://Scripts/Services/DebugCommandService.cs" id="7_h1m7h"]
 [ext_resource type="PackedScene" uid="uid://b1scwnwktr8ej" path="res://Scenes/UI/Character/CharacterWindow.tscn" id="7_yn2g2"]
 [ext_resource type="Script" uid="uid://s3pr1p2lapds" path="res://Content/Registries/MonsterContentRegistry.cs" id="8_346fj"]
@@ -108,16 +108,10 @@ script = ExtResource("1_hwpts")
 WindowHost = NodePath("../Controllers/DesktopWindowHostController")
 CloudBackground = NodePath("CloudBackground")
 
-[node name="BackgroundGuide" type="Polygon2D" parent="BackgroundPresentation" unique_id=877634073]
-visible = false
-scale = Vector2(1.0125, 1.0620915)
-color = Color(0, 1, 1, 0.77254903)
-polygon = PackedVector2Array(0, 0, 800, 0, 800, 306, 0, 306)
-
 [node name="CloudBackground" type="Sprite2D" parent="BackgroundPresentation" unique_id=12908989]
 z_index = -100
 position = Vector2(0, 1)
-scale = Vector2(1.40625, 1)
+scale = Vector2(1.0590277, 0.6450617)
 texture = ExtResource("1_fq0cl")
 centered = false
 
@@ -133,7 +127,7 @@ stretch = true
 disable_3d = true
 transparent_bg = true
 handle_input_locally = false
-size = Vector2i(1152, 648)
+size = Vector2i(610, 210)
 size_2d_override = Vector2i(800, 192)
 size_2d_override_stretch = true
 render_target_update_mode = 4
@@ -154,10 +148,10 @@ z_index = -100
 [node name="ScalableWorld" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1379885866]
 
 [node name="SceneLeftBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=972278134]
-position = Vector2(55.555553, 168)
+position = Vector2(34.09836, 146.28572)
 
 [node name="SceneRightBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=481286879]
-position = Vector2(780, 168)
+position = Vector2(780.3279, 145.37143)
 
 [node name="RegionPresentation" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=1114696346 node_paths=PackedStringArray("RegionTileA", "RegionTileB", "BackgroundPresentation", "TravelingGround", "GroundSprite", "JourneyState")]
 script = ExtResource("1_v1gob")
@@ -193,7 +187,7 @@ repeat_size = Vector2(813.241, 0)
 repeat_times = 2
 
 [node name="GroundTileA" type="Sprite2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer/TravelingGround" unique_id=1562417800]
-position = Vector2(400, 176.296)
+position = Vector2(397.37704, 155.42857)
 scale = Vector2(1.331, 1.4)
 texture = ExtResource("4_lfh1j")
 
@@ -211,10 +205,10 @@ color = Color(0.5177069, 0.42025474, 0.42084682, 1)
 polygon = PackedVector2Array(0, 164.37497, 305.5229, 164.37497, 611, 164.37497, 611, 215, 305.73227, 215, 0, 215)
 
 [node name="GroundTopBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer" unique_id=581002143]
-position = Vector2(0, 144)
+position = Vector2(0, 127.085724)
 
 [node name="GroundBottomBoundary" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/GroundLayer" unique_id=74778667]
-position = Vector2(0, 190.81482)
+position = Vector2(0, 177.37143)
 
 [node name="ActorLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=997391345]
 
@@ -228,19 +222,19 @@ polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 position = Vector2(725.6944, 178.96297)
 
 [node name="PartySlot1" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=56454585]
-position = Vector2(-284.58334, -9.666667)
+position = Vector2(-312.57962, -42.734383)
 
 [node name="PartySlot2" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=150627185]
-position = Vector2(-209.0278, -26.370369)
+position = Vector2(-214.21892, -43.648674)
 
 [node name="PartySlot3" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=232380214]
-position = Vector2(-224.99998, 6.814815)
+position = Vector2(-253.56323, -12.56296)
 
 [node name="PartySlot4" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=1328720761]
-position = Vector2(-118.75001, -25.777779)
+position = Vector2(-104.05498, -41.820103)
 
 [node name="PartySlot5" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=1641821977]
-position = Vector2(-141.66656, 6.8147974)
+position = Vector2(-151.26817, -12.562965)
 
 [node name="ForegroundLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1354326323]
 z_index = 20
@@ -276,23 +270,43 @@ offset_bottom = 195.0
 scale = Vector2(0.9701331, 1.6670202)
 color = Color(0, 1, 1, 0.26666668)
 
-[node name="MainWindowBorder" type="NinePatchRect" parent="." unique_id=1002392106]
-z_index = 100
+[node name="InterfaceCanvas" type="CanvasLayer" parent="." unique_id=2139396019]
+layer = 10
+
+[node name="InterfaceRoot" type="Control" parent="InterfaceCanvas" unique_id=1358118578]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-texture = ExtResource("6_ok4ge")
+mouse_filter = 2
 
-[node name="ExpansionClickSurface" type="Control" parent="." unique_id=3418346]
-layout_mode = 3
+[node name="ExpansionClickSurface" type="Control" parent="InterfaceCanvas/InterfaceRoot" unique_id=3418346]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+offset_transform_enabled = true
+
+[node name="ManagementWindowsButton" type="Button" parent="InterfaceCanvas/InterfaceRoot" unique_id=621345482 node_paths=PackedStringArray("Formation")]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -52.0
+offset_top = -53.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "☰"
+script = ExtResource("6_ok4ge")
+Formation = NodePath("../../../Controllers/PopupWindowFormationController")
 
 [node name="PopupWindows" type="Node" parent="." unique_id=165967780]
 
@@ -333,6 +347,7 @@ HorizontalAdjustmentValue = NodePath("../MarginContainer/SettingsRows/Horizontal
 
 [node name="DebugConsoleWindow" parent="PopupWindows" unique_id=1708193217 node_paths=PackedStringArray("Commands", "Combat", "JourneyState", "Encounter", "DebugOutput", "CommandInput", "FilterTabs", "SearchInput", "PauseButton", "AutoScrollButton", "ClearButton") instance=ExtResource("5_erwvk")]
 visible = false
+transient = true
 theme = SubResource("Theme_d8m2u")
 Commands = NodePath("../../Services/DebugCommandService")
 Combat = NodePath("../../Controllers/CombatController")
@@ -609,7 +624,7 @@ Definitions = Array[ExtResource("66_ok4ge")]([ExtResource("67_e2umn")])
 
 [node name="DesktopWindowHostController" type="Node" parent="Controllers" unique_id=1521543708 node_paths=PackedStringArray("ExpansionClickSurface")]
 script = ExtResource("1_r150o")
-ExpansionClickSurface = NodePath("../../ExpansionClickSurface")
+ExpansionClickSurface = NodePath("../../InterfaceCanvas/InterfaceRoot/ExpansionClickSurface")
 
 [node name="WindowSettingsPanelController" type="Node" parent="Controllers" unique_id=334099255 node_paths=PackedStringArray("WidthSlider", "WidthValue", "CollapsedHeightSlider", "CollapsedHeightValue", "ExpandedHeightSlider", "ExpandedHeightValue", "HorizontalAdjustmentSlider", "HorizontalAdjustmentValue")]
 script = ExtResource("3_kln2b")
@@ -663,7 +678,7 @@ WindowHost = NodePath("../DesktopWindowHostController")
 script = ExtResource("23_3tgeq")
 ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer")
 WindowHost = NodePath("../DesktopWindowHostController")
-CollapsedActorScale = 0.6000000000000001
+CollapsedActorScale = 0.5
 
 [node name="ActorGroundConstraintController" type="Node" parent="Controllers" unique_id=715707471 node_paths=PackedStringArray("ActorLayer", "GroundTopBoundary", "GroundBottomBoundary")]
 script = ExtResource("24_3tgeq")
@@ -759,9 +774,10 @@ ComparisonText = NodePath("../../PopupWindows/ItemTooltipWindow/RootMargin/Toolt
 HoveredText = NodePath("../../PopupWindows/ItemTooltipWindow/RootMargin/TooltipRow/HoveredPanel/HoveredMargin/HoveredText")
 MouseOffset = Vector2i(15, 45)
 
-[node name="PopupWindowFormationController" type="Node" parent="Controllers" unique_id=97382793 node_paths=PackedStringArray("WindowHost", "FormationHost", "CharacterWindow", "BackpackWindow", "MapWindow", "ItemTooltipPanel", "IncapacitationWindow")]
+[node name="PopupWindowFormationController" type="Node" parent="Controllers" unique_id=97382793 node_paths=PackedStringArray("WindowHost", "JourneyState", "FormationHost", "CharacterWindow", "BackpackWindow", "MapWindow", "ItemTooltipPanel", "IncapacitationWindow")]
 script = ExtResource("85_mx20r")
 WindowHost = NodePath("../DesktopWindowHostController")
+JourneyState = NodePath("../../Services/JourneyStateService")
 FormationHost = NodePath("../../PopupWindows/PopupFormationHost")
 CharacterWindow = NodePath("../../PopupWindows/CharacterWindow")
 BackpackWindow = NodePath("../../PopupWindows/BackpackWindow")

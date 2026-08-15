@@ -16,6 +16,13 @@ public partial class PopupWindowFormationController : Node
     public DesktopWindowHostController WindowHost { get; set; } = null!;
 
     /// <summary>
+    /// Owns travel and encounter state so global encounter testing remains
+    /// available while the native management host has keyboard focus.
+    /// </summary>
+    [Export]
+    public JourneyStateService JourneyState { get; set; } = null!;
+
+    /// <summary>
     /// Borderless transparent native host for custom management panels.
     /// </summary>
     [Export]
@@ -243,6 +250,12 @@ public partial class PopupWindowFormationController : Node
             return true;
         }
 
+        if (keyEvent.Keycode == Key.E)
+        {
+            JourneyState.ToggleTestEncounter();
+            return true;
+        }
+
         Control? panel = keyEvent.Keycode switch
         {
             Key.I => BackpackWindow,
@@ -257,6 +270,26 @@ public partial class PopupWindowFormationController : Node
         panel.Visible = !panel.Visible;
         ApplyManagementFormation();
         return true;
+    }
+
+    /// <summary>
+    /// Opens Character, Backpack, and Map together when all are closed. If any
+    /// management panel is open, closes the complete group in one action.
+    /// </summary>
+    public void ToggleManagementGroup()
+    {
+        bool anyPanelVisible =
+            CharacterWindow.Visible
+            || BackpackWindow.Visible
+            || MapWindow.Visible;
+
+        bool showGroup = !anyPanelVisible;
+        CharacterWindow.Visible = showGroup;
+        BackpackWindow.Visible = showGroup;
+        MapWindow.Visible = showGroup;
+        ItemTooltipPanel.Hide();
+
+        ApplyManagementFormation();
     }
 
     /// <summary>
@@ -661,6 +694,7 @@ public partial class PopupWindowFormationController : Node
     private bool ReferencesAreUsable()
     {
         return GodotObject.IsInstanceValid(WindowHost)
+            && GodotObject.IsInstanceValid(JourneyState)
             && GodotObject.IsInstanceValid(FormationHost)
             && GodotObject.IsInstanceValid(CharacterWindow)
             && GodotObject.IsInstanceValid(BackpackWindow)
@@ -673,6 +707,7 @@ public partial class PopupWindowFormationController : Node
     {
         bool valid = true;
         valid &= Require(WindowHost, nameof(WindowHost), logErrors);
+        valid &= Require(JourneyState, nameof(JourneyState), logErrors);
         valid &= Require(FormationHost, nameof(FormationHost), logErrors);
         valid &= Require(CharacterWindow, nameof(CharacterWindow), logErrors);
         valid &= Require(BackpackWindow, nameof(BackpackWindow), logErrors);
