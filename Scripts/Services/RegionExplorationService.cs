@@ -197,6 +197,43 @@ public partial class RegionExplorationService : Node
     }
 
     /// <summary>
+    /// Rewinds the active region to its highest discovered graveyard checkpoint
+    /// and saves immediately. With no authored checkpoint yet discovered, the
+    /// region entrance at zero percent is used as a safe fallback.
+    /// </summary>
+    public string ReturnActiveRegionToLatestGraveyard()
+    {
+        RegionDefinition? region = GetActiveRegion();
+
+        if (region is null)
+            return "No active region is available for graveyard revival.";
+
+        double previousSeconds = GetActiveRegionTravelSeconds();
+        float previousPercent = GetActiveRegionProgress() * 100.0f;
+        double checkpointSeconds = 0.0;
+        float checkpointPercent = 0.0f;
+        string graveyardName = $"{region.DisplayName} Entrance";
+
+        if (region.TryGetLatestDiscoveredGraveyard(
+            previousPercent,
+            out GraveyardCheckpointDefinition graveyard))
+        {
+            checkpointPercent = graveyard.DiscoveryPercent;
+            checkpointSeconds = region.GetGraveyardTravelSeconds(graveyard);
+            graveyardName = graveyard.DisplayName;
+        }
+
+        SetRegionTravelTime(region.ContentId, checkpointSeconds);
+        string saveResult = Save();
+
+        return
+            $"Returned to {graveyardName} at {checkpointPercent:0.#}% " +
+            $"exploration ({previousPercent:0.#}% → " +
+            $"{checkpointPercent:0.#}%; {previousSeconds:0.#}s → " +
+            $"{checkpointSeconds:0.#}s). {saveResult}";
+    }
+
+    /// <summary>
     /// Adds debug travel time to the active region without exceeding its
     /// authored exploration maximum, then immediately saves the new value.
     /// </summary>
@@ -240,11 +277,16 @@ public partial class RegionExplorationService : Node
 
         double seconds = GetActiveRegionTravelSeconds();
         float progress = GetActiveRegionProgress() * 100.0f;
+		MonsterDifficultySnapshot difficulty =
+			region.CreateMonsterDifficultySnapshot(seconds);
 
         return
             $"Region exploration: {region.DisplayName} " +
             $"{seconds:0.0}/{region.FullExplorationTravelSeconds:0.0}s " +
-            $"({progress:0.0}%)" +
+            $"({progress:0.0}%); next encounter: " +
+			$"Level {difficulty.MonsterLevel}, " +
+			$"health x{difficulty.HealthMultiplier:0.###}, " +
+			$"damage x{difficulty.DamageMultiplier:0.###}" +
             (IsDestinationExcursionActive
                 ? " [PAUSED: destination excursion]"
                 : string.Empty);

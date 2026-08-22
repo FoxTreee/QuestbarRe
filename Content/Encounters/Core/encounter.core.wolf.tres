@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EncounterDefinition" format=3 uid="uid://2fwydy7uuv2e"]
+
+[ext_resource type="Script" uid="uid://dqnfbfud0btw0" path="res://Scripts/Content/Definitions/EncounterMonsterEntry.cs" id="1_5anix"]
+[ext_resource type="Script" uid="uid://j08orv8sgbi4" path="res://Scripts/Content/Definitions/EncounterDefinition.cs" id="2_ha437"]
+
+[sub_resource type="Resource" id="EncounterMonsterEntry_regular"]
+script = ExtResource("1_5anix")
+MonsterContentId = "monster.core.wolf"
+MaximumCount = 3
+
+[resource]
+script = ExtResource("2_ha437")
+ContentId = "encounter.core.wolf"
+DisplayName = "Wolf"
+MonsterComposition = Array[ExtResource("1_5anix")]([SubResource("EncounterMonsterEntry_regular")])

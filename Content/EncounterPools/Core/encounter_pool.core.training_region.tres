@@ -6,20 +6,28 @@
 [sub_resource type="Resource" id="EncounterPoolEntry_mix"]
 script = ExtResource("2_entry")
 EncounterContentId = "encounter.core.training_mix"
-Weight = 60
+Weight = 20
 
 [sub_resource type="Resource" id="EncounterPoolEntry_swarm"]
 script = ExtResource("2_entry")
 EncounterContentId = "encounter.core.training_swarm"
-Weight = 10
+Weight = 5
+AvailableFromRegionTravelPercent = 5.0
 
-[sub_resource type="Resource" id="EncounterPoolEntry_heavy"]
+[sub_resource type="Resource" id="Resource_wbvgj"]
 script = ExtResource("2_entry")
-EncounterContentId = "encounter.core.heavy_patrol"
-Weight = 30
+EncounterContentId = "encounter.core.boar"
+Weight = 70
+metadata/_custom_type_script = "uid://b5prde13vi805"
+
+[sub_resource type="Resource" id="Resource_5anix"]
+script = ExtResource("2_entry")
+EncounterContentId = "encounter.core.wolf"
+Weight = 60
+metadata/_custom_type_script = "uid://b5prde13vi805"
 
 [resource]
 script = ExtResource("1_pool")
 ContentId = "encounter_pool.core.training_region"
 DisplayName = "Training Region"
-Entries = Array[ExtResource("2_entry")]([SubResource("EncounterPoolEntry_mix"), SubResource("EncounterPoolEntry_swarm"), SubResource("EncounterPoolEntry_heavy")])
+Entries = Array[ExtResource("2_entry")]([SubResource("EncounterPoolEntry_mix"), SubResource("EncounterPoolEntry_swarm"), SubResource("Resource_wbvgj"), SubResource("Resource_5anix")])

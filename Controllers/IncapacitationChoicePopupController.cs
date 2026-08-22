@@ -45,6 +45,13 @@ public partial class IncapacitationChoicePopupController : Node
 	public Button ReviveButton { get; set; } = null!;
 
 	/// <summary>
+	/// Always-available fallback that revives the hero at the region graveyard
+	/// and returns them to the safe party formation before travel resumes.
+	/// </summary>
+	[Export]
+	public Button GraveyardReviveButton { get; set; } = null!;
+
+	/// <summary>
 	/// Inspector reference used by this component for its incapacitate button dependency.
 	/// Assign the matching node or resource from the scene; leaving it empty prevents that connection from working.
 	/// </summary>
@@ -57,7 +64,7 @@ public partial class IncapacitationChoicePopupController : Node
 	/// For example, changing 520 to 1040 doubles this setting's configured contribution to the system.
 	/// </summary>
 	[Export]
-	public Vector2I PopupSize { get; set; } = new(520, 260);
+	public Vector2I PopupSize { get; set; } = new(680, 260);
 
 	private bool _choicePending;
 
@@ -73,6 +80,7 @@ public partial class IncapacitationChoicePopupController : Node
 		ChoiceWindow.Visible = false;
 		ChoiceWindow.CloseRequested += OnCloseRequested;
 		ReviveButton.Pressed += OnRevivePressed;
+		GraveyardReviveButton.Pressed += OnGraveyardRevivePressed;
 		IncapacitateButton.Pressed += OnIncapacitatePressed;
 		RegionRun.IncapacitationChoiceRequested += OnChoiceRequested;
 	}
@@ -88,6 +96,9 @@ public partial class IncapacitationChoicePopupController : Node
 
 		if (GodotObject.IsInstanceValid(ReviveButton))
 			ReviveButton.Pressed -= OnRevivePressed;
+
+		if (GodotObject.IsInstanceValid(GraveyardReviveButton))
+			GraveyardReviveButton.Pressed -= OnGraveyardRevivePressed;
 
 		if (GodotObject.IsInstanceValid(IncapacitateButton))
 			IncapacitateButton.Pressed -= OnIncapacitatePressed;
@@ -107,13 +118,26 @@ public partial class IncapacitationChoicePopupController : Node
 		_choicePending = true;
 		HeroNameLabel.Text = hero.Name.ToString();
 		MessageLabel.Text =
-			"This hero was incapacitated. Revive them now, or remove " +
-			"them from the active party for the remainder of this run?";
+			$"This hero was incapacitated. Revive them now by consuming " +
+			$"{RegionRun.ImmediateReviveItemQuantity} " +
+			$"{RegionRun.ImmediateReviveItemDisplayName}, revive them " +
+			"safely at the graveyard, or leave them incapacitated?";
 
+		ReviveButton.Text = "Revive Now";
 		ReviveButton.Disabled = !reviveAvailable;
 		ReviveButton.TooltipText = reviveAvailable
-			? "Restore this hero and return them to the active party."
-			: "Requires a priest, revive potion, or another revive source.";
+			? $"Consume {RegionRun.ImmediateReviveItemQuantity} " +
+			  $"{RegionRun.ImmediateReviveItemDisplayName} and revive now."
+			: $"Requires {RegionRun.ImmediateReviveItemQuantity} " +
+			  $"{RegionRun.ImmediateReviveItemDisplayName}.";
+
+		GraveyardReviveButton.Text = "Revive at Graveyard";
+		GraveyardReviveButton.Disabled = false;
+		GraveyardReviveButton.TooltipText =
+			"Always available. Revive at the latest discovered graveyard " +
+			"and roll regional exploration back to that checkpoint.";
+
+		IncapacitateButton.Text = "Remain Incapacitated";
 
 		ChoiceWindow.Size = PopupSize;
 		ChoiceWindow.Popup();
@@ -127,7 +151,15 @@ public partial class IncapacitationChoicePopupController : Node
 	/// </summary>
 	private void OnRevivePressed()
 	{
-		ResolveChoice(true);
+		ResolveChoice(IncapacitationChoice.ReviveNow);
+	}
+
+	/// <summary>
+	/// Handles the always-available graveyard revival choice.
+	/// </summary>
+	private void OnGraveyardRevivePressed()
+	{
+		ResolveChoice(IncapacitationChoice.ReviveAtGraveyard);
 	}
 
 	/// <summary>
@@ -136,21 +168,21 @@ public partial class IncapacitationChoicePopupController : Node
 	/// </summary>
 	private void OnIncapacitatePressed()
 	{
-		ResolveChoice(false);
+		ResolveChoice(IncapacitationChoice.RemainIncapacitated);
 	}
 
 	/// <summary>
 	/// Performs the resolve choice operation for Incapacitation Choice Popup Controller.
 	/// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
 	/// </summary>
-	private void ResolveChoice(bool revive)
+	private void ResolveChoice(IncapacitationChoice choice)
 	{
 		if (!_choicePending)
 			return;
 
 		_choicePending = false;
 		ChoiceWindow.Hide();
-		RegionRun.ResolveCurrentIncapacitationChoice(revive);
+		RegionRun.ResolveCurrentIncapacitationChoice(choice);
 	}
 
 	/// <summary>
@@ -181,6 +213,9 @@ public partial class IncapacitationChoicePopupController : Node
 		valid &= Require(HeroNameLabel, nameof(HeroNameLabel));
 		valid &= Require(MessageLabel, nameof(MessageLabel));
 		valid &= Require(ReviveButton, nameof(ReviveButton));
+		valid &= Require(
+			GraveyardReviveButton,
+			nameof(GraveyardReviveButton));
 		valid &= Require(IncapacitateButton, nameof(IncapacitateButton));
 		return valid;
 	}

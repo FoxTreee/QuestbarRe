@@ -10,8 +10,6 @@ public partial class CharacterWindowEquipmentPanelController : Node
     [Export] public BackpackWindowController Backpack { get; set; } = null!;
     [Export] public ItemTooltipController ItemTooltip { get; set; } = null!;
     [Export] public Texture2D? FallbackItemIcon { get; set; }
-    [Export(PropertyHint.Range, "1,1000,1")]
-    public int TemporaryHeroLevel { get; set; } = 1;
 
     private readonly Dictionary<EquipmentSlot, ItemSlotView> _views = new();
     private readonly Dictionary<HeroActorController,
@@ -91,7 +89,7 @@ public partial class CharacterWindowEquipmentPanelController : Node
         if (!Matches(item, itemId, instanceId) || item!.EquipmentProfile is null) return false;
         EquipmentSlot slot = destination.CharacterEquipmentSlot;
         return HeroEquipmentEligibility.CanEquip(hero!.Definition.ClassDefinition,
-                TemporaryHeroLevel, item.EquipmentProfile, slot, out _) &&
+                hero.Progression.Level, item.EquipmentProfile, slot, out _) &&
             hero.Equipment.CanEquipResolved(item.EquipmentProfile, slot, out _);
     }
 
@@ -142,7 +140,7 @@ public partial class CharacterWindowEquipmentPanelController : Node
         BackpackItemState? incoming = Backpack.GetStorageItem(destination.SlotIndex);
         return incoming is null || (incoming.EquipmentProfile is not null &&
             HeroEquipmentEligibility.CanEquip(hero.Definition.ClassDefinition,
-                TemporaryHeroLevel, incoming.EquipmentProfile, slot, out _) &&
+                hero.Progression.Level, incoming.EquipmentProfile, slot, out _) &&
             hero.Equipment.CanEquipResolved(incoming.EquipmentProfile, slot, out _));
     }
 

@@ -6,6 +6,183 @@
 [ext_resource type="Script" uid="uid://bm43aglk74odj" path="res://Controllers/Actors/HeroAbilityCooldownIndicatorController.cs" id="4_d8mty"]
 [ext_resource type="PackedScene" uid="uid://b2o6pgg63qw4c" path="res://Scenes/UI/HeroComboPointDisplay.tscn" id="4_eh30r"]
 [ext_resource type="PackedScene" uid="uid://bfnc0qm24xd1v" path="res://HeroResourceBar.tscn" id="5_4ebpt"]
+[ext_resource type="Texture2D" uid="uid://dkvuosayjwsji" path="res://Assets/Characters/Warrior/Frames/sprite-5-1.png" id="7_58718"]
+[ext_resource type="Texture2D" uid="uid://bumf0qu476ls0" path="res://Assets/Characters/Warrior/Frames/warrior_idle_01.png" id="7_cwj2h"]
+[ext_resource type="Texture2D" uid="uid://jvrne6p3uu77" path="res://Assets/Characters/Warrior/Frames/sprite-5-2.png" id="8_5v2jw"]
+[ext_resource type="Texture2D" uid="uid://cb3swmnkxa3d5" path="res://Assets/Characters/Warrior/Frames/warrior_idle_02.png" id="8_qbl6w"]
+[ext_resource type="Texture2D" uid="uid://b6s24qaeo16s0" path="res://Assets/Characters/Warrior/Frames/sprite-5-3.png" id="9_31so0"]
+[ext_resource type="Texture2D" uid="uid://dyi4iessu7xgl" path="res://Assets/Characters/Warrior/Frames/warrior_idle_03.png" id="9_w0tsd"]
+[ext_resource type="Texture2D" uid="uid://8i0rasbtdsg5" path="res://Assets/Characters/Warrior/Frames/sprite-5-4.png" id="10_c3gok"]
+[ext_resource type="Texture2D" uid="uid://d2voihaq3ksa5" path="res://Assets/Characters/Warrior/Frames/warrior_idle_04.png" id="10_sdn4k"]
+[ext_resource type="Texture2D" uid="uid://b5i3slhp8oj5b" path="res://Assets/Characters/Warrior/Frames/warrior_idle_05.png" id="11_mkuno"]
+[ext_resource type="Texture2D" uid="uid://bpuqapw2eaeho" path="res://Assets/Characters/Warrior/Frames/sprite-5-5.png" id="11_uj4sg"]
+[ext_resource type="Texture2D" uid="uid://cc0uqbxqilwel" path="res://Assets/Characters/Warrior/Frames/sprite-5-6.png" id="12_4we3t"]
+[ext_resource type="Texture2D" uid="uid://cahof23hcb0cf" path="res://Assets/Characters/Warrior/Frames/warrior_idle_06.png" id="12_p10qu"]
+[ext_resource type="Texture2D" uid="uid://fomn5ru2fgmx" path="res://Assets/Characters/Warrior/Frames/warrior_melee_01.png" id="13_ngk3l"]
+[ext_resource type="Texture2D" uid="uid://c5d5jqsprtidj" path="res://Assets/Characters/Warrior/Frames/warrior_melee_02.png" id="14_cq3hv"]
+[ext_resource type="Texture2D" uid="uid://cohk8k3s0kh8o" path="res://Assets/Characters/Warrior/Frames/warrior_melee_03.png" id="15_o0v2b"]
+[ext_resource type="Texture2D" uid="uid://djwffv3ru6478" path="res://Assets/Characters/Warrior/Frames/warrior_melee_04.png" id="16_7rwik"]
+[ext_resource type="Texture2D" uid="uid://84g5oammbprl" path="res://Assets/Characters/Warrior/Frames/warrior_melee_05.png" id="17_4vygj"]
+[ext_resource type="Texture2D" uid="uid://ct4rc0pe35k88" path="res://Assets/Characters/Warrior/Frames/warrior_melee_06.png" id="18_ebhx1"]
+[ext_resource type="Texture2D" uid="uid://cbh7kghoerdrt" path="res://Assets/Characters/Warrior/Frames/sprite-6-1.png" id="19_aai23"]
+[ext_resource type="Texture2D" uid="uid://cctv0h4a3al3b" path="res://Assets/Characters/Warrior/Frames/warrior_taunt_01.png" id="19_uoma8"]
+[ext_resource type="Texture2D" uid="uid://dcnisyvebyd61" path="res://Assets/Characters/Warrior/Frames/sprite-6-2.png" id="20_mbxhg"]
+[ext_resource type="Texture2D" uid="uid://u4v33nheh5y3" path="res://Assets/Characters/Warrior/Frames/warrior_taunt_02.png" id="20_pi4x3"]
+[ext_resource type="Texture2D" uid="uid://d4f78pqw3kg0y" path="res://Assets/Characters/Warrior/Frames/sprite-6-3.png" id="21_be0i4"]
+[ext_resource type="Texture2D" uid="uid://db7sxvqccuvq0" path="res://Assets/Characters/Warrior/Frames/warrior_taunt_03.png" id="21_rsfub"]
+[ext_resource type="Texture2D" uid="uid://dir3xb5bcn01h" path="res://Assets/Characters/Warrior/Frames/sprite-6-4.png" id="22_4jty7"]
+[ext_resource type="Texture2D" uid="uid://dn838ytj127xe" path="res://Assets/Characters/Warrior/Frames/warrior_taunt_04.png" id="22_v3ibm"]
+[ext_resource type="Texture2D" uid="uid://dnnkho2u76tg0" path="res://Assets/Characters/Warrior/Frames/sprite-6-5.png" id="23_1fbx4"]
+[ext_resource type="Texture2D" uid="uid://dutj3cww1lake" path="res://Assets/Characters/Warrior/Frames/warrior_taunt_05.png" id="23_ok6to"]
+[ext_resource type="Texture2D" uid="uid://b6ci8goyvvfi3" path="res://Assets/Characters/Warrior/Frames/warrior_taunt_06.png" id="24_5fpps"]
+[ext_resource type="Texture2D" uid="uid://b40n505cwygn" path="res://Assets/Characters/Warrior/Frames/sprite-6-6.png" id="24_pvfwn"]
+[ext_resource type="Texture2D" uid="uid://da2q2vhxohm4d" path="res://Assets/Characters/Warrior/Frames/warrior_travel_01.png" id="32_58718"]
+[ext_resource type="Texture2D" uid="uid://c7r5w5jglogm2" path="res://Assets/Characters/Warrior/Frames/warrior_travel_02.png" id="33_5v2jw"]
+[ext_resource type="Texture2D" uid="uid://cepjbp4lsuvcn" path="res://Assets/Characters/Warrior/Frames/warrior_travel_03.png" id="34_31so0"]
+[ext_resource type="Texture2D" uid="uid://d243folujs37a" path="res://Assets/Characters/Warrior/Frames/warrior_travel_04.png" id="35_c3gok"]
+[ext_resource type="Texture2D" uid="uid://ppk4r6s8qnl6" path="res://Assets/Characters/Warrior/Frames/warrior_travel_05.png" id="36_uj4sg"]
+[ext_resource type="Texture2D" uid="uid://bnvk2s4r2hwi0" path="res://Assets/Characters/Warrior/Frames/warrior_travel_06.png" id="37_4we3t"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_d6g1g"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("13_ngk3l")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_cq3hv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_o0v2b")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_7rwik")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_4vygj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_ebhx1")
+}],
+"loop": 0,
+"name": &"attack_unarmed",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7_58718")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_5v2jw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_31so0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_c3gok")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_uj4sg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_4we3t")
+}],
+"loop": 1,
+"name": &"hurt",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7_cwj2h")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_qbl6w")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_w0tsd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_sdn4k")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_mkuno")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_p10qu")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("19_aai23")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_mbxhg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_be0i4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_4jty7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_1fbx4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_pvfwn")
+}],
+"loop": 0,
+"name": &"incapacitated",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("19_uoma8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_pi4x3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_rsfub")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_v3ibm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_ok6to")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_5fpps")
+}],
+"loop": 0,
+"name": &"taunt",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("32_58718")
+}, {
+"duration": 1.0,
+"texture": ExtResource("33_5v2jw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("34_31so0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("35_c3gok")
+}, {
+"duration": 1.0,
+"texture": ExtResource("36_uj4sg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("37_4we3t")
+}],
+"loop": 1,
+"name": &"travel",
+"speed": 5.0
+}]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d8mty"]
 bg_color = Color(0.31174156, 0.33386132, 0.38903552, 1)
@@ -28,45 +205,63 @@ corner_radius_top_right = 1
 corner_radius_bottom_right = 1
 corner_radius_bottom_left = 1
 
-[node name="HeroActor" type="Node2D" unique_id=162660220 node_paths=PackedStringArray("VisualRoot", "BodyBounds", "ProjectileOrigin", "AbilityCooldownIndicatorSlot1", "AbilityCooldownIndicatorSlot2", "ResourceBar", "ComboPointDisplay")]
+[node name="HeroActor" type="Node2D" unique_id=162660220 node_paths=PackedStringArray("VisualRoot", "CharacterArtRoot", "BaseBodySprite", "BodyBounds", "ProjectileOrigin", "AbilityCooldownIndicatorSlot1", "AbilityCooldownIndicatorSlot2", "ResourceBar", "ComboPointDisplay")]
 script = ExtResource("1_nd8h6")
 VisualRoot = NodePath("VisualRoot")
+CharacterArtRoot = NodePath("VisualRoot/CharacterArtRoot")
+BaseBodySprite = NodePath("VisualRoot/CharacterArtRoot/BaseBodySprite")
 BodyBounds = NodePath("VisualRoot/BodyBounds")
 ProjectileOrigin = NodePath("VisualRoot/ProjectileOrigin")
 AbilityCooldownIndicatorSlot1 = NodePath("VisualRoot/HeroAbilityCooldownIndicator")
 AbilityCooldownIndicatorSlot2 = NodePath("VisualRoot/HeroAbilityCooldownIndicator2")
 ResourceBar = NodePath("VisualRoot/HeroResourceBar")
 ComboPointDisplay = NodePath("VisualRoot/HeroComboPointDisplay")
+BobHeight = 0.0
+BobSpeed = 0.0
 MeleeSlotHorizontalSpacingMultiplier = 0.75
 MeleeSlotVerticalSpacingMultiplier = 0.4
 
 [node name="VisualRoot" type="Node2D" parent="." unique_id=18405630]
 
+[node name="CharacterArtRoot" type="Node2D" parent="VisualRoot" unique_id=1428118698]
+position = Vector2(0, -24)
+
+[node name="BaseBodySprite" type="AnimatedSprite2D" parent="VisualRoot/CharacterArtRoot" unique_id=115419564]
+position = Vector2(0, -19)
+sprite_frames = SubResource("SpriteFrames_d6g1g")
+animation = &"travel"
+frame_progress = 0.69475114
+
 [node name="ActorHealthBar" parent="VisualRoot" unique_id=1290293826 instance=ExtResource("3_d8mty")]
-position = Vector2(0, -48)
+position = Vector2(0, -96)
 
 [node name="HeroResourceBar" parent="VisualRoot" unique_id=1366571141 instance=ExtResource("5_4ebpt")]
-position = Vector2(0, -41)
+position = Vector2(0, -89)
 
 [node name="HeroComboPointDisplay" parent="VisualRoot" unique_id=1540390464 instance=ExtResource("4_eh30r")]
-position = Vector2(0, -36)
+position = Vector2(0, -84)
 
 [node name="HeroBody" type="Polygon2D" parent="VisualRoot" unique_id=1886110105]
+visible = false
 scale = Vector2(-1.4151518, 0.78945625)
 color = Color(0.44638622, 0.8959402, 0.30923367, 1)
 polygon = PackedVector2Array(-12, -40, -0.28832245, -40.000008, 12, -40, 12, -20, 12, 0, -12, 0)
 
 [node name="BodyBounds" type="Node2D" parent="VisualRoot" unique_id=471378649]
+scale = Vector2(1.29, 2.4)
 script = ExtResource("1_vrpdx")
 BoundsSize = Vector2(34, 32)
 metadata/_custom_type_script = "uid://cl6hid01monyl"
 
 [node name="ProjectileOrigin" type="Marker2D" parent="VisualRoot" unique_id=444408168]
-position = Vector2(-12, -24)
+position = Vector2(-14, -49)
+
+[node name="CombatTextAnchor" type="Marker2D" parent="VisualRoot" unique_id=60267493]
+position = Vector2(0, -122)
 
 [node name="HeroAbilityCooldownIndicator" type="Node2D" parent="VisualRoot" unique_id=390563175]
 z_index = 6
-position = Vector2(-8, -62)
+position = Vector2(-8, -110)
 scale = Vector2(1.3370678, 1.3863667)
 script = ExtResource("4_d8mty")
 
@@ -94,7 +289,7 @@ show_percentage = false
 
 [node name="HeroAbilityCooldownIndicator2" type="Node2D" parent="VisualRoot" unique_id=2106245047]
 z_index = 6
-position = Vector2(8, -62)
+position = Vector2(8, -110)
 scale = Vector2(1.3370678, 1.3863667)
 script = ExtResource("4_d8mty")
 

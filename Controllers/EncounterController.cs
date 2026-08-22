@@ -7,7 +7,7 @@ public partial class EncounterController : Node
 	[Signal]
 	public delegate void ActiveMonsterCountChangedEventHandler(
 	int activeMonsterCount);
-	
+
 	[ExportCategory("Dependencies")]
 	/// <summary>
 	/// Inspector reference used by this component for its journey state dependency.
@@ -50,6 +50,19 @@ public partial class EncounterController : Node
 	/// </summary>
 	[Export]
 	public EncounterPoolContentRegistry EncounterPoolRegistry { get; set; } = null!;
+
+	/// <summary>
+	/// Awards hero XP exactly once when this controller accepts a monster death.
+	/// </summary>
+	[Export]
+	public HeroExperienceService Experience { get; set; } = null!;
+
+	/// <summary>
+	/// Rolls the defeated monster's own loot table exactly once after this
+	/// controller accepts and removes that monster from the active roster.
+	/// </summary>
+	[Export]
+	public MonsterLootService Loot { get; set; } = null!;
 
 	[ExportCategory("Monster Spawn Formation")]
 
@@ -184,6 +197,7 @@ public partial class EncounterController : Node
 		if (!TrySpawnRolledComposition(
 			definition,
 			rolledComposition,
+			null,
 			out int successfullySpawned,
 			out result))
 		{
@@ -224,6 +238,23 @@ public partial class EncounterController : Node
 		string poolContentId,
 		out string result)
 	{
+		return TryStartEncounterPool(
+			poolContentId,
+			0.0f,
+			null,
+			out result);
+	}
+
+	/// <summary>
+	/// Starts a regional encounter using the current travel availability and a
+	/// fixed difficulty snapshot shared by every monster in the encounter.
+	/// </summary>
+	public bool TryStartEncounterPool(
+		string poolContentId,
+		float regionTravelProgress,
+		MonsterDifficultySnapshot? difficulty,
+		out string result)
+	{
 		result = string.Empty;
 
 		if (JourneyState.CurrentState
@@ -248,8 +279,10 @@ public partial class EncounterController : Node
 
 		if (!TrySelectEncounterFromPool(
 			pool,
+			regionTravelProgress,
 			out EncounterPoolEntry selectedEntry,
 			out int roll,
+			out int eligibleWeight,
 			out result))
 		{
 			return false;
@@ -260,7 +293,7 @@ public partial class EncounterController : Node
 			$"({pool.ContentId})");
 
 		DebugLog.Print(
-			$"  Roll: {roll} / {pool.GetTotalWeight()}");
+			$"  Roll: {roll} / {eligibleWeight}");
 
 		DebugLog.Print(
 			$"  Selected: {selectedEntry.EncounterContentId}");
@@ -302,6 +335,7 @@ public partial class EncounterController : Node
 		if (!TrySpawnRolledComposition(
 			definition,
 			rolledComposition,
+			difficulty,
 			out int successfullySpawned,
 			out result))
 		{
@@ -316,7 +350,12 @@ public partial class EncounterController : Node
 
 		result =
 			$"Started pool {pool.ContentId}; selected " +
-			$"{definition.ContentId} with {successfullySpawned} monster(s).";
+			$"{definition.ContentId} with {successfullySpawned} monster(s)" +
+			(difficulty is null
+				? "."
+				: $" at level {difficulty.MonsterLevel}, " +
+					$"health x{difficulty.HealthMultiplier:0.###}, " +
+					$"damage x{difficulty.DamageMultiplier:0.###}.");
 
 		return true;
 	}
@@ -376,6 +415,7 @@ public partial class EncounterController : Node
 	private bool TrySpawnRolledComposition(
 		EncounterDefinition definition,
 		IReadOnlyList<(EncounterMonsterEntry Entry, int Count)> rolledComposition,
+		MonsterDifficultySnapshot? difficulty,
 		out int successfullySpawned,
 		out string result)
 	{
@@ -388,7 +428,7 @@ public partial class EncounterController : Node
 			for (int i = 0; i < count; i++)
 			{
 				MonsterActorController? monster =
-					SpawnMonster(entry.MonsterContentId);
+					SpawnMonster(entry.MonsterContentId, difficulty);
 
 				if (monster is null)
 				{
@@ -626,8 +666,10 @@ public partial class EncounterController : Node
 		{
 			if (TrySelectEncounterFromPool(
 				pool,
+				0.0f,
 				out EncounterPoolEntry selectedEntry,
 				out int roll,
+				out int eligibleWeight,
 				out string selectionError))
 			{
 				DebugLog.Print(
@@ -635,7 +677,7 @@ public partial class EncounterController : Node
 					$"({pool.ContentId})");
 
 				DebugLog.Print(
-					$"  Roll: {roll} / {pool.GetTotalWeight()}");
+					$"  Roll: {roll} / {eligibleWeight}");
 
 				DebugLog.Print(
 					$"  Selected: {selectedEntry.EncounterContentId}");
@@ -702,32 +744,38 @@ public partial class EncounterController : Node
 	/// </summary>
 	private bool TrySelectEncounterFromPool(
 		EncounterPoolDefinition pool,
+		float regionTravelProgress,
 		out EncounterPoolEntry selectedEntry,
 		out int roll,
+		out int eligibleWeight,
 		out string result)
 	{
 		selectedEntry = null!;
 		roll = 0;
+		eligibleWeight = 0;
 		result = string.Empty;
 
-		int totalWeight = pool.GetTotalWeight();
+		eligibleWeight = pool.GetEligibleWeight(regionTravelProgress);
 
-		if (totalWeight <= 0)
+		if (eligibleWeight <= 0)
 		{
 			result =
-				$"Encounter pool '{pool.ContentId}' has no " +
-				"positive selection weight.";
+				$"Encounter pool '{pool.ContentId}' has no eligible " +
+				$"encounters at {regionTravelProgress * 100.0f:0.##}% " +
+				"regional travel progress.";
 
 			return false;
 		}
 
-		roll = _spawnRandom.RandiRange(1, totalWeight);
+		roll = _spawnRandom.RandiRange(1, eligibleWeight);
 		int cumulativeWeight = 0;
 
 		foreach (EncounterPoolEntry entry in pool.Entries)
 		{
 			if (!GodotObject.IsInstanceValid(entry)
-				|| entry.Weight <= 0)
+				|| entry.Weight <= 0
+				|| !entry.IsAvailableAtRegionTravelProgress(
+					regionTravelProgress))
 			{
 				continue;
 			}
@@ -772,6 +820,7 @@ public partial class EncounterController : Node
 		if (!TrySpawnRolledComposition(
 			definition,
 			rolledComposition,
+			null,
 			out int successfullySpawned,
 			out result))
 		{
@@ -899,10 +948,13 @@ public partial class EncounterController : Node
 	/// Performs the spawn monster operation for Encounter Controller.
 	/// Uses the supplied arguments and current state and returns the resulting monster actor controller to the caller.
 	/// </summary>
-	private MonsterActorController? SpawnMonster(string contentId)
+	private MonsterActorController? SpawnMonster(
+		string contentId,
+		MonsterDifficultySnapshot? difficulty = null)
 	{
 		if (!MonsterFactory.TryCreate(
 			contentId,
+			difficulty,
 			out MonsterActorController monster,
 			out string error))
 		{
@@ -1013,6 +1065,12 @@ public partial class EncounterController : Node
 		monster.Died -=
 			OnMonsterDied;
 
+		if (GodotObject.IsInstanceValid(monster.Definition))
+		{
+			Experience.AwardMonsterDefeat(monster);
+			Loot.AwardMonsterDefeat(monster);
+		}
+
 		EmitActiveMonsterCountChanged();
 
 		DebugLog.Print(
@@ -1069,6 +1127,14 @@ public partial class EncounterController : Node
 		valid &= Require(
 			EncounterPoolRegistry,
 			nameof(EncounterPoolRegistry));
+
+		valid &= Require(
+			Experience,
+			nameof(Experience));
+
+		valid &= Require(
+			Loot,
+			nameof(Loot));
 
 		if (string.IsNullOrWhiteSpace(DefaultEncounterPoolContentId))
 		{

@@ -52,6 +52,19 @@ public partial class MonsterFactory : Node
 		out MonsterActorController monster,
 		out string error)
 	{
+		return TryCreate(contentId, null, out monster, out error);
+	}
+
+	/// <summary>
+	/// Creates a monster with an optional regional difficulty snapshot. The
+	/// snapshot changes only this actor and never mutates registered content.
+	/// </summary>
+	public bool TryCreate(
+		string contentId,
+		MonsterDifficultySnapshot? difficulty,
+		out MonsterActorController monster,
+		out string error)
+	{
 		monster = null!;
 		error = string.Empty;
 
@@ -112,7 +125,8 @@ public partial class MonsterFactory : Node
 		monster.Configure(
 			definition,
 			abilities,
-			SceneBoundaries);
+			SceneBoundaries,
+			difficulty);
 
 		return true;
 	}

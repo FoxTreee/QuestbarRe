@@ -13,6 +13,14 @@ public partial class MonsterContentRegistry : Node
     public AbilityContentRegistry AbilityRegistry
     { get; set; } = null!;
 
+    /// <summary>
+    /// Resolves and validates every item Content ID authored in monster loot
+    /// tables before those monsters are made available to encounter content.
+    /// </summary>
+    [Export]
+    public ItemContentRegistry ItemRegistry
+    { get; set; } = null!;
+
     [ExportCategory("Monster Content")]
     /// <summary>
     /// Controls definitions.
@@ -52,9 +60,23 @@ public partial class MonsterContentRegistry : Node
             return;
         }
 
-        // Ability content may appear later in sibling scene order.
-        // Rebuild explicitly so monster loadouts can validate now.
+        if (!GodotObject.IsInstanceValid(ItemRegistry))
+        {
+            GD.PushError(
+                "MonsterContentRegistry is missing its " +
+                "ItemRegistry Inspector reference.");
+
+            DebugLog.Print(
+                "MonsterContentRegistry could not rebuild: " +
+                "ItemRegistry reference is missing.");
+
+            return;
+        }
+
+        // Referenced content may appear later in sibling scene order. Rebuild
+        // both registries explicitly so monster content can validate now.
         AbilityRegistry.Rebuild();
+        ItemRegistry.Rebuild();
         Rebuild();
 
         DebugLog.Print(
@@ -168,6 +190,35 @@ public partial class MonsterContentRegistry : Node
                 errors.Add(
                     $"{definition.ContentId}: unknown ability " +
                     $"Content ID '{abilityContentId}'.");
+            }
+        }
+
+        foreach (MonsterLootEntry lootEntry in definition.LootTable)
+        {
+            if (!GodotObject.IsInstanceValid(lootEntry)
+                || !global::ContentId.IsValid(lootEntry.ItemContentId))
+            {
+                continue;
+            }
+
+            if (!ItemRegistry.TryGet(
+                lootEntry.ItemContentId,
+                out ItemDefinition itemDefinition))
+            {
+                errors.Add(
+                    $"{definition.ContentId}: unknown loot item " +
+                    $"Content ID '{lootEntry.ItemContentId}'.");
+                continue;
+            }
+
+            if (itemDefinition.IsUnique
+                && (lootEntry.MinimumQuantity != 1
+                    || lootEntry.MaximumQuantity != 1))
+            {
+                errors.Add(
+                    $"{definition.ContentId}: unique loot item " +
+                    $"'{lootEntry.ItemContentId}' must use a fixed " +
+                    "quantity of one.");
             }
         }
 

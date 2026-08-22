@@ -25,6 +25,22 @@ public partial class EncounterPoolEntry : Resource
     [Export(PropertyHint.Range, "1,10000,1")]
     public int Weight { get; set; } = 1;
 
+	[ExportCategory("Regional Travel Availability")]
+
+	/// <summary>
+	/// Minimum percentage of the region's full exploration travel time required
+	/// before this encounter can be selected.
+	/// </summary>
+	[Export(PropertyHint.Range, "0,100,0.1,suffix:%")]
+	public float AvailableFromRegionTravelPercent { get; set; } = 0.0f;
+
+	/// <summary>
+	/// Maximum regional travel percentage at which this encounter remains in
+	/// the pool. Leave at 100 to keep it available at maximum depth.
+	/// </summary>
+	[Export(PropertyHint.Range, "0,100,0.1,suffix:%")]
+	public float AvailableThroughRegionTravelPercent { get; set; } = 100.0f;
+
     [ExportCategory("Authoring")]
 
     /// <summary>
@@ -57,6 +73,36 @@ public partial class EncounterPoolEntry : Resource
                 "greater than zero.");
         }
 
+		if (AvailableFromRegionTravelPercent < 0.0f
+			|| AvailableFromRegionTravelPercent > 100.0f)
+		{
+			errors.Add(
+				$"{EncounterContentId}: AvailableFromRegionTravelPercent " +
+				"must be between 0 and 100.");
+		}
+
+		if (AvailableThroughRegionTravelPercent
+			< AvailableFromRegionTravelPercent
+			|| AvailableThroughRegionTravelPercent > 100.0f)
+		{
+			errors.Add(
+				$"{EncounterContentId}: " +
+				"AvailableThroughRegionTravelPercent must be between " +
+				"AvailableFromRegionTravelPercent and 100.");
+		}
+
         return errors;
     }
+
+	/// <summary>
+	/// Returns whether this encounter participates in the weighted roll at the
+	/// supplied normalized regional travel progress.
+	/// </summary>
+	public bool IsAvailableAtRegionTravelProgress(float progress)
+	{
+		float percent = Mathf.Clamp(progress, 0.0f, 1.0f) * 100.0f;
+
+		return percent >= AvailableFromRegionTravelPercent
+			&& percent <= AvailableThroughRegionTravelPercent;
+	}
 }

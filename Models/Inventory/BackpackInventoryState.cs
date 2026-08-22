@@ -95,6 +95,89 @@ public sealed class BackpackInventoryState
         kind = default; index = -1; return false;
     }
 
+    /// <summary>
+    /// Counts matching items in ordinary Backpack storage. Stack quantities
+    /// contribute their complete count; unique items contribute one each.
+    /// </summary>
+    public int GetItemQuantity(string itemId)
+    {
+        if (string.IsNullOrWhiteSpace(itemId))
+            return 0;
+
+        int total = 0;
+
+        foreach (BackpackInventoryLocation location in _storageLocations)
+        {
+            BackpackItemState? item = location.Item;
+
+            if (item is not null
+                && item.ItemId.Equals(
+                    itemId,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                total += item.Quantity;
+            }
+        }
+
+        return total;
+    }
+
+    /// <summary>
+    /// Atomically consumes a requested quantity from matching storage stacks.
+    /// The inventory is unchanged when the complete quantity is unavailable.
+    /// </summary>
+    public bool TryConsumeItem(
+        string itemId,
+        int quantity,
+        out string error)
+    {
+        error = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(itemId) || quantity < 1)
+        {
+            error = "Item consumption requires a valid ID and quantity.";
+            return false;
+        }
+
+        int available = GetItemQuantity(itemId);
+
+        if (available < quantity)
+        {
+            error =
+                $"Requires {quantity} '{itemId}', but only " +
+                $"{available} is available.";
+            return false;
+        }
+
+        int remaining = quantity;
+
+        foreach (BackpackInventoryLocation location in _storageLocations)
+        {
+            BackpackItemState? item = location.Item;
+
+            if (remaining == 0)
+                break;
+
+            if (item is null
+                || !item.ItemId.Equals(
+                    itemId,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            int consumed = Math.Min(remaining, item.Quantity);
+            int newQuantity = item.Quantity - consumed;
+            location.SetItem(
+                newQuantity == 0
+                    ? null
+                    : item.WithQuantity(newQuantity));
+            remaining -= consumed;
+        }
+
+        return true;
+    }
+
     public bool TryRestore(
         IReadOnlyList<BackpackItemState?> bags,
         IReadOnlyList<BackpackItemState?> storage,
@@ -356,6 +439,103 @@ public sealed class BackpackInventoryState
         source.SetItem(item.WithQuantity(item.Quantity - splitQuantity));
         _storageLocations[destinationIndex].SetItem(
             item.CreateSplitStack(_nextSplitStackId++, splitQuantity));
+        return true;
+    }
+
+    /// <summary>
+    /// Deletes the exact item identified by a right-click action. Removing an
+    /// equipped bag succeeds only when every displaced storage item still fits.
+    /// </summary>
+    public bool TryDeleteItem(
+        BackpackLocationKind kind,
+        int index,
+        string expectedItemId,
+        long? expectedStackId,
+        long? expectedUniqueInstanceId,
+        out BackpackItemState? deletedItem,
+        out string error)
+    {
+        deletedItem = null;
+        error = string.Empty;
+
+        if (!TryGetLocation(
+            kind,
+            index,
+            out BackpackInventoryLocation? location))
+        {
+            error = "The selected Backpack location no longer exists.";
+            return false;
+        }
+
+        BackpackItemState? item = location!.Item;
+
+        if (item is null
+            || !SourceIdentityMatches(
+                item,
+                expectedItemId,
+                expectedStackId,
+                expectedUniqueInstanceId))
+        {
+            error = "The selected item no longer matches the delete request.";
+            return false;
+        }
+
+        if (kind == BackpackLocationKind.Storage)
+        {
+            location.SetItem(null);
+            deletedItem = item;
+            return true;
+        }
+
+        if (kind != BackpackLocationKind.BagEquipment)
+        {
+            error = $"Items cannot be deleted from {kind}.";
+            return false;
+        }
+
+        BackpackItemState?[] proposedBags =
+            SnapshotItems(_bagEquipmentLocations);
+        BackpackItemState?[] proposedStorage =
+            SnapshotItems(_storageLocations);
+        proposedBags[index] = null;
+
+        int proposedCapacity = BaseStorageSlotCount;
+
+        foreach (BackpackItemState? bag in proposedBags)
+            proposedCapacity += bag?.AddedInventorySlots ?? 0;
+
+        List<BackpackItemState> displacedItems = new();
+
+        for (int storageIndex = proposedCapacity;
+            storageIndex < proposedStorage.Length;
+            storageIndex++)
+        {
+            if (proposedStorage[storageIndex] is BackpackItemState displaced)
+                displacedItems.Add(displaced);
+        }
+
+        for (int displacedIndex = 0;
+            displacedIndex < displacedItems.Count;
+            displacedIndex++)
+        {
+            int emptyIndex = FindEmptyIndex(
+                proposedStorage,
+                proposedCapacity);
+
+            if (emptyIndex < 0)
+            {
+                error =
+                    "This bag cannot be deleted because its removal would " +
+                    "leave Backpack items without storage slots.";
+                return false;
+            }
+
+            proposedStorage[emptyIndex] = displacedItems[displacedIndex];
+        }
+
+        CommitBagItems(proposedBags);
+        CommitStorageItems(proposedStorage, proposedCapacity);
+        deletedItem = item;
         return true;
     }
 

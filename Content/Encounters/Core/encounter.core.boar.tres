@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EncounterDefinition" format=3 uid="uid://ytqa348yw7ik"]
+
+[ext_resource type="Script" uid="uid://dqnfbfud0btw0" path="res://Scripts/Content/Definitions/EncounterMonsterEntry.cs" id="1_wbvgj"]
+[ext_resource type="Script" uid="uid://j08orv8sgbi4" path="res://Scripts/Content/Definitions/EncounterDefinition.cs" id="2_pkiti"]
+
+[sub_resource type="Resource" id="EncounterMonsterEntry_regular"]
+script = ExtResource("1_wbvgj")
+MonsterContentId = "monster.core.boar"
+MaximumCount = 2
+
+[resource]
+script = ExtResource("2_pkiti")
+ContentId = "encounter.core.boar"
+DisplayName = "Boar"
+MonsterComposition = Array[ExtResource("1_wbvgj")]([SubResource("EncounterMonsterEntry_regular")])

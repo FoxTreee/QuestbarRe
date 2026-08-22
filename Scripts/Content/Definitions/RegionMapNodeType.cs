@@ -9,5 +9,6 @@ public enum RegionMapNodeType
     Subregion,
     Dungeon,
     Town,
-    RegionGateway
+    RegionGateway,
+    Graveyard
 }

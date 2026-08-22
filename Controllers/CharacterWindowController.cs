@@ -11,12 +11,14 @@ public partial class CharacterWindowController : Node
     [Export]
     public PartyController Party { get; set; } = null!;
 
+    [Export]
+    public ExperienceCurveService ExperienceCurve { get; set; } = null!;
+
 
     [ExportCategory("Character Header")]
 
     /// <summary>
-    /// Displays the currently selected hero's authored display name.
-    /// Level remains a placeholder until Questbar has authoritative level data.
+    /// Displays the selected hero's name, level, and current XP progress.
     /// </summary>
     [Export]
     public Label SelectedHeroLabel { get; set; } = null!;
@@ -140,6 +142,9 @@ public partial class CharacterWindowController : Node
     /// </summary>
     public override void _ExitTree()
     {
+        if (GodotObject.IsInstanceValid(SelectedHero))
+            SelectedHero!.Progression.Changed -= OnSelectedProgressionChanged;
+
         if (GodotObject.IsInstanceValid(Party))
         {
             Party.PartySpawned -=
@@ -221,7 +226,7 @@ public partial class CharacterWindowController : Node
                     hero!);
 
             button.Text =
-                $"{displayName}\nLvl —";
+                $"{displayName}\nLvl {hero!.Progression.Level}";
 
             button.TooltipText =
                 hero!.Definition?.ContentId
@@ -260,8 +265,11 @@ public partial class CharacterWindowController : Node
         if (!GodotObject.IsInstanceValid(hero))
             return false;
 
-        SelectedHero =
-            hero;
+        if (GodotObject.IsInstanceValid(SelectedHero))
+            SelectedHero!.Progression.Changed -= OnSelectedProgressionChanged;
+
+        SelectedHero = hero;
+        SelectedHero.Progression.Changed += OnSelectedProgressionChanged;
 
         SelectedPartySlotIndex =
             slotIndex;
@@ -270,8 +278,7 @@ public partial class CharacterWindowController : Node
             GetHeroDisplayName(
                 hero!);
 
-        SelectedHeroLabel.Text =
-            $"{displayName} — Level —";
+        RefreshSelectedHeroLabel();
 
         for (int buttonIndex = 0;
             buttonIndex < _partyButtons.Length;
@@ -292,6 +299,30 @@ public partial class CharacterWindowController : Node
             hero!);
 
         return true;
+    }
+
+    /// <summary>
+    /// Refreshes character-window progression immediately after XP or a level-up.
+    /// </summary>
+    private void OnSelectedProgressionChanged()
+    {
+        RefreshSelectedHeroLabel();
+        RefreshPartySelector();
+    }
+
+    private void RefreshSelectedHeroLabel()
+    {
+        if (!GodotObject.IsInstanceValid(SelectedHero))
+            return;
+
+        string displayName = GetHeroDisplayName(SelectedHero!);
+        HeroProgressionState progression = SelectedHero!.Progression;
+
+        SelectedHeroLabel.Text = progression.Level >= HeroProgressionState.MaximumLevel
+            ? $"{displayName} — Level 60 — MAX"
+            : $"{displayName} — Level {progression.Level} — " +
+              $"{progression.Experience:0}/" +
+              $"{ExperienceCurve.GetExperienceRequiredForNextLevel(progression.Level):0} XP";
     }
 
 
@@ -377,6 +408,11 @@ public partial class CharacterWindowController : Node
             Require(
                 Party,
                 nameof(Party));
+
+        valid &=
+            Require(
+                ExperienceCurve,
+                nameof(ExperienceCurve));
 
         valid &=
             Require(

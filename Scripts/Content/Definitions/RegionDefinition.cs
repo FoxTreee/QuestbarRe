@@ -36,11 +36,34 @@ public partial class RegionDefinition : Resource
 	public string EncounterPoolContentId { get; set; } = string.Empty;
 
 	/// <summary>
-	/// Controls monster group count, measured as a count.
-	/// For example, changing 4 to 8 doubles the configured monster group count.
+	/// When enabled, victories always return to travel and another encounter is
+	/// scheduled. Disable this only for authored finite runs such as a scenario.
+	/// </summary>
+	[Export]
+	public bool EncountersLoopIndefinitely { get; set; } = true;
+
+	/// <summary>
+	/// Number of groups in a finite run. This is ignored while
+	/// EncountersLoopIndefinitely is enabled.
 	/// </summary>
 	[Export(PropertyHint.Range, "1,100,1")]
 	public int MonsterGroupCount { get; set; } = 4;
+
+	[ExportCategory("Encounter Timing")]
+
+	/// <summary>
+	/// Shortest Traveling-state delay that may be rolled before an encounter.
+	/// Set this equal to MaximumTravelSecondsBetweenEncounters for fixed timing.
+	/// </summary>
+	[Export(PropertyHint.Range, "0,3600,0.1,suffix:s")]
+	public float MinimumTravelSecondsBetweenEncounters { get; set; } = 4.0f;
+
+	/// <summary>
+	/// Longest Traveling-state delay that may be rolled before an encounter.
+	/// A fresh value is selected at run start and after each cleared encounter.
+	/// </summary>
+	[Export(PropertyHint.Range, "0,3600,0.1,suffix:s")]
+	public float MaximumTravelSecondsBetweenEncounters { get; set; } = 8.0f;
 
 	[ExportCategory("Exploration")]
 
@@ -51,21 +74,54 @@ public partial class RegionDefinition : Resource
 	[Export(PropertyHint.Range, "1,86400,1,suffix:s")]
 	public float FullExplorationTravelSeconds { get; set; } = 7200.0f;
 
-	[ExportCategory("Completion Reward")]
-	/// <summary>
-	/// Stable content identifier for completion reward; other systems use this value to find the same game data.
-	/// For example, changing this ID makes the owning resource resolve a different registered completion reward.
-	/// </summary>
-	[Export(PropertyHint.PlaceholderText, "currency.core.gold")]
-	public string CompletionRewardContentId { get; set; } =
-		"currency.core.gold";
+	[ExportCategory("Graveyard Checkpoints")]
 
 	/// <summary>
-	/// Controls completion reward amount, measured as a count.
-	/// For example, changing 100 to 200 doubles the configured completion reward amount.
+	/// Region-specific checkpoints discovered by exploration percentage. A
+	/// graveyard revival rewinds saved exploration to the highest discovered one.
 	/// </summary>
-	[Export(PropertyHint.Range, "0,1000000,1")]
-	public int CompletionRewardAmount { get; set; } = 100;
+	[Export]
+	public Godot.Collections.Array<GraveyardCheckpointDefinition>
+		GraveyardCheckpoints
+	{ get; set; } = new();
+
+	[ExportCategory("Monster Difficulty")]
+
+	/// <summary>
+	/// Runtime level assigned to monsters at zero regional travel progress.
+	/// The authored monster definition remains unchanged.
+	/// </summary>
+	[Export(PropertyHint.Range, "1,60,1")]
+	public int StartingMonsterLevel { get; set; } = 1;
+
+	/// <summary>
+	/// Highest runtime monster level in this region. It is reached only when
+	/// FullExplorationTravelSeconds has been reached.
+	/// </summary>
+	[Export(PropertyHint.Range, "1,60,1")]
+	public int MaximumMonsterLevel { get; set; } = 5;
+
+	/// <summary>
+	/// Travel-time interval between difficulty updates. Set this to zero for
+	/// continuous scaling; larger values create fewer, more noticeable steps.
+	/// </summary>
+	[Export(PropertyHint.Range, "0,86400,1,suffix:s")]
+	public float DifficultyIncreaseIntervalTravelSeconds { get; set; } =
+		300.0f;
+
+	/// <summary>
+	/// Percentage added to each monster definition's base maximum health at
+	/// full exploration. For example, 50 produces 150% of base health.
+	/// </summary>
+	[Export(PropertyHint.Range, "0,10000,1,suffix:%")]
+	public float MaximumHealthIncreasePercent { get; set; } = 50.0f;
+
+	/// <summary>
+	/// Percentage added to basic attacks and fixed-damage monster abilities at
+	/// full exploration. For example, 25 produces 125% of base damage.
+	/// </summary>
+	[Export(PropertyHint.Range, "0,10000,1,suffix:%")]
+	public float MaximumDamageIncreasePercent { get; set; } = 25.0f;
 
 	[ExportCategory("Presentation")]
 	/// <summary>
@@ -108,11 +164,27 @@ public partial class RegionDefinition : Resource
 				$"'{EncounterPoolContentId}'.");
 		}
 
-		if (MonsterGroupCount <= 0)
+		if (!EncountersLoopIndefinitely
+			&& MonsterGroupCount <= 0)
 		{
 			errors.Add(
 				$"{ContentId}: MonsterGroupCount must be " +
 				"greater than zero.");
+		}
+
+		if (MinimumTravelSecondsBetweenEncounters < 0.0f)
+		{
+			errors.Add(
+				$"{ContentId}: MinimumTravelSecondsBetweenEncounters " +
+				"cannot be negative.");
+		}
+
+		if (MaximumTravelSecondsBetweenEncounters
+			< MinimumTravelSecondsBetweenEncounters)
+		{
+			errors.Add(
+				$"{ContentId}: MaximumTravelSecondsBetweenEncounters " +
+				"must be greater than or equal to the minimum.");
 		}
 
 		if (FullExplorationTravelSeconds <= 0.0f)
@@ -122,19 +194,175 @@ public partial class RegionDefinition : Resource
 				"greater than zero.");
 		}
 
-		if (!global::ContentId.IsValid(CompletionRewardContentId))
+		HashSet<string> seenGraveyardIds =
+			new(System.StringComparer.OrdinalIgnoreCase);
+
+		foreach (GraveyardCheckpointDefinition graveyard
+			in GraveyardCheckpoints)
 		{
-			errors.Add(
-				$"{ContentId}: invalid completion reward Content ID " +
-				$"'{CompletionRewardContentId}'.");
+			if (!GodotObject.IsInstanceValid(graveyard))
+			{
+				errors.Add(
+					$"{ContentId}: GraveyardCheckpoints contains a " +
+					"missing entry.");
+				continue;
+			}
+
+			foreach (string error in graveyard.GetValidationErrors())
+				errors.Add($"{ContentId}: {error}");
+
+			if (global::ContentId.IsValid(graveyard.ContentId)
+				&& !seenGraveyardIds.Add(graveyard.ContentId.Trim()))
+			{
+				errors.Add(
+					$"{ContentId}: duplicate graveyard Content ID " +
+					$"'{graveyard.ContentId}'.");
+			}
 		}
 
-		if (CompletionRewardAmount < 0)
+		if (StartingMonsterLevel < 1 || StartingMonsterLevel > 60)
 		{
 			errors.Add(
-				$"{ContentId}: CompletionRewardAmount cannot be negative.");
+				$"{ContentId}: StartingMonsterLevel must be " +
+				"between 1 and 60.");
+		}
+
+		if (MaximumMonsterLevel < StartingMonsterLevel
+			|| MaximumMonsterLevel > 60)
+		{
+			errors.Add(
+				$"{ContentId}: MaximumMonsterLevel must be between " +
+				"StartingMonsterLevel and 60.");
+		}
+
+		if (DifficultyIncreaseIntervalTravelSeconds < 0.0f)
+		{
+			errors.Add(
+				$"{ContentId}: DifficultyIncreaseIntervalTravelSeconds " +
+				"cannot be negative.");
+		}
+
+		if (MaximumHealthIncreasePercent < 0.0f)
+		{
+			errors.Add(
+				$"{ContentId}: MaximumHealthIncreasePercent cannot " +
+				"be negative.");
+		}
+
+		if (MaximumDamageIncreasePercent < 0.0f)
+		{
+			errors.Add(
+				$"{ContentId}: MaximumDamageIncreasePercent cannot " +
+				"be negative.");
 		}
 
 		return errors;
+	}
+
+	/// <summary>
+	/// Finds the discovered graveyard with the greatest checkpoint percentage.
+	/// Array order is irrelevant, so regions may author any number of graveyards.
+	/// </summary>
+	public bool TryGetLatestDiscoveredGraveyard(
+		float explorationPercent,
+		out GraveyardCheckpointDefinition graveyard)
+	{
+		graveyard = null!;
+		float clampedPercent = Mathf.Clamp(
+			explorationPercent,
+			0.0f,
+			100.0f);
+		float latestPercent = -1.0f;
+
+		foreach (GraveyardCheckpointDefinition candidate
+			in GraveyardCheckpoints)
+		{
+			if (!GodotObject.IsInstanceValid(candidate)
+				|| candidate.DiscoveryPercent > clampedPercent + 0.001f
+				|| candidate.DiscoveryPercent <= latestPercent)
+			{
+				continue;
+			}
+
+			graveyard = candidate;
+			latestPercent = candidate.DiscoveryPercent;
+		}
+
+		return GodotObject.IsInstanceValid(graveyard);
+	}
+
+	public bool TryGetGraveyard(
+		string graveyardContentId,
+		out GraveyardCheckpointDefinition graveyard)
+	{
+		foreach (GraveyardCheckpointDefinition candidate
+			in GraveyardCheckpoints)
+		{
+			if (GodotObject.IsInstanceValid(candidate)
+				&& candidate.ContentId.Equals(
+					graveyardContentId?.Trim(),
+					System.StringComparison.OrdinalIgnoreCase))
+			{
+				graveyard = candidate;
+				return true;
+			}
+		}
+
+		graveyard = null!;
+		return false;
+	}
+
+	public double GetGraveyardTravelSeconds(
+		GraveyardCheckpointDefinition graveyard)
+	{
+		return FullExplorationTravelSeconds
+			* (Mathf.Clamp(graveyard.DiscoveryPercent, 0.0f, 100.0f)
+				/ 100.0);
+	}
+
+	/// <summary>
+	/// Captures the level, health, and damage scaling for a newly starting
+	/// encounter. Existing monsters never change when travel time advances.
+	/// </summary>
+	public MonsterDifficultySnapshot CreateMonsterDifficultySnapshot(
+		double regionTravelSeconds)
+	{
+		double clampedTravelSeconds = System.Math.Clamp(
+			regionTravelSeconds,
+			0.0,
+			FullExplorationTravelSeconds);
+
+		double difficultyTravelSeconds = clampedTravelSeconds;
+
+		if (DifficultyIncreaseIntervalTravelSeconds > 0.0f
+			&& clampedTravelSeconds < FullExplorationTravelSeconds)
+		{
+			difficultyTravelSeconds = System.Math.Floor(
+				clampedTravelSeconds
+				/ DifficultyIncreaseIntervalTravelSeconds)
+				* DifficultyIncreaseIntervalTravelSeconds;
+		}
+
+		float progress = Mathf.Clamp(
+			(float)(difficultyTravelSeconds
+				/ FullExplorationTravelSeconds),
+			0.0f,
+			1.0f);
+
+		int levelRange = MaximumMonsterLevel - StartingMonsterLevel;
+		int monsterLevel = StartingMonsterLevel
+			+ Mathf.FloorToInt(levelRange * progress);
+
+		float healthMultiplier = 1.0f
+			+ (MaximumHealthIncreasePercent / 100.0f) * progress;
+		float damageMultiplier = 1.0f
+			+ (MaximumDamageIncreasePercent / 100.0f) * progress;
+
+		return new MonsterDifficultySnapshot(
+			monsterLevel,
+			healthMultiplier,
+			damageMultiplier,
+			clampedTravelSeconds,
+			progress);
 	}
 }

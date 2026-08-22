@@ -3,6 +3,605 @@
 [ext_resource type="PackedScene" uid="uid://cjnbbo06cblp8" path="res://Syzygy.tscn" id="1_2g8sy"]
 [ext_resource type="Resource" uid="uid://jlb3tvqx2ype" path="res://Content/HeroClasses/Core/class.core.warrior.tres" id="2_4qlw8"]
 [ext_resource type="Script" uid="uid://b38xxk3rax5nx" path="res://Scripts/Content/Definitions/HeroDefinition.cs" id="2_f1e56"]
+[ext_resource type="Script" uid="uid://dux6naht75ygc" path="res://Scripts/Content/Definitions/HeroLevelStatDefinition.cs" id="3_4qlw8"]
+
+[sub_resource type="Resource" id="Resource_b6afc"]
+script = ExtResource("3_4qlw8")
+Strength = 5
+Agility = 2
+Stamina = 6
+Intellect = 1
+Spirit = 1
+
+[sub_resource type="Resource" id="Resource_088ad"]
+script = ExtResource("3_4qlw8")
+Level = 2
+Strength = 5
+Agility = 2
+Stamina = 7
+Intellect = 1
+Spirit = 1
+BaseHealth = 132.0
+
+[sub_resource type="Resource" id="Resource_ubvdt"]
+script = ExtResource("3_4qlw8")
+Level = 3
+Strength = 6
+Agility = 2
+Stamina = 8
+Intellect = 1
+Spirit = 1
+BaseHealth = 165.0
+
+[sub_resource type="Resource" id="Resource_8i3w0"]
+script = ExtResource("3_4qlw8")
+Level = 4
+Strength = 6
+Agility = 3
+Stamina = 9
+Intellect = 1
+Spirit = 2
+BaseHealth = 197.0
+
+[sub_resource type="Resource" id="Resource_cm68m"]
+script = ExtResource("3_4qlw8")
+Level = 5
+Strength = 7
+Agility = 3
+Stamina = 10
+Intellect = 1
+Spirit = 2
+BaseHealth = 229.0
+
+[sub_resource type="Resource" id="Resource_4ywjs"]
+script = ExtResource("3_4qlw8")
+Level = 6
+Strength = 7
+Agility = 3
+Stamina = 11
+Intellect = 2
+Spirit = 2
+BaseHealth = 262.0
+
+[sub_resource type="Resource" id="Resource_jq5jx"]
+script = ExtResource("3_4qlw8")
+Level = 7
+Strength = 7
+Agility = 3
+Stamina = 11
+Intellect = 2
+Spirit = 2
+BaseHealth = 294.0
+
+[sub_resource type="Resource" id="Resource_mkukq"]
+script = ExtResource("3_4qlw8")
+Level = 8
+Strength = 8
+Agility = 3
+Stamina = 12
+Intellect = 2
+Spirit = 2
+BaseHealth = 326.0
+
+[sub_resource type="Resource" id="Resource_se135"]
+script = ExtResource("3_4qlw8")
+Level = 9
+Strength = 8
+Agility = 4
+Stamina = 13
+Intellect = 2
+Spirit = 2
+BaseHealth = 359.0
+
+[sub_resource type="Resource" id="Resource_sup08"]
+script = ExtResource("3_4qlw8")
+Level = 10
+Strength = 9
+Agility = 4
+Stamina = 14
+Intellect = 2
+Spirit = 3
+BaseHealth = 391.0
+
+[sub_resource type="Resource" id="Resource_xmui8"]
+script = ExtResource("3_4qlw8")
+Level = 11
+Strength = 9
+Agility = 4
+Stamina = 15
+Intellect = 2
+Spirit = 3
+BaseHealth = 424.0
+
+[sub_resource type="Resource" id="Resource_0luq8"]
+script = ExtResource("3_4qlw8")
+Level = 12
+Strength = 9
+Agility = 4
+Stamina = 16
+Intellect = 2
+Spirit = 3
+BaseHealth = 456.0
+
+[sub_resource type="Resource" id="Resource_4wh0r"]
+script = ExtResource("3_4qlw8")
+Level = 13
+Strength = 10
+Agility = 4
+Stamina = 17
+Intellect = 2
+Spirit = 3
+BaseHealth = 488.0
+
+[sub_resource type="Resource" id="Resource_f14vn"]
+script = ExtResource("3_4qlw8")
+Level = 14
+Strength = 10
+Agility = 5
+Stamina = 18
+Intellect = 2
+Spirit = 3
+BaseHealth = 521.0
+
+[sub_resource type="Resource" id="Resource_f8p6v"]
+script = ExtResource("3_4qlw8")
+Level = 15
+Strength = 10
+Agility = 5
+Stamina = 19
+Intellect = 2
+Spirit = 4
+BaseHealth = 553.0
+
+[sub_resource type="Resource" id="Resource_663rw"]
+script = ExtResource("3_4qlw8")
+Level = 16
+Strength = 11
+Agility = 5
+Stamina = 20
+Intellect = 3
+Spirit = 4
+BaseHealth = 585.0
+
+[sub_resource type="Resource" id="Resource_hgpau"]
+script = ExtResource("3_4qlw8")
+Level = 17
+Strength = 11
+Agility = 5
+Stamina = 21
+Intellect = 3
+Spirit = 4
+BaseHealth = 618.0
+
+[sub_resource type="Resource" id="Resource_5afbo"]
+script = ExtResource("3_4qlw8")
+Level = 18
+Strength = 12
+Agility = 5
+Stamina = 22
+Intellect = 3
+Spirit = 4
+BaseHealth = 650.0
+
+[sub_resource type="Resource" id="Resource_josuo"]
+script = ExtResource("3_4qlw8")
+Level = 19
+Strength = 12
+Agility = 6
+Stamina = 22
+Intellect = 3
+Spirit = 4
+BaseHealth = 682.0
+
+[sub_resource type="Resource" id="Resource_kn6vi"]
+script = ExtResource("3_4qlw8")
+Level = 20
+Strength = 12
+Agility = 6
+Stamina = 23
+Intellect = 3
+Spirit = 5
+BaseHealth = 715.0
+
+[sub_resource type="Resource" id="Resource_7fagf"]
+script = ExtResource("3_4qlw8")
+Level = 21
+Strength = 13
+Agility = 6
+Stamina = 24
+Intellect = 3
+Spirit = 5
+BaseHealth = 747.0
+
+[sub_resource type="Resource" id="Resource_42rik"]
+script = ExtResource("3_4qlw8")
+Level = 22
+Strength = 13
+Agility = 6
+Stamina = 25
+Intellect = 3
+Spirit = 5
+BaseHealth = 779.0
+
+[sub_resource type="Resource" id="Resource_a8w4n"]
+script = ExtResource("3_4qlw8")
+Level = 23
+Strength = 14
+Agility = 6
+Stamina = 26
+Intellect = 3
+Spirit = 5
+BaseHealth = 812.0
+
+[sub_resource type="Resource" id="Resource_ll4kj"]
+script = ExtResource("3_4qlw8")
+Level = 24
+Strength = 14
+Agility = 7
+Stamina = 27
+Intellect = 3
+Spirit = 5
+BaseHealth = 844.0
+
+[sub_resource type="Resource" id="Resource_cgi6u"]
+script = ExtResource("3_4qlw8")
+Level = 25
+Strength = 14
+Agility = 7
+Stamina = 28
+Intellect = 3
+Spirit = 5
+BaseHealth = 877.0
+
+[sub_resource type="Resource" id="Resource_fa0wc"]
+script = ExtResource("3_4qlw8")
+Level = 26
+Strength = 15
+Agility = 7
+Stamina = 29
+Intellect = 4
+Spirit = 6
+BaseHealth = 909.0
+
+[sub_resource type="Resource" id="Resource_fuyh3"]
+script = ExtResource("3_4qlw8")
+Level = 27
+Strength = 15
+Agility = 7
+Stamina = 30
+Intellect = 4
+Spirit = 6
+BaseHealth = 941.0
+
+[sub_resource type="Resource" id="Resource_j12uk"]
+script = ExtResource("3_4qlw8")
+Level = 28
+Strength = 16
+Agility = 7
+Stamina = 31
+Intellect = 4
+Spirit = 6
+BaseHealth = 974.0
+
+[sub_resource type="Resource" id="Resource_uhmd0"]
+script = ExtResource("3_4qlw8")
+Level = 29
+Strength = 16
+Agility = 8
+Stamina = 32
+Intellect = 4
+Spirit = 6
+BaseHealth = 1006.0
+
+[sub_resource type="Resource" id="Resource_qw32o"]
+script = ExtResource("3_4qlw8")
+Level = 30
+Strength = 16
+Agility = 8
+Stamina = 33
+Intellect = 4
+Spirit = 6
+BaseHealth = 1038.0
+
+[sub_resource type="Resource" id="Resource_1w0im"]
+script = ExtResource("3_4qlw8")
+Level = 31
+Strength = 17
+Agility = 8
+Stamina = 33
+Intellect = 4
+Spirit = 7
+BaseHealth = 1071.0
+
+[sub_resource type="Resource" id="Resource_hpdw1"]
+script = ExtResource("3_4qlw8")
+Level = 32
+Strength = 17
+Agility = 8
+Stamina = 34
+Intellect = 4
+Spirit = 7
+BaseHealth = 1103.0
+
+[sub_resource type="Resource" id="Resource_r3kay"]
+script = ExtResource("3_4qlw8")
+Level = 33
+Strength = 17
+Agility = 9
+Stamina = 35
+Intellect = 4
+Spirit = 7
+BaseHealth = 1135.0
+
+[sub_resource type="Resource" id="Resource_8yoxu"]
+script = ExtResource("3_4qlw8")
+Level = 34
+Strength = 18
+Agility = 9
+Stamina = 36
+Intellect = 4
+Spirit = 7
+BaseHealth = 1168.0
+
+[sub_resource type="Resource" id="Resource_ek2it"]
+script = ExtResource("3_4qlw8")
+Level = 35
+Strength = 18
+Agility = 9
+Stamina = 37
+Intellect = 4
+Spirit = 7
+BaseHealth = 1200.0
+
+[sub_resource type="Resource" id="Resource_i8owp"]
+script = ExtResource("3_4qlw8")
+Level = 36
+Strength = 19
+Agility = 9
+Stamina = 38
+Intellect = 5
+Spirit = 8
+BaseHealth = 1232.0
+
+[sub_resource type="Resource" id="Resource_gwcqs"]
+script = ExtResource("3_4qlw8")
+Level = 37
+Strength = 19
+Agility = 9
+Stamina = 39
+Intellect = 5
+Spirit = 8
+BaseHealth = 1265.0
+
+[sub_resource type="Resource" id="Resource_aitln"]
+script = ExtResource("3_4qlw8")
+Level = 38
+Strength = 19
+Agility = 10
+Stamina = 40
+Intellect = 5
+Spirit = 8
+BaseHealth = 1297.0
+
+[sub_resource type="Resource" id="Resource_pkrfr"]
+script = ExtResource("3_4qlw8")
+Level = 39
+Strength = 20
+Agility = 10
+Stamina = 41
+Intellect = 5
+Spirit = 8
+BaseHealth = 1330.0
+
+[sub_resource type="Resource" id="Resource_8iaj7"]
+script = ExtResource("3_4qlw8")
+Level = 40
+Strength = 20
+Agility = 10
+Stamina = 42
+Intellect = 5
+Spirit = 8
+BaseHealth = 1362.0
+
+[sub_resource type="Resource" id="Resource_l2qjf"]
+script = ExtResource("3_4qlw8")
+Level = 41
+Strength = 21
+Agility = 10
+Stamina = 43
+Intellect = 5
+Spirit = 8
+BaseHealth = 1394.0
+
+[sub_resource type="Resource" id="Resource_48sjf"]
+script = ExtResource("3_4qlw8")
+Level = 42
+Strength = 21
+Agility = 10
+Stamina = 44
+Intellect = 5
+Spirit = 9
+BaseHealth = 1427.0
+
+[sub_resource type="Resource" id="Resource_j840b"]
+script = ExtResource("3_4qlw8")
+Level = 43
+Strength = 21
+Agility = 11
+Stamina = 44
+Intellect = 5
+Spirit = 9
+BaseHealth = 1459.0
+
+[sub_resource type="Resource" id="Resource_0embu"]
+script = ExtResource("3_4qlw8")
+Level = 44
+Strength = 22
+Agility = 11
+Stamina = 45
+Intellect = 5
+Spirit = 9
+BaseHealth = 1491.0
+
+[sub_resource type="Resource" id="Resource_xlc0y"]
+script = ExtResource("3_4qlw8")
+Level = 45
+Strength = 22
+Agility = 11
+Stamina = 46
+Intellect = 5
+Spirit = 9
+BaseHealth = 1524.0
+
+[sub_resource type="Resource" id="Resource_e6gyh"]
+script = ExtResource("3_4qlw8")
+Level = 46
+Strength = 23
+Agility = 11
+Stamina = 47
+Intellect = 6
+Spirit = 9
+BaseHealth = 1556.0
+
+[sub_resource type="Resource" id="Resource_5gbjm"]
+script = ExtResource("3_4qlw8")
+Level = 47
+Strength = 23
+Agility = 11
+Stamina = 48
+Intellect = 6
+Spirit = 10
+BaseHealth = 1588.0
+
+[sub_resource type="Resource" id="Resource_x87xi"]
+script = ExtResource("3_4qlw8")
+Level = 48
+Strength = 23
+Agility = 12
+Stamina = 49
+Intellect = 6
+Spirit = 10
+BaseHealth = 1621.0
+
+[sub_resource type="Resource" id="Resource_l1h6y"]
+script = ExtResource("3_4qlw8")
+Level = 49
+Strength = 24
+Agility = 12
+Stamina = 50
+Intellect = 6
+Spirit = 10
+BaseHealth = 1653.0
+
+[sub_resource type="Resource" id="Resource_dub12"]
+script = ExtResource("3_4qlw8")
+Level = 50
+Strength = 24
+Agility = 12
+Stamina = 51
+Intellect = 6
+Spirit = 10
+BaseHealth = 1685.0
+
+[sub_resource type="Resource" id="Resource_sywcy"]
+script = ExtResource("3_4qlw8")
+Level = 51
+Strength = 24
+Agility = 12
+Stamina = 52
+Intellect = 6
+Spirit = 10
+BaseHealth = 1718.0
+
+[sub_resource type="Resource" id="Resource_cqcbh"]
+script = ExtResource("3_4qlw8")
+Level = 52
+Strength = 25
+Agility = 12
+Stamina = 53
+Intellect = 6
+Spirit = 11
+BaseHealth = 1750.0
+
+[sub_resource type="Resource" id="Resource_uvpni"]
+script = ExtResource("3_4qlw8")
+Level = 53
+Strength = 25
+Agility = 13
+Stamina = 54
+Intellect = 6
+Spirit = 11
+BaseHealth = 1783.0
+
+[sub_resource type="Resource" id="Resource_7cdx3"]
+script = ExtResource("3_4qlw8")
+Level = 54
+Strength = 26
+Agility = 13
+Stamina = 55
+Intellect = 6
+Spirit = 11
+BaseHealth = 1815.0
+
+[sub_resource type="Resource" id="Resource_ue60p"]
+script = ExtResource("3_4qlw8")
+Level = 55
+Strength = 26
+Agility = 13
+Stamina = 55
+Intellect = 6
+Spirit = 11
+BaseHealth = 1847.0
+
+[sub_resource type="Resource" id="Resource_yiys6"]
+script = ExtResource("3_4qlw8")
+Level = 56
+Strength = 26
+Agility = 13
+Stamina = 56
+Intellect = 7
+Spirit = 11
+BaseHealth = 1880.0
+
+[sub_resource type="Resource" id="Resource_3xdet"]
+script = ExtResource("3_4qlw8")
+Level = 57
+Strength = 27
+Agility = 13
+Stamina = 57
+Intellect = 7
+Spirit = 11
+BaseHealth = 1912.0
+
+[sub_resource type="Resource" id="Resource_d47w0"]
+script = ExtResource("3_4qlw8")
+Level = 58
+Strength = 27
+Agility = 14
+Stamina = 58
+Intellect = 7
+Spirit = 12
+BaseHealth = 1944.0
+
+[sub_resource type="Resource" id="Resource_imjjl"]
+script = ExtResource("3_4qlw8")
+Level = 59
+Strength = 28
+Agility = 14
+Stamina = 59
+Intellect = 7
+Spirit = 12
+BaseHealth = 1977.0
+
+[sub_resource type="Resource" id="Resource_flnr8"]
+script = ExtResource("3_4qlw8")
+Level = 60
+Strength = 28
+Agility = 14
+Stamina = 60
+Intellect = 7
+Spirit = 12
+BaseHealth = 2009.0
 
 [resource]
 script = ExtResource("2_f1e56")
@@ -12,11 +611,7 @@ ClassDefinition = ExtResource("2_4qlw8")
 ActorScene = ExtResource("1_2g8sy")
 CombatTagMask = 81
 StartingCombatStance = 2
-MaximumHealth = 225.0
-AttackDamage = 28.0
-AttackInterval = 1.6
 AttackDuration = 0.3
-AttackReleasePoint = 0.25
 StartingMainHandWeaponContentId = "weapon.core.starter_warrior_longsword"
 StartingAbilitySlot1ContentId = "ability.core.taunt"
 metadata/_custom_type_script = "uid://b38xxk3rax5nx"

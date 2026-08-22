@@ -525,6 +525,9 @@ public partial class DebugConsoleController : Window
 				CombatEventType.DamageApplied =>
 					(BuildDamageMessage(combatEvent), DebugLogCategory.Damage),
 
+				CombatEventType.HealingApplied =>
+					(BuildHealingMessage(combatEvent), DebugLogCategory.Ability),
+
 				CombatEventType.ActorDied =>
 					(BuildDeathMessage(combatEvent), DebugLogCategory.Encounter),
 
@@ -830,6 +833,18 @@ public partial class DebugConsoleController : Window
 			$"{combatEvent.Target.Name} | " +
 			$"{combatEvent.Damage.AppliedDamage:0} applied | " +
 			$"{combatEvent.Damage.RemainingHealth:0} remaining";
+	}
+
+	/// <summary>
+	/// Creates healing message from the supplied resolved combat event.
+	/// </summary>
+	private static string BuildHealingMessage(CombatEvent combatEvent)
+	{
+		return
+			$"HEAL  " +
+			$"{combatEvent.Attacker.Name} → " +
+			$"{combatEvent.Target.Name} | " +
+			$"{combatEvent.AppliedHealing:0} restored";
 	}
 
 	/// <summary>

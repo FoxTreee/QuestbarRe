@@ -6,8 +6,8 @@
 [resource]
 script = ExtResource("1_weapon")
 Handedness = 1
+Strength = 2
+Stamina = 2
 ContentId = "weapon.core.starter_warrior_longsword"
 DisplayName = "Starter Longsword"
 Description = "Starting two-handed melee weapon for the Warrior."
-Strength = 2
-Stamina = 2

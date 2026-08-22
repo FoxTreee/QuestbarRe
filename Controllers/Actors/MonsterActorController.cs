@@ -133,6 +133,18 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 
 	public float AttackDamage { get; set; }
 
+	/// <summary>
+	/// Runtime level captured from the active region when this monster spawned.
+	/// Debug-spawned monsters use their authored definition level.
+	/// </summary>
+	public int Level { get; private set; } = 1;
+
+	/// <summary>
+	/// Regional spawn scaling used by basic attacks, fixed-damage abilities, and
+	/// maximum health. Null means this actor uses unscaled authored values.
+	/// </summary>
+	public MonsterDifficultySnapshot? Difficulty { get; private set; }
+
 	public MonsterDefinition Definition
 	{
 		get;
@@ -206,7 +218,8 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 	public void Configure(
 		MonsterDefinition definition,
 		IReadOnlyList<AbilityDefinition>? abilities,
-		SceneBoundaryService sceneBoundaries)
+		SceneBoundaryService sceneBoundaries,
+		MonsterDifficultySnapshot? difficulty = null)
 	{
 		if (!GodotObject.IsInstanceValid(definition))
 		{
@@ -221,6 +234,8 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 
 		Definition = definition;
 		_sceneBoundaries = sceneBoundaries;
+		Difficulty = difficulty;
+		Level = difficulty?.MonsterLevel ?? definition.Level;
 
 		StatusEffects.Clear();
 		Threat.Clear();
@@ -352,8 +367,13 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 	/// </summary>
 	private void ApplyDefinition()
 	{
-		CombatProfile.MaximumHealth = Definition.MaximumHealth;
-		CombatProfile.AttackDamage = Definition.AttackDamage;
+		float healthMultiplier = Difficulty?.HealthMultiplier ?? 1.0f;
+		float damageMultiplier = Difficulty?.DamageMultiplier ?? 1.0f;
+
+		CombatProfile.MaximumHealth =
+			Definition.MaximumHealth * healthMultiplier;
+		CombatProfile.AttackDamage =
+			Definition.AttackDamage * damageMultiplier;
 		CombatProfile.AttackRange = Definition.AttackRange;
 		CombatProfile.CombatRadius = BodyBounds.GetHorizontalRadiusInParentSpace() * Mathf.Abs(VisualRoot.Scale.X);
 		CombatProfile.AttackInterval = Definition.AttackInterval;
@@ -501,6 +521,7 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 		_healthBar.Bind(Health);
 
 		_visualRestPosition = VisualRoot.Position;
+		InitializeMonsterAnimation();
 
 		string targetPreference =
 			Definition.PreferredTargetTags == HeroCombatTag.None
@@ -510,7 +531,7 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 		DebugLog.Print(
 			$"{Name} initialized as " +
 			$"{Definition.ContentId} " +
-			$"('{Definition.DisplayName}') with " +
+			$"('{Definition.DisplayName}', Level {Level}) with " +
 			$"{Health.CurrentHealth}/" +
 			$"{Health.MaximumHealth} health. " +
 			$"Target preference={targetPreference}; " +
@@ -1001,9 +1022,13 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 			float meleeMovementDistance =
 				CombatProfile.MoveSpeed * (float)delta;
 
+			Vector2 previousPosition = GlobalPosition;
+
 			GlobalPosition = GlobalPosition.MoveToward(
 				meleeEngagementPosition,
 				meleeMovementDistance);
+
+			TrackMonsterMovement(previousPosition);
 
 			if (!HasReachedMeleeEngagementPosition(
 				target,
@@ -1036,9 +1061,13 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 		float movementDistance =
 			CombatProfile.MoveSpeed * (float)delta;
 
+		Vector2 previousApproachPosition = GlobalPosition;
+
 		GlobalPosition = GlobalPosition.MoveToward(
 			approachPosition,
 			movementDistance);
+
+		TrackMonsterMovement(previousApproachPosition);
 
 		if (!IsTargetWithinAttackRange(target)
 			|| !IsVerticallyAligned(target))
@@ -1557,7 +1586,9 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 		bool hitBoundary =
 			!contained.IsEqualApprox(candidate);
 
+		Vector2 previousForcedMovementPosition = GlobalPosition;
 		GlobalPosition = contained;
+		TrackMonsterMovement(previousForcedMovementPosition);
 
 		if (definition.ForcedMovementMode
 			== CombatForcedMovementMode.Panic
@@ -1738,6 +1769,7 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 	/// </summary>
 	public override void _Process(double delta)
 	{
+		BeginMonsterAnimationFrame();
 		StatusEffects.Update(delta);
 
 		if (!IsDead)
@@ -1752,6 +1784,7 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 		if (!IsDead
 			&& TryUpdateForcedMovement(delta))
 		{
+			UpdateMonsterAnimation(delta);
 			PositionHealthBar();
 			return;
 		}
@@ -1784,6 +1817,7 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 				break;
 		}
 
+		UpdateMonsterAnimation(delta);
 		PositionHealthBar();
 	}
 
@@ -1864,6 +1898,7 @@ public partial class MonsterActorController : Node2D, ICombatStatusEffectOwner
 	/// </summary>
 	public override void _ExitTree()
 	{
+		ShutdownMonsterAnimation();
 		ResetForcedMovementRuntime();
 		SetCurrentTarget(null);
 		MeleeEngagementSlots.Clear();

@@ -63,8 +63,8 @@ public partial class RegionMapNodeController : Button
     }
 
     /// <summary>
-    /// Stable ID of the subregion, dungeon, town, or connected region entered
-    /// through this node. Starting locations may leave this empty.
+    /// Stable ID of the represented destination or graveyard checkpoint.
+    /// Starting locations may leave this empty.
     /// </summary>
     [Export(PropertyHint.PlaceholderText,
         "subregion.stonebanner_highlands.horsethief_hideout")]
@@ -143,6 +143,18 @@ public partial class RegionMapNodeController : Button
     public void ApplyUnavailableActionPresentation()
     {
         SetActionTooltipText(string.Empty);
+    }
+
+    /// <summary>
+    /// Presents a discovered graveyard as information only. The map controller
+    /// keeps the Button disabled, while the custom tooltip explains its rollback.
+    /// </summary>
+    public void ApplyGraveyardPresentation(float discoveryPercent)
+    {
+        SetActionTooltipText(
+            $"{DisplayName.ToUpperInvariant()}\n" +
+            $"GRAVEYARD CHECKPOINT: {discoveryPercent:0.#}%\n" +
+            "REVIVE AT GRAVEYARD RETURNS EXPLORATION HERE.");
     }
 
     /// <summary>

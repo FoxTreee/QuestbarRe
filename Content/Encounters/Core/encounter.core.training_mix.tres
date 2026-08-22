@@ -6,6 +6,7 @@
 [sub_resource type="Resource" id="EncounterMonsterEntry_regular"]
 script = ExtResource("2_entry")
 MonsterContentId = "monster.core.training_monster"
+MaximumCount = 2
 
 [resource]
 script = ExtResource("1_encounter")

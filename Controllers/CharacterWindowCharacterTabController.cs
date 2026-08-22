@@ -118,8 +118,8 @@ public partial class CharacterWindowCharacterTabController : Node
 
 
     /// <summary>
-    /// Presents equipment-derived stats and raw authored weapon values for the
-    /// selected hero. No character-stat or armor gameplay formulas are applied.
+    /// Presents authoritative total stats and final damage after equipment,
+    /// Strength, Stamina, weapon, and unarmed rules have been applied.
     /// </summary>
     public void Refresh(
         HeroActorController? hero)
@@ -130,29 +130,26 @@ public partial class CharacterWindowCharacterTabController : Node
             return;
         }
 
-        EquipmentStatTotals stats =
-            hero!.EquipmentStats;
-
         _strengthValue.Text =
-            stats.Strength.ToString();
+            hero!.TotalStrength.ToString();
 
         _agilityValue.Text =
-            stats.Agility.ToString();
+            hero.TotalAgility.ToString();
 
         _staminaValue.Text =
-            stats.Stamina.ToString();
+            hero.TotalStamina.ToString();
 
         _intellectValue.Text =
-            stats.Intellect.ToString();
+            hero.TotalIntellect.ToString();
 
         _spiritValue.Text =
-            stats.Spirit.ToString();
+            hero.TotalSpirit.ToString();
 
         _armorValue.Text =
             hero.EquipmentArmor.ToString();
 
-        PresentWeapon(
-            hero.Equipment.MainHandWeapon,
+        PresentMelee(
+            hero,
             _minimumDamageValue,
             _maximumDamageValue,
             _attackSpeedValue,
@@ -164,6 +161,28 @@ public partial class CharacterWindowCharacterTabController : Node
             _rangedMaximumDamageValue,
             _rangedAttackSpeedValue,
             _rangedDpsValue);
+    }
+
+    private static void PresentMelee(
+        HeroActorController hero,
+        Label minimumDamageValue,
+        Label maximumDamageValue,
+        Label attackSpeedValue,
+        Label dpsValue)
+    {
+        hero.GetMeleeDamageRange(
+            out int minimumDamage,
+            out int maximumDamage);
+
+        float attackSpeed = hero.MeleeAttackInterval;
+        float displayDps =
+            ((minimumDamage + maximumDamage) / 2.0f)
+            / attackSpeed;
+
+        minimumDamageValue.Text = minimumDamage.ToString();
+        maximumDamageValue.Text = maximumDamage.ToString();
+        attackSpeedValue.Text = attackSpeed.ToString("0.00");
+        dpsValue.Text = displayDps.ToString("0.0");
     }
 
 

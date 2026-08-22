@@ -3,6 +3,12 @@
 [ext_resource type="Texture2D" uid="uid://tji765ijy8k7" path="res://Assets/Background/pink_transparant_cloud.png" id="1_ju48h"]
 [ext_resource type="Texture2D" uid="uid://c6q0hofeka2rq" path="res://Assets/Enviornment/Ground/Questbar_Cobblestone_Ground_Deep_611x51.png" id="2_ro4xt"]
 [ext_resource type="Script" uid="uid://cnx11xbyp71h7" path="res://Scripts/Content/Definitions/RegionDefinition.cs" id="3_mksp6"]
+[ext_resource type="Script" uid="uid://dhu24ofhc4gu3" path="res://Scripts/Content/Definitions/GraveyardCheckpointDefinition.cs" id="4_graveyard"]
+
+[sub_resource type="Resource" id="GraveyardCheckpoint_entrance"]
+script = ExtResource("4_graveyard")
+ContentId = "graveyard.stonebanner_highlands.entrance"
+DisplayName = "Stonebanner Highlands Entrance Graveyard"
 
 [resource]
 script = ExtResource("3_mksp6")
@@ -10,6 +16,13 @@ ContentId = "region.core.training_region"
 DisplayName = "Stonebanner Highlands"
 Description = "Warrior starting zone."
 EncounterPoolContentId = "encounter_pool.core.training_region"
+MinimumTravelSecondsBetweenEncounters = 1.0
+MaximumTravelSecondsBetweenEncounters = 10.0
+FullExplorationTravelSeconds = 600.0
+GraveyardCheckpoints = Array[ExtResource("4_graveyard")]([SubResource("GraveyardCheckpoint_entrance")])
+MaximumMonsterLevel = 10
+MaximumHealthIncreasePercent = 10.0
+MaximumDamageIncreasePercent = 15.0
 BackgroundTexture = ExtResource("1_ju48h")
 GroundTexture = ExtResource("2_ro4xt")
 metadata/_custom_type_script = "uid://cnx11xbyp71h7"

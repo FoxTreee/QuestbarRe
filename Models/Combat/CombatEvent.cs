@@ -9,4 +9,6 @@ public sealed class CombatEvent
     public Node Target { get; init; } = null!;
 
     public DamageResult Damage { get; init; }
+
+    public float AppliedHealing { get; init; }
 }

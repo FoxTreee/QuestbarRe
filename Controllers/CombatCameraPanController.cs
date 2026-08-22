@@ -138,7 +138,10 @@ public partial class CombatCameraPanController : Camera2D
 		_waitingForPartyFormation = false;
 		SetProcess(false);
 		if (currentState == JourneyStateService.JourneyState.Encounter)
+		{
 			CaptureBaseFormationOffsets();
+			RestoreBaseFormationOffsets();
+		}
 
 		StartPan(GetTargetPosition(currentState), true);
 
@@ -231,15 +234,29 @@ public partial class CombatCameraPanController : Camera2D
 	}
 
 	/// <summary>
-	/// Records authored runtime formation offsets before combat changes them.
-	/// This preserves nonzero per-hero offsets when normal travel framing returns.
+	/// Records each hero's authored runtime formation offset once. Existing
+	/// entries are never overwritten because a rapid encounter can begin while
+	/// the hero is still using a temporary camera-relative formation target.
 	/// </summary>
 	private void CaptureBaseFormationOffsets()
 	{
-		_baseFormationOffsets.Clear();
-
 		foreach (HeroActorController hero in GetAvailableHeroes())
-			_baseFormationOffsets[hero] = hero.FormationOffset;
+		{
+			if (!_baseFormationOffsets.ContainsKey(hero))
+				_baseFormationOffsets[hero] = hero.FormationOffset;
+		}
+	}
+
+	/// <summary>
+	/// Restores canonical formation targets when a new encounter interrupts the
+	/// return-to-travel handoff. Heroes keep their current world positions and
+	/// may immediately engage the new monsters without adopting the temporary
+	/// camera-relative offset as their permanent home position.
+	/// </summary>
+	private void RestoreBaseFormationOffsets()
+	{
+		foreach (HeroActorController hero in GetAvailableHeroes())
+			hero.FormationOffset = GetBaseFormationOffset(hero);
 	}
 
 	/// <summary>

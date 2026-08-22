@@ -66,7 +66,7 @@ public partial class BackpackWindowController : Node
     [Export]
     public Texture2D? FallbackItemIcon { get; set; }
 
-    [ExportCategory("Stack Splitting")]
+    [ExportCategory("Item Actions")]
     [Export] public StackSplitPopupController StackSplitPopup { get; set; } = null!;
     [Export] public ItemTooltipController ItemTooltip { get; set; } = null!;
 
@@ -97,6 +97,11 @@ public partial class BackpackWindowController : Node
 
     private int _pendingSplitSourceIndex = -1;
     private long _pendingSplitStackId;
+    private BackpackLocationKind _pendingActionKind;
+    private int _pendingActionSourceIndex = -1;
+    private string _pendingActionItemId = string.Empty;
+    private long? _pendingActionStackId;
+    private long? _pendingActionUniqueInstanceId;
     private string _storageSearchText = string.Empty;
 
     public BackpackInventoryState Inventory { get; private set; } = new();
@@ -117,6 +122,7 @@ public partial class BackpackWindowController : Node
         BuildExpansionSlotViews();
         RefreshAllSlots();
         StackSplitPopup.SplitConfirmed += HandleSplitConfirmed;
+        StackSplitPopup.DeleteConfirmed += HandleDeleteConfirmed;
         SearchEdit.TextChanged += HandleSearchTextChanged;
         Currency.BalanceChanged += RefreshCurrencyDisplay;
         RefreshCurrencyDisplay();
@@ -133,7 +139,10 @@ public partial class BackpackWindowController : Node
     public override void _ExitTree()
     {
         if (GodotObject.IsInstanceValid(StackSplitPopup))
+        {
             StackSplitPopup.SplitConfirmed -= HandleSplitConfirmed;
+            StackSplitPopup.DeleteConfirmed -= HandleDeleteConfirmed;
+        }
 
         if (GodotObject.IsInstanceValid(SearchEdit))
             SearchEdit.TextChanged -= HandleSearchTextChanged;
@@ -200,6 +209,36 @@ public partial class BackpackWindowController : Node
             ref nextInstanceId, ref nextStackId, out error);
         if (added) RefreshAllSlots();
         return added;
+    }
+
+    /// <summary>
+    /// Returns whether ordinary Backpack storage contains the requested item
+    /// quantity. Equipped items and bag-equipment slots are intentionally excluded.
+    /// </summary>
+    public bool HasItemQuantity(string itemId, int quantity)
+    {
+        return quantity > 0
+            && Inventory.GetItemQuantity(itemId) >= quantity;
+    }
+
+    /// <summary>
+    /// Consumes items from authoritative Backpack storage and immediately
+    /// refreshes the affected stack visuals.
+    /// </summary>
+    public bool TryConsumeItem(
+        string itemId,
+        int quantity,
+        out string error)
+    {
+        bool consumed = Inventory.TryConsumeItem(
+            itemId,
+            quantity,
+            out error);
+
+        if (consumed)
+            RefreshAllSlots();
+
+        return consumed;
     }
 
     public void RebuildAfterRestore()
@@ -463,6 +502,7 @@ public partial class BackpackWindowController : Node
         {
             slotView.DragEnabled = false;
             slotView.DropValidator = null;
+            slotView.ContextActionsRequested -= HandleContextActionsRequested;
             return;
         }
 
@@ -472,7 +512,58 @@ public partial class BackpackWindowController : Node
         slotView.DropRequested += HandleBackpackDropRequested;
         slotView.SplitRequested -= HandleSplitRequested;
         slotView.SplitRequested += HandleSplitRequested;
+        slotView.ContextActionsRequested -= HandleContextActionsRequested;
+        slotView.ContextActionsRequested += HandleContextActionsRequested;
         ItemTooltip.RegisterSlot(slotView);
+    }
+
+    /// <summary>
+    /// Opens item actions only after resolving the slot's current authoritative
+    /// record. Character equipment must be unequipped before it can be deleted.
+    /// </summary>
+    private void HandleContextActionsRequested(ItemSlotView sourceView)
+    {
+        if (!TryMapLocationKind(
+            sourceView.Purpose,
+            out BackpackLocationKind kind))
+        {
+            return;
+        }
+
+        BackpackItemState? item = Inventory.GetLocation(
+            kind,
+            sourceView.SlotIndex).Item;
+
+        if (item is null)
+        {
+            RefreshAllSlots();
+            return;
+        }
+
+        _pendingActionKind = kind;
+        _pendingActionSourceIndex = sourceView.SlotIndex;
+        _pendingActionItemId = item.ItemId;
+        _pendingActionStackId = item.StackId;
+        _pendingActionUniqueInstanceId = item.UniqueInstanceId;
+
+        if (kind == BackpackLocationKind.Storage
+            && item.IsStackable
+            && item.StackId.HasValue
+            && item.Quantity > 1)
+        {
+            _pendingSplitSourceIndex = sourceView.SlotIndex;
+            _pendingSplitStackId = item.StackId.Value;
+        }
+        else
+        {
+            _pendingSplitSourceIndex = -1;
+            _pendingSplitStackId = 0;
+        }
+
+        StackSplitPopup.OpenActions(
+            item.DisplayName,
+            item.Quantity,
+            item.IsStackable);
     }
 
     private void HandleSplitRequested(ItemSlotView sourceView, long stackId)
@@ -496,8 +587,7 @@ public partial class BackpackWindowController : Node
     {
         int sourceIndex = _pendingSplitSourceIndex;
         long stackId = _pendingSplitStackId;
-        _pendingSplitSourceIndex = -1;
-        _pendingSplitStackId = 0;
+        ClearPendingItemAction();
 
         if (!Inventory.TrySplitStack(sourceIndex, stackId, quantity,
             out int destinationIndex, out string error))
@@ -511,6 +601,55 @@ public partial class BackpackWindowController : Node
         DebugLog.Print(
             $"Split stack {stackId}: moved {quantity} from Storage[{sourceIndex}] " +
             $"into new stack at Storage[{destinationIndex}].");
+    }
+
+    private void HandleDeleteConfirmed()
+    {
+        BackpackLocationKind kind = _pendingActionKind;
+        int sourceIndex = _pendingActionSourceIndex;
+        string itemId = _pendingActionItemId;
+        long? stackId = _pendingActionStackId;
+        long? uniqueInstanceId = _pendingActionUniqueInstanceId;
+        ClearPendingItemAction();
+
+        if (sourceIndex < 0)
+        {
+            GD.PushWarning("Item delete rejected: no item action is pending.");
+            RefreshAllSlots();
+            return;
+        }
+
+        if (!Inventory.TryDeleteItem(
+                kind,
+                sourceIndex,
+                itemId,
+                stackId,
+                uniqueInstanceId,
+                out BackpackItemState? deletedItem,
+                out string error))
+        {
+            GD.PushWarning($"Item delete rejected: {error}");
+            RefreshAllSlots();
+            return;
+        }
+
+        if (kind == BackpackLocationKind.BagEquipment)
+            RebuildExpansionSlotViews();
+
+        RefreshAllSlots();
+        DebugLog.Print(
+            $"Deleted {deletedItem!.DisplayName} x{deletedItem.Quantity} " +
+            $"from {kind}[{sourceIndex}].");
+    }
+
+    private void ClearPendingItemAction()
+    {
+        _pendingActionSourceIndex = -1;
+        _pendingActionItemId = string.Empty;
+        _pendingActionStackId = null;
+        _pendingActionUniqueInstanceId = null;
+        _pendingSplitSourceIndex = -1;
+        _pendingSplitStackId = 0;
     }
 
     private bool CanAcceptBackpackDrop(

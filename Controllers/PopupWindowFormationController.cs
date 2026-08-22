@@ -302,7 +302,11 @@ public partial class PopupWindowFormationController : Node
         {
             _restoreBackpackOnExpand = BackpackWindow.Visible;
             _restoreMapOnExpand = MapWindow.Visible;
-            _restoreIncapacitationOnExpand = IncapacitationWindow.Visible;
+            _restoreIncapacitationOnExpand =
+                IncapacitationWindow.Visible
+                || JourneyState.CurrentState
+                    == JourneyStateService.JourneyState
+                        .AwaitingIncapacitationChoice;
 
             CharacterWindow.Hide();
             BackpackWindow.Hide();
@@ -318,7 +322,10 @@ public partial class PopupWindowFormationController : Node
         MapWindow.Visible = _restoreMapOnExpand;
         ItemTooltipPanel.Hide();
 
-        if (_restoreIncapacitationOnExpand)
+        if (_restoreIncapacitationOnExpand
+            || JourneyState.CurrentState
+                == JourneyStateService.JourneyState
+                    .AwaitingIncapacitationChoice)
             IncapacitationWindow.Show();
         else
             IncapacitationWindow.Hide();

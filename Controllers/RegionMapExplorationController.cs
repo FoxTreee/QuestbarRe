@@ -82,7 +82,21 @@ public partial class RegionMapExplorationController : Node
         }
 
         foreach (RegionMapNodeController destination in _destinations)
+        {
             destination.ActionPressed += OnDestinationActionPressed;
+
+            if (destination.NodeType == RegionMapNodeType.Graveyard
+                && (!GodotObject.IsInstanceValid(RegionRun.ActiveRegion)
+                    || !RegionRun.ActiveRegion.TryGetGraveyard(
+                        destination.DestinationContentId,
+                        out _)))
+            {
+                GD.PushError(
+                    $"Graveyard map node '{destination.NodeContentId}' " +
+                    $"references unknown regional graveyard " +
+                    $"'{destination.DestinationContentId}'.");
+            }
+        }
 
         _revealAreas.Sort(
             (left, right) => left.RevealAtTravelSeconds.CompareTo(
@@ -150,6 +164,7 @@ public partial class RegionMapExplorationController : Node
         double travelSeconds = Exploration.GetActiveRegionTravelSeconds();
         float progress = Exploration.GetActiveRegionProgress();
         ApplyDestinationVisibility(
+            region,
             travelSeconds,
             progress >= 1.0f);
         ApplyFog(travelSeconds, progress);
@@ -157,6 +172,7 @@ public partial class RegionMapExplorationController : Node
     }
 
     private void ApplyDestinationVisibility(
+        RegionDefinition region,
         double travelSeconds,
         bool regionFullyExplored)
     {
@@ -167,7 +183,9 @@ public partial class RegionMapExplorationController : Node
 
             bool shouldReveal =
                 regionFullyExplored
-                || travelSeconds >= destination.RevealAtTravelSeconds
+                || travelSeconds >= GetRevealTravelSeconds(
+                    destination,
+                    region)
                 || ReferenceEquals(destination, ActiveDestination);
 
             bool isActive = ReferenceEquals(
@@ -186,6 +204,7 @@ public partial class RegionMapExplorationController : Node
 
             ApplyDestinationActionPresentation(
                 destination,
+                region,
                 shouldReveal,
                 canUse,
                 blockedByAnotherDestination);
@@ -210,8 +229,13 @@ public partial class RegionMapExplorationController : Node
 
             if (_initialStateApplied)
             {
+                string discoveryType =
+                    destination.NodeType == RegionMapNodeType.Graveyard
+                        ? "graveyard"
+                        : "destination";
+
                 DebugLog.Print(
-                    $"New destination discovered: " +
+                    $"New {discoveryType} discovered: " +
                     $"{destination.DisplayName} " +
                     $"({destination.NodeContentId}).");
 
@@ -281,10 +305,22 @@ public partial class RegionMapExplorationController : Node
 
     private void ApplyDestinationActionPresentation(
         RegionMapNodeController destination,
+        RegionDefinition region,
         bool shouldReveal,
         bool canEnter,
         bool blockedByAnotherDestination)
     {
+        if (destination.NodeType == RegionMapNodeType.Graveyard
+            && shouldReveal
+            && region.TryGetGraveyard(
+                destination.DestinationContentId,
+                out GraveyardCheckpointDefinition graveyard))
+        {
+            destination.ApplyGraveyardPresentation(
+                graveyard.DiscoveryPercent);
+            return;
+        }
+
         if (!shouldReveal || !canEnter || blockedByAnotherDestination)
         {
             destination.ApplyUnavailableActionPresentation();
@@ -308,6 +344,25 @@ public partial class RegionMapExplorationController : Node
             && ContentId.IsValid(destination.DestinationContentId)
             && RegionRun.JourneyState.CurrentState
                 == JourneyStateService.JourneyState.Traveling;
+    }
+
+    /// <summary>
+    /// Graveyard reveal timing comes from region gameplay data rather than a
+    /// duplicated value on its map marker. Other node types keep authored seconds.
+    /// </summary>
+    private static double GetRevealTravelSeconds(
+        RegionMapNodeController destination,
+        RegionDefinition region)
+    {
+        if (destination.NodeType == RegionMapNodeType.Graveyard
+            && region.TryGetGraveyard(
+                destination.DestinationContentId,
+                out GraveyardCheckpointDefinition graveyard))
+        {
+            return region.GetGraveyardTravelSeconds(graveyard);
+        }
+
+        return destination.RevealAtTravelSeconds;
     }
 
     private void ApplyFog(double travelSeconds, float progress)

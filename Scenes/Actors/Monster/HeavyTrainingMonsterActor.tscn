@@ -26,3 +26,6 @@ texture = ExtResource("2_aeu7f")
 
 [node name="ActorHealthBar" parent="PresentationRoot" parent_id_path=PackedInt32Array(2029984864) index="1" unique_id=1290293826]
 position = Vector2(-0.73923564, -115.00197)
+
+[node name="CombatTextAnchor" parent="PresentationRoot" parent_id_path=PackedInt32Array(2029984864) index="3"]
+position = Vector2(0, -132)

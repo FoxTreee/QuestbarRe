@@ -5,8 +5,10 @@ using System.Text.Json;
 
 public partial class InventoryPersistenceService : Node
 {
-    private const string SavePath = "user://inventory_v2.json";
-    private const string LegacyPath = "user://inventory_v1.json";
+    private const int CurrentSaveVersion = 3;
+    private const string SavePath = "user://inventory_v3.json";
+    private const string VersionTwoSavePath = "user://inventory_v2.json";
+    private const string VersionOneSavePath = "user://inventory_v1.json";
     private const double AutoSaveInterval = 0.75;
 
     [ExportCategory("Dependencies")]
@@ -56,8 +58,10 @@ public partial class InventoryPersistenceService : Node
         string result;
         if (FileAccess.FileExists(SavePath))
             result = Load();
-        else if (FileAccess.FileExists(LegacyPath))
-            result = MigrateLegacySave();
+        else if (FileAccess.FileExists(VersionTwoSavePath))
+            result = MigrateVersionTwoSave();
+        else if (FileAccess.FileExists(VersionOneSavePath))
+            result = MigrateVersionOneSave();
         else
             result = "No inventory save found; using new-game inventory.";
 
@@ -79,19 +83,24 @@ public partial class InventoryPersistenceService : Node
     {
         if (!FileAccess.FileExists(SavePath)) return $"No inventory save exists at {SavePath}.";
         if (!TryRead(SavePath, out InventorySaveData? data, out string error)) return error;
-        if (data!.Version != 2) return $"Unsupported inventory save version {data.Version}.";
+        if (data!.Version != CurrentSaveVersion)
+            return $"Unsupported inventory save version {data.Version}.";
         if (!TryPrepare(data, out PreparedSnapshot? prepared, out error)) return error;
 
         _suppressAutoSave = true;
         Commit(prepared!);
         _suppressAutoSave = false;
         _lastSavedSnapshot = Serialize(BuildSnapshot());
-        return $"Inventory and hero equipment loaded from {SavePath}.";
+        return $"Inventory, equipment, and hero progression loaded from {SavePath}.";
     }
 
     private InventorySaveData BuildSnapshot()
     {
-        InventorySaveData data = new() { Version = 2, TotalCopper = Backpack.Currency.TotalCopper };
+        InventorySaveData data = new()
+        {
+            Version = CurrentSaveVersion,
+            TotalCopper = Backpack.Currency.TotalCopper
+        };
         foreach (BackpackInventoryLocation location in Backpack.Inventory.BagEquipmentLocations)
             data.Bags.Add(ToData(location.Item));
         foreach (BackpackInventoryLocation location in Backpack.Inventory.StorageLocations)
@@ -104,7 +113,9 @@ public partial class InventoryPersistenceService : Node
             SavedHero savedHero = new()
             {
                 PartySlotIndex = partySlot,
-                HeroContentId = hero!.Definition.ContentId
+                HeroContentId = hero!.Definition.ContentId,
+                Level = hero.Progression.Level,
+                Experience = hero.Progression.Experience
             };
             foreach (EquipmentSlot slot in Enum.GetValues<EquipmentSlot>())
             {
@@ -137,6 +148,9 @@ public partial class InventoryPersistenceService : Node
                 !hero!.Definition.ContentId.Equals(savedHero.HeroContentId, StringComparison.OrdinalIgnoreCase))
             { error = $"Saved party slot {savedHero.PartySlotIndex + 1} does not match the current hero."; return false; }
 
+            if (!TryValidateSavedProgression(savedHero, out error))
+                return false;
+
             if (savedHero.Equipment.Count != Enum.GetValues<EquipmentSlot>().Length)
             { error = $"Saved hero '{savedHero.HeroContentId}' does not contain every equipment slot."; return false; }
 
@@ -154,19 +168,64 @@ public partial class InventoryPersistenceService : Node
                     item = one[0];
                     if (item?.EquipmentProfile is null)
                     { error = $"Saved hero slot {slot} contains non-equipment."; return false; }
-                    if (!HeroEquipmentEligibility.CanEquip(hero.Definition.ClassDefinition, 1,
+                    if (!HeroEquipmentEligibility.CanEquip(
+                        hero.Definition.ClassDefinition,
+                        savedHero.Level,
                         item.EquipmentProfile, slot, out error) ||
                         !validator.TryEquipResolved(item.EquipmentProfile, slot, out error)) return false;
                 }
                 equipment.Add(slot, item);
             }
-            prepared.Heroes.Add((hero, equipment));
+            prepared.Heroes.Add((
+                hero,
+                savedHero.Level,
+                savedHero.Experience,
+                equipment));
         }
 
         if (!ValidateCapacity(prepared.Bags, prepared.Storage, out error)) return false;
         if (data.TotalCopper < 0) { error = "Saved currency cannot be negative."; return false; }
         prepared.TotalCopper = data.TotalCopper;
         _preparingSnapshot = null;
+        return true;
+    }
+
+    /// <summary>
+    /// Rejects invalid progression before any inventory, equipment, currency,
+    /// or hero state is committed from the save.
+    /// </summary>
+    private static bool TryValidateSavedProgression(
+        SavedHero savedHero,
+        out string error)
+    {
+        if (savedHero.Level < 1
+            || savedHero.Level > HeroProgressionState.MaximumLevel)
+        {
+            error =
+                $"Saved hero '{savedHero.HeroContentId}' has invalid " +
+                $"Level {savedHero.Level}.";
+            return false;
+        }
+
+        if (!double.IsFinite(savedHero.Experience)
+            || savedHero.Experience < 0.0)
+        {
+            error =
+                $"Saved hero '{savedHero.HeroContentId}' has invalid XP " +
+                $"{savedHero.Experience}.";
+            return false;
+        }
+
+        if (savedHero.Level >= HeroProgressionState.MaximumLevel
+            && savedHero.Experience > 0.0)
+        {
+            error =
+                $"Saved Level {HeroProgressionState.MaximumLevel} hero " +
+                $"'{savedHero.HeroContentId}' must have zero carried XP.";
+            return false;
+        }
+
+        error = string.Empty;
         return true;
     }
 
@@ -178,6 +237,9 @@ public partial class InventoryPersistenceService : Node
         {
             HeroActorController hero = heroEntry.Hero;
             hero.Equipment.ClearAll();
+            hero.Progression.Configure(
+                heroEntry.Level,
+                heroEntry.Experience);
             foreach (var pair in heroEntry.Equipment)
             {
                 if (pair.Value?.EquipmentProfile is not null)
@@ -237,9 +299,58 @@ public partial class InventoryPersistenceService : Node
         error = string.Empty; return true;
     }
 
-    private string MigrateLegacySave()
+    /// <summary>
+    /// Upgrades a v2 ownership save by adding each currently spawned hero's
+    /// authored starting progression, since v2 never recorded earned progress.
+    /// </summary>
+    private string MigrateVersionTwoSave()
     {
-        if (!TryRead(LegacyPath, out InventorySaveData? legacy, out string error)) return error;
+        if (!TryRead(
+            VersionTwoSavePath,
+            out InventorySaveData? versionTwo,
+            out string error))
+        {
+            return error;
+        }
+
+        if (versionTwo!.Version != 2)
+            return "Inventory v2 migration found an unsupported save version.";
+
+        foreach (SavedHero savedHero in versionTwo.Heroes)
+        {
+            HeroActorController? hero =
+                Party.GetHeroAtSlot(savedHero.PartySlotIndex);
+
+            if (!GodotObject.IsInstanceValid(hero))
+                continue;
+
+            savedHero.Level = hero!.Progression.Level;
+            savedHero.Experience = hero.Progression.Experience;
+        }
+
+        versionTwo.Version = CurrentSaveVersion;
+
+        if (!TryPrepare(versionTwo, out PreparedSnapshot? prepared, out error))
+            return $"Inventory v2 migration rejected: {error}";
+
+        Commit(prepared!);
+        string snapshot = Serialize(BuildSnapshot());
+
+        if (!WriteSnapshot(snapshot, out string writeResult))
+            return writeResult;
+
+        return
+            "Inventory v2 save migrated to v3 with persistent hero " +
+            "level and XP.";
+    }
+
+    /// <summary>
+    /// Migrates the original inventory-only format directly to v3, retaining
+    /// its ownership repair and adding current authored hero progression.
+    /// </summary>
+    private string MigrateVersionOneSave()
+    {
+        if (!TryRead(VersionOneSavePath, out InventorySaveData? legacy, out string error)) return error;
         if (legacy!.Version != 1) return "Legacy inventory save version is unsupported.";
 
         // V1 did not record hero slots. If a saved unique equipment definition
@@ -259,13 +370,19 @@ public partial class InventoryPersistenceService : Node
             }
         }
 
-        legacy.Version = 2;
+        legacy.Version = CurrentSaveVersion;
         legacy.Heroes.Clear();
         for (int i = 0; i < PartyController.MaximumPartySize; i++)
         {
             HeroActorController? hero = Party.GetHeroAtSlot(i);
             if (!GodotObject.IsInstanceValid(hero)) continue;
-            SavedHero savedHero = new() { PartySlotIndex = i, HeroContentId = hero!.Definition.ContentId };
+            SavedHero savedHero = new()
+            {
+                PartySlotIndex = i,
+                HeroContentId = hero!.Definition.ContentId,
+                Level = hero.Progression.Level,
+                Experience = hero.Progression.Experience
+            };
             foreach (EquipmentSlot slot in Enum.GetValues<EquipmentSlot>())
             {
                 IResolvedEquipmentProfile? profile = hero.Equipment.GetItem(slot);
@@ -278,8 +395,11 @@ public partial class InventoryPersistenceService : Node
         if (!TryPrepare(legacy, out PreparedSnapshot? prepared, out error)) return $"Legacy migration rejected: {error}";
         Commit(prepared!);
         string snapshot = Serialize(BuildSnapshot());
-        WriteSnapshot(snapshot, out _);
-        return "Legacy inventory save migrated to complete ownership save v2.";
+        if (!WriteSnapshot(snapshot, out string writeResult))
+            return writeResult;
+        return
+            "Legacy inventory save migrated to v3 ownership and hero " +
+            "progression persistence.";
     }
 
     private static bool TryRead(string path, out InventorySaveData? data, out string error)
@@ -295,7 +415,7 @@ public partial class InventoryPersistenceService : Node
 
     private bool WriteSnapshot(string json, out string result)
     {
-        const string temporaryPath = "user://inventory_v2.tmp";
+        const string temporaryPath = "user://inventory_v3.tmp";
         using (FileAccess file = FileAccess.Open(temporaryPath, FileAccess.ModeFlags.Write))
         {
             if (file is null) { result = $"Could not open {temporaryPath} for writing."; return false; }
@@ -319,7 +439,9 @@ public partial class InventoryPersistenceService : Node
         }
 
         _lastSavedSnapshot = json;
-        result = $"Complete inventory ownership saved to {SavePath}.";
+        result =
+            $"Inventory, equipment, currency, and hero progression saved " +
+            $"to {SavePath}.";
         return true;
     }
 
@@ -335,7 +457,12 @@ internal sealed class PreparedSnapshot
     public long TotalCopper;
     public List<BackpackItemState?> Bags { get; } = new();
     public List<BackpackItemState?> Storage { get; } = new();
-    public List<(HeroActorController Hero, Dictionary<EquipmentSlot, BackpackItemState?> Equipment)> Heroes { get; } = new();
+    public List<(
+        HeroActorController Hero,
+        int Level,
+        double Experience,
+        Dictionary<EquipmentSlot, BackpackItemState?> Equipment)> Heroes
+    { get; } = new();
     public long MaximumInstanceId;
     public long MaximumStackId;
 }
@@ -353,6 +480,8 @@ public sealed class SavedHero
 {
     public int PartySlotIndex { get; set; }
     public string HeroContentId { get; set; } = string.Empty;
+    public int Level { get; set; } = 1;
+    public double Experience { get; set; }
     public List<SavedEquipmentSlot> Equipment { get; set; } = new();
 }
 

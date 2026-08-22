@@ -13,6 +13,8 @@ public sealed class CombatHealthState
     public bool IsAlive =>
         CurrentHealth > 0.0f;
 
+    public bool IsLocked { get; private set; }
+
     /// <summary>
     /// Performs the initialize operation for Combat Health State.
     /// Uses the supplied arguments and current node state; any result is applied through side effects, events, or stored fields.
@@ -47,6 +49,29 @@ public sealed class CombatHealthState
     }
 
     /// <summary>
+    /// Rebuilds maximum health after a Stamina change while preserving the
+    /// hero's missing-health amount. Equipping and removing Stamina therefore
+    /// cannot be exploited as free healing.
+    /// </summary>
+    public void SetMaximumHealth(float maximumHealth)
+    {
+        if (!IsInitialized)
+            return;
+
+        float newMaximum = MathF.Max(maximumHealth, 1.0f);
+        float missingHealth = MathF.Max(
+            MaximumHealth - CurrentHealth,
+            0.0f);
+
+        MaximumHealth = newMaximum;
+        CurrentHealth = IsAlive
+            ? MathF.Max(newMaximum - missingHealth, 0.0f)
+            : 0.0f;
+
+        NotifyHealthChanged();
+    }
+
+    /// <summary>
     /// Applies damage to the relevant actor, resource, or presentation state.
     /// Uses the supplied arguments and current state and returns the resulting damage result to the caller.
     /// </summary>
@@ -55,7 +80,7 @@ public sealed class CombatHealthState
         float validDamage =
             MathF.Max(requestedDamage, 0.0f);
 
-        if (!IsAlive || validDamage <= 0.0f)
+        if (IsLocked || !IsAlive || validDamage <= 0.0f)
         {
             return new DamageResult(
                 requestedDamage,
@@ -120,7 +145,8 @@ public sealed class CombatHealthState
         float validRecovery =
             MathF.Max(requestedRecovery, 0.0f);
 
-        if (!IsAlive
+        if (IsLocked
+            || !IsAlive
             || validRecovery <= 0.0f
             || CurrentHealth >= MaximumHealth)
         {
@@ -139,6 +165,21 @@ public sealed class CombatHealthState
         NotifyHealthChanged();
 
         return appliedRecovery;
+    }
+
+    /// <summary>
+    /// Enables or disables the debug health lock. Enabling it first restores
+    /// full health, then prevents damage, healing, and regeneration changes.
+    /// </summary>
+    public void SetLocked(bool locked)
+    {
+        if (locked && IsInitialized)
+        {
+            CurrentHealth = MaximumHealth;
+            NotifyHealthChanged();
+        }
+
+        IsLocked = locked;
     }
 
     /// <summary>

@@ -51,6 +51,21 @@ public partial class ItemAcquisitionService : Node
         return true;
     }
 
+    /// <summary>
+    /// Adds monster currency loot to the persistent Backpack wallet. The wallet
+    /// stores copper and derives the displayed gold and silver values from it.
+    /// </summary>
+    public bool TryAcquireCopper(long copperAmount, out string result)
+    {
+        if (!Backpack.Currency.TryAdd(copperAmount, out result))
+            return false;
+
+        result =
+            $"Added {copperAmount} copper. Wallet balance: " +
+            $"{Backpack.Currency}.";
+        return true;
+    }
+
     private bool IsOwned(string itemId, out string location)
     {
         if (Backpack.TryFindOwnedItem(itemId, out location)) return true;

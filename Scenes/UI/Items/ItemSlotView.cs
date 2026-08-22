@@ -77,6 +77,13 @@ public partial class ItemSlotView :
         long>?
         SplitRequested;
 
+    /// <summary>
+    /// Raised by right-clicking a non-empty slot. The owning controller
+    /// resolves the current authoritative item before presenting any action.
+    /// </summary>
+    public event Action<ItemSlotView>?
+        ContextActionsRequested;
+
     /*
      * The controller can assign a destination-specific validator.
      *
@@ -413,6 +420,21 @@ public partial class ItemSlotView :
     public override void _GuiInput(
         InputEvent inputEvent)
     {
+        if (inputEvent is InputEventMouseButton contextClick
+            && contextClick.ButtonIndex == MouseButton.Right
+            && contextClick.Pressed)
+        {
+            CancelPendingDrag();
+
+            if (!IsEmpty)
+            {
+                ContextActionsRequested?.Invoke(this);
+                AcceptEvent();
+            }
+
+            return;
+        }
+
         if (inputEvent is
             InputEventMouseButton mouseButton &&
             mouseButton.ButtonIndex ==

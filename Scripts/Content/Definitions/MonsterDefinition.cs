@@ -21,6 +21,52 @@ public partial class MonsterDefinition : Resource
     public string DisplayName { get; set; } = "Unnamed Monster";
 
 
+    [ExportCategory("Progression Reward")]
+
+    /// <summary>
+    /// Authored monster level used for level-difference XP scaling.
+    /// </summary>
+    [Export(PropertyHint.Range, "1,60,1")]
+    public int Level { get; set; } = 1;
+
+    /// <summary>
+    /// XP awarded when defeated by a hero of the same level.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,1000000,1")]
+    public int BaseExperienceReward { get; set; } = 10;
+
+
+    [ExportCategory("Loot Table")]
+
+    /// <summary>
+    /// Monster-owned item drops. Each entry rolls independently, allowing the
+    /// same item to have different chances on different monster definitions.
+    /// </summary>
+    [Export]
+    public Godot.Collections.Array<MonsterLootEntry> LootTable
+    { get; set; } = new();
+
+    /// <summary>
+    /// Chance for this monster to award its configured copper range. Currency
+    /// is stored as copper and displayed by the Backpack as gold/silver/copper.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,100,0.1,suffix:%")]
+    public float CurrencyDropChancePercent { get; set; } = 0.0f;
+
+    /// <summary>
+    /// Smallest copper award after the currency roll succeeds.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,1000000,1,suffix: copper")]
+    public int MinimumCopperDrop { get; set; } = 0;
+
+    /// <summary>
+    /// Largest copper award after the currency roll succeeds. Leave this at
+    /// zero to disable currency drops regardless of the configured chance.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,1000000,1,suffix: copper")]
+    public int MaximumCopperDrop { get; set; } = 0;
+
+
     [ExportCategory("Runtime")]
 
     /// <summary>
@@ -201,6 +247,34 @@ public partial class MonsterDefinition : Resource
             errors.Add(
                 $"{ContentId}: ActorScene is required.");
         }
+        if (Level < 1 || Level > 60)
+        {
+            errors.Add(
+                $"{ContentId}: Level must be between 1 and 60.");
+        }
+        if (BaseExperienceReward < 0)
+        {
+            errors.Add(
+                $"{ContentId}: BaseExperienceReward cannot be negative.");
+        }
+        if (CurrencyDropChancePercent < 0.0f
+            || CurrencyDropChancePercent > 100.0f)
+        {
+            errors.Add(
+                $"{ContentId}: CurrencyDropChancePercent must be " +
+                "between 0 and 100.");
+        }
+        if (MinimumCopperDrop < 0)
+        {
+            errors.Add(
+                $"{ContentId}: MinimumCopperDrop cannot be negative.");
+        }
+        if (MaximumCopperDrop < MinimumCopperDrop)
+        {
+            errors.Add(
+                $"{ContentId}: MaximumCopperDrop must be greater than " +
+                "or equal to MinimumCopperDrop.");
+        }
         if (MaximumHealth <= 0.0f)
         {
             errors.Add(
@@ -294,6 +368,30 @@ public partial class MonsterDefinition : Resource
                 errors.Add(
                     $"{ContentId}: duplicate ability Content ID " +
                     $"'{abilityContentId}'.");
+            }
+        }
+
+        HashSet<string> seenLootItemIds =
+            new(System.StringComparer.OrdinalIgnoreCase);
+
+        foreach (MonsterLootEntry entry in LootTable)
+        {
+            if (!GodotObject.IsInstanceValid(entry))
+            {
+                errors.Add(
+                    $"{ContentId}: LootTable contains a missing entry.");
+                continue;
+            }
+
+            foreach (string error in entry.GetValidationErrors())
+                errors.Add($"{ContentId}: {error}");
+
+            if (global::ContentId.IsValid(entry.ItemContentId)
+                && !seenLootItemIds.Add(entry.ItemContentId.Trim()))
+            {
+                errors.Add(
+                    $"{ContentId}: duplicate loot item Content ID " +
+                    $"'{entry.ItemContentId}'.");
             }
         }
 

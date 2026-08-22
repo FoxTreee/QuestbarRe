@@ -19,6 +19,10 @@ public partial class DebugCommandService : Node
 		".reviveAll",
 		".kill <hero_id>",
 		".kill partySlot <1-5>",
+		".addXp <amount>",
+		".addLevel [amount]",
+		".changeLevel <1-60>",
+		".godMode [on|off|toggle]",
 		".testResource <hero_id> <mana|energy|rage|none> [spend]",
 		".useAbility <hero_id> <ability_id>",
 		".addItem <item_id> [quantity]",
@@ -1304,6 +1308,34 @@ public partial class DebugCommandService : Node
 			"      .kill partySlot 1\n" +
 			"      .kill partySlot(1)\n\n" +
 
+			".addXp <amount>\n" +
+			"    Award XP to the first equipped hero through the real XP curve.\n" +
+			"    Excess XP carries through level-up ceilings.\n" +
+			"    Example: .addXp 200\n\n" +
+
+			".addLevel [amount]\n" +
+			"    Add one or more direct levels to the first equipped hero.\n" +
+			"    Amount defaults to 1, clamps at Level 60, and resets XP to zero.\n" +
+			"    Examples:\n" +
+			"      .addLevel\n" +
+			"      .addLevel 10\n\n" +
+
+			".changeLevel <1-60>\n" +
+			"    Set the first equipped hero directly to an exact level.\n" +
+			"    Works upward or downward and resets XP to zero.\n" +
+			"    Examples:\n" +
+			"      .changeLevel 1\n" +
+			"      .changeLevel 30\n" +
+			"      .changeLevel 60\n\n" +
+
+			".godMode [on|off|toggle]\n" +
+			"    Refill and lock the first equipped hero's HP and class resource.\n" +
+			"    Omitting the option toggles the current state.\n" +
+			"    Examples:\n" +
+			"      .godMode\n" +
+			"      .godMode on\n" +
+			"      .godMode off\n\n" +
+
 			".testResource <hero_id> <mana|energy|rage|none> [spend]\n" +
 			"    Temporarily assign a 100-point resource without changing class data.\n" +
 			"    The optional spend amount defaults to 50; the pool regenerates 10 every 2s.\n" +
@@ -1592,6 +1624,18 @@ public partial class DebugCommandService : Node
 			".kill" =>
 				ExecuteKillHero(parts),
 
+			".addxp" =>
+				ExecuteAddXp(parts),
+
+			".addlevel" =>
+				ExecuteAddLevel(parts),
+
+			".changelevel" =>
+				ExecuteChangeLevel(parts),
+
+			".godmode" =>
+				ExecuteGodMode(parts),
+
 			".testresource" =>
 				ExecuteTestResource(parts),
 
@@ -1638,6 +1682,127 @@ public partial class DebugCommandService : Node
 				$"Unknown command: {parts[0]}\n" +
                 "Type '.help' for available commands."
 		};
+	}
+
+	private string ExecuteAddXp(string[] parts)
+	{
+		if (parts.Length != 2
+			|| !double.TryParse(
+				parts[1],
+				NumberStyles.Float,
+				CultureInfo.InvariantCulture,
+				out double amount)
+			|| amount <= 0.0)
+		{
+			return "Usage: .addXp <positive amount>";
+		}
+
+		HeroActorController? hero = GetPrimaryDebugHero();
+		if (!GodotObject.IsInstanceValid(hero))
+			return "No equipped hero is available.";
+
+		int levelsGained = hero!.Progression.AddExperience(
+			amount,
+			Encounter.Experience.Curve);
+
+		return hero.Progression.Level >= HeroProgressionState.MaximumLevel
+			? $"Added {amount:0.##} XP to {hero.Definition?.DisplayName}. Level 60 MAX."
+			: $"Added {amount:0.##} XP to {hero.Definition?.DisplayName}. " +
+			  $"Level={hero.Progression.Level}; " +
+			  $"XP={hero.Progression.Experience:0.##}/" +
+			  $"{Encounter.Experience.Curve.GetExperienceRequiredForNextLevel(hero.Progression.Level):0.##}; " +
+			  $"LevelsGained={levelsGained}.";
+	}
+
+	private string ExecuteAddLevel(string[] parts)
+	{
+		int amount = 1;
+
+		if (parts.Length > 2
+			|| (parts.Length == 2
+				&& (!int.TryParse(
+					parts[1],
+					NumberStyles.Integer,
+					CultureInfo.InvariantCulture,
+					out amount)
+					|| amount <= 0)))
+		{
+			return "Usage: .addLevel [positive amount]";
+		}
+
+		HeroActorController? hero = GetPrimaryDebugHero();
+		if (!GodotObject.IsInstanceValid(hero))
+			return "No equipped hero is available.";
+
+		int levelsGained = hero!.Progression.AddLevels(amount);
+
+		return $"Added {levelsGained} level(s) to " +
+			$"{hero.Definition?.DisplayName}. " +
+			$"Level={hero.Progression.Level}; XP=0.";
+	}
+
+	private string ExecuteGodMode(string[] parts)
+	{
+		if (parts.Length > 2)
+			return "Usage: .godMode [on|off|toggle]";
+
+		HeroActorController? hero = GetPrimaryDebugHero();
+		if (!GodotObject.IsInstanceValid(hero))
+			return "No equipped hero is available.";
+
+		string option = parts.Length == 2
+			? parts[1].ToLowerInvariant()
+			: "toggle";
+
+		bool enabled = option switch
+		{
+			"on" => true,
+			"off" => false,
+			"toggle" => !hero!.IsGodMode,
+			_ => hero!.IsGodMode
+		};
+
+		if (option is not ("on" or "off" or "toggle"))
+			return "Usage: .godMode [on|off|toggle]";
+
+		hero!.SetGodMode(enabled);
+
+		return $"God mode {(enabled ? "ON" : "OFF")} for " +
+			$"{hero.Definition?.DisplayName}.";
+	}
+
+	private string ExecuteChangeLevel(string[] parts)
+	{
+		if (parts.Length != 2
+			|| !int.TryParse(
+				parts[1],
+				NumberStyles.Integer,
+				CultureInfo.InvariantCulture,
+				out int level)
+			|| level < 1
+			|| level > HeroProgressionState.MaximumLevel)
+		{
+			return "Usage: .changeLevel <1-60>";
+		}
+
+		HeroActorController? hero = GetPrimaryDebugHero();
+		if (!GodotObject.IsInstanceValid(hero))
+			return "No equipped hero is available.";
+
+		hero!.Progression.TrySetLevel(level);
+
+		return $"Set {hero.Definition?.DisplayName} to Level {level}. XP=0.";
+	}
+
+	private HeroActorController? GetPrimaryDebugHero()
+	{
+		foreach (HeroActorController hero in Party.SpawnedHeroes)
+		{
+			if (GodotObject.IsInstanceValid(hero))
+				return hero;
+		}
+
+		return null;
 	}
 
 	/// <summary>

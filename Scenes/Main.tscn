@@ -55,12 +55,18 @@
 [ext_resource type="Resource" uid="uid://ca677bt8r4l5a" path="res://Content/Abilities/Core/ability.core.taunt.tres" id="29_d8m2u"]
 [ext_resource type="Script" uid="uid://yaghcenkkidu" path="res://Scripts/Services/CombatDamageResolver.cs" id="30_4yxf6"]
 [ext_resource type="Resource" uid="uid://c3kbgs46muogb" path="res://Content/Abilities/Core/ability.core.heal.tres" id="30_5psol"]
+[ext_resource type="Script" uid="uid://cu1npdexb40y7" path="res://Controllers/FloatingCombatTextController.cs" id="30_combat_text"]
 [ext_resource type="Resource" uid="uid://djymbg83v4q3y" path="res://Content/Abilities/Core/ability.core.serpent_shot.tres" id="31_m4llh"]
+[ext_resource type="Resource" uid="uid://dvn2h050jt0o7" path="res://Content/Monsters/Core/monster.core.boar.tres" id="31_tjlwc"]
+[ext_resource type="Resource" uid="uid://bews2hfj2p04r" path="res://Content/Monsters/Core/monster.core.wolf.tres" id="32_a5sy2"]
 [ext_resource type="Resource" uid="uid://i0takopxv3o2" path="res://Content/Abilities/Core/ability.core.sinister_strike.tres" id="36_js5gh"]
+[ext_resource type="Resource" uid="uid://ytqa348yw7ik" path="res://Content/Encounters/Core/encounter.core.boar.tres" id="37_5ltlj"]
 [ext_resource type="Resource" uid="uid://b3c4n8wtaxc3u" path="res://Content/Abilities/Core/ability.core.frost_nova.tres" id="37_yisvs"]
 [ext_resource type="Resource" uid="uid://dh244cxw0adh6" path="res://Content/Abilities/Core/ability.core.panic.tres" id="38_5gwyn"]
+[ext_resource type="Resource" uid="uid://2fwydy7uuv2e" path="res://Content/Encounters/Core/encounter.core.wolf.tres" id="38_om687"]
 [ext_resource type="Script" uid="uid://bgv0cmtivgfi7" path="res://Controllers/PartyController.cs" id="40_6ehlx"]
-[ext_resource type="Script" uid="uid://dwnavkiixraok" path="res://Scripts/Services/RewardLedgerService.cs" id="40_ep8v8"]
+[ext_resource type="Script" uid="uid://xqeg0nkntfp8" path="res://Scripts/Services/HeroExperienceService.cs" id="40_xpaward"]
+[ext_resource type="Script" uid="uid://dyenvw68csome" path="res://Scripts/Services/ExperienceCurveService.cs" id="40_xpcurve"]
 [ext_resource type="Script" uid="uid://cte4v1w5xrc6j" path="res://Scripts/Services/SceneBoundaryService.cs" id="43_rgw24"]
 [ext_resource type="Script" uid="uid://bntu3gf7et4cn" path="res://Content/Registries/WeaponContentRegistry.cs" id="45_1bbis"]
 [ext_resource type="Script" uid="uid://c7t5joojna4re" path="res://Scripts/Content/Definitions/WeaponDefinition.cs" id="47_ex7s8"]
@@ -76,6 +82,7 @@
 [ext_resource type="Script" uid="uid://do6q8e6i0vdjs" path="res://Scripts/Content/Definitions/ItemDefinition.cs" id="55_atu2d"]
 [ext_resource type="Script" uid="uid://fgfei303hnli" path="res://Scripts/Services/CombatHitResolver.cs" id="56_vvjo1"]
 [ext_resource type="Script" uid="uid://bh3u4yli62qwn" path="res://Scripts/Services/ItemAcquisitionService.cs" id="57_atu2d"]
+[ext_resource type="Script" uid="uid://d2ngtytqpvdnl" path="res://Scripts/Services/MonsterLootService.cs" id="57_loot"]
 [ext_resource type="Resource" uid="uid://0yhkm7tmeykh" path="res://Content/Items/Materials/Core/material.core.test_dust.tres" id="58_c5nnb"]
 [ext_resource type="Script" uid="uid://bm4k13q5itvi3" path="res://Scripts/Services/InventoryPersistenceService.cs" id="60_fsd2l"]
 [ext_resource type="Script" uid="uid://bbobvlvb01p3" path="res://Scripts/Services/RegionExplorationService.cs" id="64_he124"]
@@ -222,7 +229,7 @@ polygon = PackedVector2Array(-8, -32, 8, -32, 8, 0, -8, 0)
 position = Vector2(725.6944, 178.96297)
 
 [node name="PartySlot1" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=56454585]
-position = Vector2(-312.57962, -42.734383)
+position = Vector2(-312.5796, -26.27724)
 
 [node name="PartySlot2" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=150627185]
 position = Vector2(-214.21892, -43.648674)
@@ -235,6 +242,9 @@ position = Vector2(-104.05498, -41.820103)
 
 [node name="PartySlot5" type="Marker2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors" unique_id=1641821977]
 position = Vector2(-151.26817, -12.562965)
+
+[node name="FloatingCombatTextLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport/ScalableWorld" unique_id=867033611]
+z_index = 15
 
 [node name="ForegroundLayer" type="Node2D" parent="RegionViewportContainer/RegionViewport" unique_id=1354326323]
 z_index = 20
@@ -313,9 +323,10 @@ Formation = NodePath("../../../Controllers/PopupWindowFormationController")
 [node name="StackSplitPopup" parent="PopupWindows" unique_id=290862077 instance=ExtResource("5_tbeql")]
 title = "Split Stack"
 initial_position = 2
-size = Vector2i(107, 100)
+size = Vector2i(300, 112)
 visible = false
 wrap_controls = true
+transient = true
 unresizable = true
 maximize_disabled = true
 
@@ -324,15 +335,6 @@ text = "Split Stack"
 
 [node name="QuantityInput" parent="PopupWindows/StackSplitPopup/RootMargin/RootVBox" parent_id_path=PackedInt32Array(290862077, 885429226) index="1" unique_id=637010466]
 update_on_text_changed = true
-
-[node name="ButtonRow" parent="PopupWindows/StackSplitPopup/RootMargin/RootVBox" parent_id_path=PackedInt32Array(290862077, 885429226) index="2" unique_id=839862620]
-alignment = 2
-
-[node name="CancelButton" parent="PopupWindows/StackSplitPopup/RootMargin/RootVBox/ButtonRow" index="0" unique_id=1163169954]
-text = "Cancel"
-
-[node name="ConfirmButton" parent="PopupWindows/StackSplitPopup/RootMargin/RootVBox/ButtonRow" index="1" unique_id=1808385076]
-text = "Split"
 
 [node name="WindowSettingsPopup" parent="PopupWindows" unique_id=1207381413 instance=ExtResource("1_rgh2o")]
 visible = false
@@ -428,11 +430,18 @@ alignment = 1
 
 [node name="ReviveButton" type="Button" parent="PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/ButtonRow" unique_id=1477804055]
 layout_mode = 2
-text = "Revive"
+size_flags_horizontal = 3
+text = "Revive Now"
+
+[node name="GraveyardReviveButton" type="Button" parent="PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/ButtonRow" unique_id=1421780291]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Revive at Graveyard"
 
 [node name="IncapacitateButton" type="Button" parent="PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/ButtonRow" unique_id=1261173460]
 layout_mode = 2
-text = "Incapacitate"
+size_flags_horizontal = 3
+text = "Remain Incapacitated"
 
 [node name="CharacterWindow" parent="PopupWindows" unique_id=411267466 instance=ExtResource("7_yn2g2")]
 visible = false
@@ -544,15 +553,16 @@ script = ExtResource("12_f7hdo")
 Registry = NodePath("../HeroContentRegistry")
 WeaponRegistry = NodePath("../WeaponContentRegistry")
 
-[node name="MonsterContentRegistry" type="Node" parent="Services" unique_id=436469126 node_paths=PackedStringArray("AbilityRegistry")]
+[node name="MonsterContentRegistry" type="Node" parent="Services" unique_id=436469126 node_paths=PackedStringArray("AbilityRegistry", "ItemRegistry")]
 script = ExtResource("8_346fj")
 AbilityRegistry = NodePath("../AbilityContentRegistry")
-Definitions = Array[ExtResource("9_0sclb")]([ExtResource("11_sxkr1"), ExtResource("14_erwvk")])
+ItemRegistry = NodePath("../ItemContentRegistry")
+Definitions = Array[ExtResource("9_0sclb")]([ExtResource("11_sxkr1"), ExtResource("14_erwvk"), ExtResource("31_tjlwc"), ExtResource("32_a5sy2")])
 
 [node name="EncounterContentRegistry" type="Node" parent="Services" unique_id=365350510 node_paths=PackedStringArray("MonsterRegistry")]
 script = ExtResource("14_5jffn")
 MonsterRegistry = NodePath("../MonsterContentRegistry")
-Definitions = Array[ExtResource("15_kpo4j")]([ExtResource("16_4n42c"), ExtResource("17_4n42c"), ExtResource("18_c5snn")])
+Definitions = Array[ExtResource("15_kpo4j")]([ExtResource("16_4n42c"), ExtResource("17_4n42c"), ExtResource("18_c5snn"), ExtResource("37_5ltlj"), ExtResource("38_om687")])
 
 [node name="MonsterFactory" type="Node" parent="Services" unique_id=583709723 node_paths=PackedStringArray("Registry", "SceneBoundaries")]
 script = ExtResource("12_0sclb")
@@ -579,8 +589,13 @@ Backpack = NodePath("../../Controllers/BackpackWindowController")
 InventoryPersistence = NodePath("../InventoryPersistenceService")
 RegionExploration = NodePath("../RegionExplorationService")
 
-[node name="RewardLedgerService" type="Node" parent="Services" unique_id=1372524594]
-script = ExtResource("40_ep8v8")
+[node name="ExperienceCurveService" type="Node" parent="Services" unique_id=2082891789]
+script = ExtResource("40_xpcurve")
+
+[node name="HeroExperienceService" type="Node" parent="Services" unique_id=1122177932 node_paths=PackedStringArray("Party", "Curve")]
+script = ExtResource("40_xpaward")
+Party = NodePath("../../Controllers/PartyController")
+Curve = NodePath("../ExperienceCurveService")
 
 [node name="SceneBoundaryService" type="Node" parent="Services" unique_id=811700688 node_paths=PackedStringArray("SceneLeftBoundary", "SceneRightBoundary", "GroundTopBoundary", "GroundBottomBoundary")]
 script = ExtResource("43_rgw24")
@@ -602,6 +617,10 @@ script = ExtResource("57_atu2d")
 Registry = NodePath("../ItemContentRegistry")
 Backpack = NodePath("../../Controllers/BackpackWindowController")
 Party = NodePath("../../Controllers/PartyController")
+
+[node name="MonsterLootService" type="Node" parent="Services" unique_id=921801611 node_paths=PackedStringArray("ItemAcquisition")]
+script = ExtResource("57_loot")
+ItemAcquisition = NodePath("../ItemAcquisitionService")
 
 [node name="InventoryPersistenceService" type="Node" parent="Services" unique_id=1073064237 node_paths=PackedStringArray("Backpack", "Registry", "Party", "EquipmentPanel", "ItemAcquisition")]
 script = ExtResource("60_fsd2l")
@@ -643,7 +662,7 @@ WindowHost = NodePath("../DesktopWindowHostController")
 SettingsWindow = NodePath("../../PopupWindows/WindowSettingsPopup")
 PanelController = NodePath("../WindowSettingsPanelController")
 
-[node name="EncounterController" type="Node" parent="Controllers" unique_id=292181593 node_paths=PackedStringArray("JourneyState", "ActorLayer", "MonsterSpawnAnchor", "MonsterFactory", "EncounterRegistry", "EncounterPoolRegistry")]
+[node name="EncounterController" type="Node" parent="Controllers" unique_id=292181593 node_paths=PackedStringArray("JourneyState", "ActorLayer", "MonsterSpawnAnchor", "MonsterFactory", "EncounterRegistry", "EncounterPoolRegistry", "Experience", "Loot")]
 script = ExtResource("11_grg3l")
 JourneyState = NodePath("../../Services/JourneyStateService")
 ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer")
@@ -651,8 +670,11 @@ MonsterSpawnAnchor = NodePath("../../RegionViewportContainer/RegionViewport/Scal
 MonsterFactory = NodePath("../../Services/MonsterFactory")
 EncounterRegistry = NodePath("../../Services/EncounterContentRegistry")
 EncounterPoolRegistry = NodePath("../../Services/EncounterPoolContentRegistry")
+Experience = NodePath("../../Services/HeroExperienceService")
+Loot = NodePath("../../Services/MonsterLootService")
 SpawnRows = 5
 SpawnsPerColumnExpansion = 4
+DefaultMonsterContentId = "monster.core.boar"
 
 [node name="CombatController" type="Node" parent="Controllers" unique_id=1601105505 node_paths=PackedStringArray("Encounter", "ActorLayer", "Targeting", "DamageResolver", "HitResolver", "Party")]
 script = ExtResource("12_grg3l")
@@ -666,6 +688,17 @@ ProjectileScene = ExtResource("14_1p5hy")
 
 [node name="CombatDamageResolver" type="Node" parent="Controllers" unique_id=1803014460]
 script = ExtResource("30_4yxf6")
+
+[node name="FloatingCombatTextController" type="Node" parent="Controllers" unique_id=160677541 node_paths=PackedStringArray("Combat", "TextLayer")]
+script = ExtResource("30_combat_text")
+Combat = NodePath("../CombatController")
+TextLayer = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/FloatingCombatTextLayer")
+FontSize = 18
+OutlineSize = 4
+LifetimeSeconds = 1.1
+FloatDistance = 30.0
+HorizontalJitter = 8.0
+FadeDurationSeconds = 0.25
 
 [node name="PresentationFrameController" type="Node" parent="Controllers" unique_id=1525423310 node_paths=PackedStringArray("PresentationFrame", "RegionViewport", "Ground", "WindowHost")]
 script = ExtResource("23_jyqft")
@@ -688,23 +721,24 @@ GroundBottomBoundary = NodePath("../../RegionViewportContainer/RegionViewport/Sc
 
 [node name="PartyController" type="Node" parent="Controllers" unique_id=1434086924 node_paths=PackedStringArray("PartySlotAnchors", "Factory", "ActorLayer", "JourneyState", "Targeting")]
 script = ExtResource("40_6ehlx")
-EquippedHeroContentIds = Array[String](["hero.core.syzygy", "hero.core.huntard", "hero.core.rook", "hero.core.chet", "hero.core.allistar"])
+EquippedHeroContentIds = Array[String](["hero.core.syzygy", "", "", "", ""])
 PartySlotAnchors = [NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors/PartySlot1"), NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors/PartySlot2"), NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors/PartySlot3"), NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors/PartySlot4"), NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer/PartyFormationAnchors/PartySlot5")]
 Factory = NodePath("../../Services/HeroFactory")
 ActorLayer = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/ActorLayer")
 JourneyState = NodePath("../../Services/JourneyStateService")
 Targeting = NodePath("../../Services/TargetingService")
 
-[node name="RegionRunController" type="Node" parent="Controllers" unique_id=1309989878 node_paths=PackedStringArray("Encounter", "Combat", "JourneyState", "RewardLedger", "RegionPresentation")]
+[node name="RegionRunController" type="Node" parent="Controllers" unique_id=1309989878 node_paths=PackedStringArray("Encounter", "Combat", "JourneyState", "Exploration", "Backpack", "RegionPresentation")]
 script = ExtResource("51_7sj7i")
 Encounter = NodePath("../EncounterController")
 Combat = NodePath("../CombatController")
 JourneyState = NodePath("../../Services/JourneyStateService")
-RewardLedger = NodePath("../../Services/RewardLedgerService")
+Exploration = NodePath("../../Services/RegionExplorationService")
+Backpack = NodePath("../BackpackWindowController")
 RegionPresentation = NodePath("../../RegionViewportContainer/RegionViewport/ScalableWorld/RegionPresentation")
 ActiveRegion = ExtResource("52_semxg")
 
-[node name="IncapacitationChoicePopupController" type="Node" parent="Controllers" unique_id=239960428 node_paths=PackedStringArray("RegionRun", "ChoiceWindow", "Formation", "HeroNameLabel", "MessageLabel", "ReviveButton", "IncapacitateButton")]
+[node name="IncapacitationChoicePopupController" type="Node" parent="Controllers" unique_id=239960428 node_paths=PackedStringArray("RegionRun", "ChoiceWindow", "Formation", "HeroNameLabel", "MessageLabel", "ReviveButton", "GraveyardReviveButton", "IncapacitateButton")]
 script = ExtResource("54_3133c")
 RegionRun = NodePath("../RegionRunController")
 ChoiceWindow = NodePath("../../PopupWindows/IncapacitationChoiceWindow")
@@ -712,14 +746,16 @@ Formation = NodePath("../PopupWindowFormationController")
 HeroNameLabel = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/HeroNameLabel")
 MessageLabel = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/MessageLabel")
 ReviveButton = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/ButtonRow/ReviveButton")
+GraveyardReviveButton = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/ButtonRow/GraveyardReviveButton")
 IncapacitateButton = NodePath("../../PopupWindows/IncapacitationChoiceWindow/MarginContainer/VBoxContainer/ButtonRow/IncapacitateButton")
 
 [node name="CombatHitResolver" type="Node" parent="Controllers" unique_id=921140515]
 script = ExtResource("56_vvjo1")
 
-[node name="CharacterWindowController" type="Node" parent="Controllers" unique_id=2116314171 node_paths=PackedStringArray("Party", "SelectedHeroLabel", "PartySlot1Button", "PartySlot2Button", "PartySlot3Button", "PartySlot4Button", "PartySlot5Button")]
+[node name="CharacterWindowController" type="Node" parent="Controllers" unique_id=2116314171 node_paths=PackedStringArray("Party", "ExperienceCurve", "SelectedHeroLabel", "PartySlot1Button", "PartySlot2Button", "PartySlot3Button", "PartySlot4Button", "PartySlot5Button")]
 script = ExtResource("68_yic5e")
 Party = NodePath("../PartyController")
+ExperienceCurve = NodePath("../../Services/ExperienceCurveService")
 SelectedHeroLabel = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/SelectedHeroLabel")
 PartySlot1Button = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow/PartySlot1Button")
 PartySlot2Button = NodePath("../../PopupWindows/CharacterWindow/RootMargin/RootVBox/PartySelectorPanel/PartySelectorRow/PartySlot2Button")
@@ -755,12 +791,13 @@ GoldValueLabel = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox
 SilverValueLabel = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/CurrencyRow/SilverValue")
 CopperValueLabel = NodePath("../../PopupWindows/BackpackWindow/RootMargin/RootHBox/InventoryPane/CurrencyRow/CopperValue")
 
-[node name="StackSplitPopupController" type="Node" parent="Controllers" unique_id=626931148 node_paths=PackedStringArray("Popup", "PromptLabel", "QuantityInput", "ConfirmButton", "CancelButton")]
+[node name="StackSplitPopupController" type="Node" parent="Controllers" unique_id=626931148 node_paths=PackedStringArray("Popup", "PromptLabel", "QuantityInput", "ConfirmButton", "DeleteButton", "CancelButton")]
 script = ExtResource("80_c5nnb")
 Popup = NodePath("../../PopupWindows/StackSplitPopup")
 PromptLabel = NodePath("../../PopupWindows/StackSplitPopup/RootMargin/RootVBox/PromptLabel")
 QuantityInput = NodePath("../../PopupWindows/StackSplitPopup/RootMargin/RootVBox/QuantityInput")
 ConfirmButton = NodePath("../../PopupWindows/StackSplitPopup/RootMargin/RootVBox/ButtonRow/ConfirmButton")
+DeleteButton = NodePath("../../PopupWindows/StackSplitPopup/RootMargin/RootVBox/ButtonRow/DeleteButton")
 CancelButton = NodePath("../../PopupWindows/StackSplitPopup/RootMargin/RootVBox/ButtonRow/CancelButton")
 
 [node name="ItemTooltipController" type="Node" parent="Controllers" unique_id=493083567 node_paths=PackedStringArray("Backpack", "CharacterWindow", "FormationHost", "TooltipWindow", "ComparisonPanel", "ComparisonText", "HoveredText")]

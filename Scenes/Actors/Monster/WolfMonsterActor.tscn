@@ -1,0 +1,116 @@
+[gd_scene format=3 uid="uid://cus7xfpnqv4ag"]
+
+[ext_resource type="PackedScene" uid="uid://bxp73ohtqn7ga" path="res://Scenes/Actors/Monster/MonsterActor.tscn" id="1_8bl7q"]
+[ext_resource type="Texture2D" uid="uid://s5xjf4sdli37" path="res://Scenes/Actors/Sprites/Wolf/sprite-2-1.png" id="2_8bl7q"]
+[ext_resource type="Texture2D" uid="uid://btoektwrrdsiy" path="res://Scenes/Actors/Sprites/Wolf/sprite-2-2.png" id="3_6efk4"]
+[ext_resource type="Texture2D" uid="uid://dudoxnru1ltks" path="res://Scenes/Actors/Sprites/Wolf/sprite-2-3.png" id="4_a5taf"]
+[ext_resource type="Texture2D" uid="uid://c35jwwa7ct7fn" path="res://Scenes/Actors/Sprites/Wolf/sprite-2-4.png" id="5_irind"]
+[ext_resource type="Texture2D" uid="uid://dus0wmjwvqjsb" path="res://Scenes/Actors/Sprites/Wolf/sprite-2-5.png" id="6_homrs"]
+[ext_resource type="Texture2D" uid="uid://depqyrdc147s2" path="res://Scenes/Actors/Sprites/Wolf/sprite-2-6.png" id="7_x3638"]
+[ext_resource type="Texture2D" uid="uid://dpv0m00pikudj" path="res://Scenes/Actors/Sprites/Wolf/sprite-3-1.png" id="8_seeij"]
+[ext_resource type="Texture2D" uid="uid://2i8q0l1ttvgl" path="res://Scenes/Actors/Sprites/Wolf/sprite-3-2.png" id="9_hnwe0"]
+[ext_resource type="Texture2D" uid="uid://criewc3wudfde" path="res://Scenes/Actors/Sprites/Wolf/sprite-3-3.png" id="10_lo7xp"]
+[ext_resource type="Texture2D" uid="uid://5a3y3j2iq45h" path="res://Scenes/Actors/Sprites/Wolf/sprite-3-4.png" id="11_amk7g"]
+[ext_resource type="Texture2D" uid="uid://d1cb20w1tuxu" path="res://Scenes/Actors/Sprites/Wolf/sprite-3-5.png" id="12_1v17t"]
+[ext_resource type="Texture2D" uid="uid://c4a4hbtbevk6c" path="res://Scenes/Actors/Sprites/Wolf/sprite-3-6.png" id="13_j4tv8"]
+[ext_resource type="Texture2D" uid="uid://c30rybdcki2b7" path="res://Scenes/Actors/Sprites/Wolf/sprite-1-1.png" id="14_bqydk"]
+[ext_resource type="Texture2D" uid="uid://hl35s1mkl5di" path="res://Scenes/Actors/Sprites/Wolf/sprite-1-2.png" id="15_ymuvr"]
+[ext_resource type="Texture2D" uid="uid://7380r4vlegjl" path="res://Scenes/Actors/Sprites/Wolf/sprite-1-3.png" id="16_0n6j3"]
+[ext_resource type="Texture2D" uid="uid://d3b2r4atly6bb" path="res://Scenes/Actors/Sprites/Wolf/sprite-1-4.png" id="17_3yjqw"]
+[ext_resource type="Texture2D" uid="uid://bkm0k7v8jjtao" path="res://Scenes/Actors/Sprites/Wolf/sprite-1-5.png" id="18_lr2xa"]
+[ext_resource type="Texture2D" uid="uid://8xqtnf8xhqdf" path="res://Scenes/Actors/Sprites/Wolf/sprite-1-6.png" id="19_c2qad"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_d6g1g"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_8bl7q")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_6efk4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_a5taf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_irind")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_homrs")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_x3638")
+}],
+"loop": 0,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_seeij")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_hnwe0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_lo7xp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_amk7g")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_1v17t")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_j4tv8")
+}],
+"loop": 0,
+"name": &"hurt",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("14_bqydk")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("14_bqydk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_ymuvr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_0n6j3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_3yjqw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_lr2xa")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_c2qad")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 5.0
+}]
+
+[node name="MonsterActor" unique_id=1953699697 node_paths=PackedStringArray("MonsterSprite") instance=ExtResource("1_8bl7q")]
+MonsterSprite = NodePath("PresentationRoot/VisualRoot/MonsterSprite")
+SpriteFramesFaceRight = true
+MeleeSlotHorizontalSpacingMultiplier = 0.5
+
+[node name="MonsterSprite" type="AnimatedSprite2D" parent="PresentationRoot/VisualRoot" parent_id_path=PackedInt32Array(1579220540) index="0" unique_id=1348990027]
+position = Vector2(0, -22)
+scale = Vector2(0.215, 0.215)
+sprite_frames = SubResource("SpriteFrames_d6g1g")
+animation = &"hurt"
+
+[node name="MonsterBody" parent="PresentationRoot/VisualRoot" parent_id_path=PackedInt32Array(1579220540) index="1" unique_id=1973935004]
+visible = false
+color = Color(0.8553518, 0.0001732707, 0.73660785, 1)

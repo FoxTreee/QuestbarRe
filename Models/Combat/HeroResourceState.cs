@@ -8,6 +8,7 @@ public sealed class HeroResourceState
     public float CurrentAmount { get; private set; }
     public float MaximumAmount { get; private set; }
     public bool HasResource => ResourceType != HeroResourceType.None;
+    public bool IsLocked { get; private set; }
 
     /// <summary>
     /// Initializes runtime resource state from class data. The configured
@@ -37,7 +38,8 @@ public sealed class HeroResourceState
     /// </summary>
     public void Update(double delta, HeroResourceDefinition? definition)
     {
-        if (!HasResource
+        if (IsLocked
+            || !HasResource
             || !GodotObject.IsInstanceValid(definition)
             || definition!.RegenerationAmount <= 0.0f
             || definition.RegenerationIntervalSeconds <= 0.0f
@@ -69,6 +71,9 @@ public sealed class HeroResourceState
     /// </summary>
     public bool TrySpend(float amount)
     {
+        if (IsLocked)
+            return HasResource && amount >= 0.0f;
+
         if (!HasResource || amount < 0.0f || CurrentAmount < amount)
             return false;
 
@@ -82,7 +87,7 @@ public sealed class HeroResourceState
     /// </summary>
     public void Restore(float amount)
     {
-        if (!HasResource || amount <= 0.0f)
+        if (IsLocked || !HasResource || amount <= 0.0f)
             return;
 
         CurrentAmount = Mathf.Min(CurrentAmount + amount, MaximumAmount);
@@ -96,5 +101,17 @@ public sealed class HeroResourceState
     {
         CurrentAmount = MaximumAmount;
         _regenerationElapsedSeconds = 0.0;
+    }
+
+    /// <summary>
+    /// Enables or disables the debug resource lock. Enabling it fills the
+    /// active Rage, Energy, or Mana pool and makes ability spending free.
+    /// </summary>
+    public void SetLocked(bool locked)
+    {
+        if (locked && HasResource)
+            RestoreToMaximum();
+
+        IsLocked = locked;
     }
 }

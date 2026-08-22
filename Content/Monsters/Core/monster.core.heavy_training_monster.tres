@@ -2,16 +2,28 @@
 
 [ext_resource type="PackedScene" uid="uid://cm2gu3cdamwh4" path="res://Scenes/Actors/Monster/HeavyTrainingMonsterActor.tscn" id="1_rb0hp"]
 [ext_resource type="Script" uid="uid://bwnluygsef150" path="res://Scripts/Content/Definitions/MonsterDefinition.cs" id="2_l6wml"]
+[ext_resource type="Script" uid="uid://djcf02h4cbkip" path="res://Scripts/Content/Definitions/MonsterLootEntry.cs" id="3_loot"]
+
+[sub_resource type="Resource" id="Resource_q4q3t"]
+script = ExtResource("3_loot")
+ItemContentId = "material.core.test_dust"
+DropChancePercent = 60.0
+MaximumQuantity = 3
+metadata/_custom_type_script = "uid://djcf02h4cbkip"
 
 [resource]
 script = ExtResource("2_l6wml")
 ContentId = "monster.core.heavy_training_monster"
 DisplayName = "Heavy Training Monster"
+BaseExperienceReward = 25
+LootTable = Array[ExtResource("3_loot")]([SubResource("Resource_q4q3t")])
+CurrencyDropChancePercent = 90.0
+MinimumCopperDrop = 1
+MaximumCopperDrop = 5
 ActorScene = ExtResource("1_rb0hp")
 AttackDamage = 15.0
 AttackInterval = 3.0
 AttackDuration = 0.7000000000000001
-EntrySpeed = 40.0
 CombatMoveSpeed = 50.0
 PreferredTargetTagMask = 1
 TargetingStyle = 0

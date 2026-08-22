@@ -205,7 +205,9 @@ public partial class EncounterPoolContentRegistry : Node
 		{
 			DebugLog.Print(
 				$"  {entry.EncounterContentId}: " +
-				$"weight={entry.Weight}");
+				$"weight={entry.Weight}; available=" +
+				$"{entry.AvailableFromRegionTravelPercent:0.##}-" +
+				$"{entry.AvailableThroughRegionTravelPercent:0.##}%");
 		}
 	}
 

@@ -34,6 +34,87 @@ public partial class HeroDefinition : Resource
     { get; set; } = null!;
 
 
+    [ExportCategory("Base Attributes")]
+
+    /// <summary>
+    /// Innate Strength before equipment. Each total point currently adds two
+    /// damage to both ends of every melee damage range.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,1000,1")]
+    public int BaseStrength { get; set; } = 5;
+
+    [Export(PropertyHint.Range, "0,1000,1")]
+    public int BaseAgility { get; set; } = 2;
+
+    /// <summary>
+    /// Innate Stamina before equipment. Each total point currently grants ten
+    /// maximum health in addition to BaseHealth.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,1000,1")]
+    public int BaseStamina { get; set; } = 6;
+
+    [Export(PropertyHint.Range, "0,1000,1")]
+    public int BaseIntellect { get; set; } = 1;
+
+    [Export(PropertyHint.Range, "0,1000,1")]
+    public int BaseSpirit { get; set; } = 1;
+
+
+    [ExportCategory("Level 1-60 Base Stat Table")]
+
+    /// <summary>
+    /// Authoritative naked stats for every level. Entry 0 is Level 1 and entry
+    /// 59 is Level 60. The supplied Warrior curve starts at 5/2/6/1/1 with 100
+    /// base health and ends at 28/14/60/7/12 with 2,009 base health.
+    /// Every generated row remains independently editable in the Inspector.
+    /// </summary>
+    [Export]
+    public Godot.Collections.Array<HeroLevelStatDefinition> LevelStats
+    { get; set; } = CreateDefaultWarriorLevelStats();
+
+
+    [ExportCategory("Derived Stat Rules")]
+
+    /// <summary>
+    /// Health shared by every starting hero before Stamina is applied.
+    /// </summary>
+    [Export(PropertyHint.Range, "1,1000000,1")]
+    public float BaseHealth { get; set; } = 100.0f;
+
+    [Export(PropertyHint.Range, "0,1000,1")]
+    public float HealthPerStamina { get; set; } = 10.0f;
+
+    [Export(PropertyHint.Range, "0,1000,1")]
+    public float MeleeDamagePerStrength { get; set; } = 2.0f;
+
+
+    [ExportCategory("Unarmed Melee")]
+
+    [Export(PropertyHint.Range, "0,1000000,1")]
+    public float UnarmedMinimumDamage { get; set; } = 2.0f;
+
+    [Export(PropertyHint.Range, "0,1000000,1")]
+    public float UnarmedMaximumDamage { get; set; } = 4.0f;
+
+    [Export(PropertyHint.Range, "0.1,30,0.05")]
+    public float UnarmedAttackInterval { get; set; } = 2.0f;
+
+
+    [ExportCategory("Starting Progression")]
+
+    /// <summary>
+    /// Starting level used when no saved progression exists.
+    /// </summary>
+    [Export(PropertyHint.Range, "1,60,1")]
+    public int StartingLevel { get; set; } = 1;
+
+    /// <summary>
+    /// XP already earned toward the next level when no save exists.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,100000000000000000000,1")]
+    public double StartingExperience { get; set; } = 0.0;
+
+
     [ExportCategory("Runtime")]
 
     /// <summary>
@@ -229,6 +310,77 @@ public partial class HeroDefinition : Resource
         }
     }
 
+    /// <summary>
+    /// Returns the authored naked stat row for a level. A malformed table falls
+    /// back to the original Level 1 fields so combat can report validation
+    /// errors without crashing during content iteration.
+    /// </summary>
+    public HeroLevelStatDefinition GetLevelStats(int level)
+    {
+        int index = Mathf.Clamp(
+            level,
+            1,
+            HeroProgressionState.MaximumLevel) - 1;
+
+        if (index < LevelStats.Count
+            && GodotObject.IsInstanceValid(LevelStats[index]))
+        {
+            return LevelStats[index];
+        }
+
+        return new HeroLevelStatDefinition
+        {
+            Level = index + 1,
+            Strength = BaseStrength,
+            Agility = BaseAgility,
+            Stamina = BaseStamina,
+            Intellect = BaseIntellect,
+            Spirit = BaseSpirit,
+            BaseHealth = BaseHealth
+        };
+    }
+
+    /// <summary>
+    /// Seeds a complete, editable Warrior table using rounded interpolation.
+    /// Rounding intentionally produces WoW-like uneven individual level gains
+    /// while guaranteeing the exact approved Level 1 and Level 60 endpoints.
+    /// </summary>
+    private static Godot.Collections.Array<HeroLevelStatDefinition>
+        CreateDefaultWarriorLevelStats()
+    {
+        Godot.Collections.Array<HeroLevelStatDefinition> rows = new();
+
+        for (int level = 1;
+            level <= HeroProgressionState.MaximumLevel;
+            level++)
+        {
+            double progress = (level - 1) / 59.0;
+
+            rows.Add(new HeroLevelStatDefinition
+            {
+                Level = level,
+                Strength = InterpolateWhole(5, 28, progress),
+                Agility = InterpolateWhole(2, 14, progress),
+                Stamina = InterpolateWhole(6, 60, progress),
+                Intellect = InterpolateWhole(1, 7, progress),
+                Spirit = InterpolateWhole(1, 12, progress),
+                BaseHealth = InterpolateWhole(100, 2009, progress)
+            });
+        }
+
+        return rows;
+    }
+
+    private static int InterpolateWhole(
+        int start,
+        int end,
+        double progress)
+    {
+        return (int)System.Math.Round(
+            start + (end - start) * progress,
+            System.MidpointRounding.AwayFromZero);
+    }
+
 
     /// <summary>
     /// Retrieves validation errors from the current game state.
@@ -266,6 +418,66 @@ public partial class HeroDefinition : Resource
                     $"{ContentId}: invalid class reference: " +
                     classError);
             }
+        }
+
+        if (BaseStrength < 0 || BaseAgility < 0
+            || BaseStamina < 0 || BaseIntellect < 0
+            || BaseSpirit < 0)
+        {
+            errors.Add(
+                $"{ContentId}: base attributes cannot be negative.");
+        }
+
+        if (LevelStats.Count != HeroProgressionState.MaximumLevel)
+        {
+            errors.Add(
+                $"{ContentId}: LevelStats must contain exactly 60 rows.");
+        }
+        else
+        {
+            for (int index = 0; index < LevelStats.Count; index++)
+            {
+                HeroLevelStatDefinition row = LevelStats[index];
+
+                if (!GodotObject.IsInstanceValid(row)
+                    || row.Level != index + 1
+                    || row.Strength < 0 || row.Agility < 0
+                    || row.Stamina < 0 || row.Intellect < 0
+                    || row.Spirit < 0 || row.BaseHealth <= 0.0f)
+                {
+                    errors.Add(
+                        $"{ContentId}: LevelStats entry {index} must be " +
+                        $"a valid Level {index + 1} row.");
+                }
+            }
+        }
+
+        if (BaseHealth <= 0.0f || HealthPerStamina < 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: base-health values are invalid.");
+        }
+
+        if (MeleeDamagePerStrength < 0.0f
+            || UnarmedMinimumDamage < 0.0f
+            || UnarmedMaximumDamage < UnarmedMinimumDamage
+            || UnarmedAttackInterval <= 0.0f)
+        {
+            errors.Add(
+                $"{ContentId}: unarmed melee values are invalid.");
+        }
+
+        if (StartingLevel < 1
+            || StartingLevel > HeroProgressionState.MaximumLevel)
+        {
+            errors.Add(
+                $"{ContentId}: StartingLevel must be between 1 and 60.");
+        }
+
+        if (StartingExperience < 0.0)
+        {
+            errors.Add(
+                $"{ContentId}: StartingExperience cannot be negative.");
         }
 
         if (!GodotObject.IsInstanceValid(ActorScene))

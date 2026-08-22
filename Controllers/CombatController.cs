@@ -680,6 +680,18 @@ public partial class CombatController : Node
 		float appliedHealing =
 			target.Health.ApplySpellHealing(requestedHealing);
 
+		if (appliedHealing > 0.0f)
+		{
+			RaiseCombatEvent(
+				new CombatEvent
+				{
+					Type = CombatEventType.HealingApplied,
+					Attacker = caster,
+					Target = target,
+					AppliedHealing = appliedHealing
+				});
+		}
+
 		DebugLog.Print(
 			$"{caster.Name} used '{ability.DisplayName}' on " +
 			$"{target.Name}. SpellHealing={appliedHealing:0}; " +
@@ -2945,7 +2957,8 @@ public partial class CombatController : Node
 			new DamageRequest(
 				attacker,
 				target,
-				ability.BaseDamage),
+				ability.BaseDamage
+					* (attacker.Difficulty?.DamageMultiplier ?? 1.0f)),
 			target.Health);
 
 		PrintDamageResult(

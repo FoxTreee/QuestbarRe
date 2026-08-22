@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="MonsterDefinition" format=3 uid="uid://dvn2h050jt0o7"]
+
+[ext_resource type="PackedScene" uid="uid://wlbmcyp0q6xa" path="res://Scenes/Actors/Monster/BoarMonsterActor.tscn" id="1_td22i"]
+[ext_resource type="Script" uid="uid://djcf02h4cbkip" path="res://Scripts/Content/Definitions/MonsterLootEntry.cs" id="2_dnrn6"]
+[ext_resource type="Script" uid="uid://bwnluygsef150" path="res://Scripts/Content/Definitions/MonsterDefinition.cs" id="3_io2fg"]
+
+[sub_resource type="Resource" id="Resource_l6wml"]
+script = ExtResource("2_dnrn6")
+ItemContentId = "material.core.test_dust"
+DropChancePercent = 50.0
+metadata/_custom_type_script = "uid://djcf02h4cbkip"
+
+[resource]
+script = ExtResource("3_io2fg")
+ContentId = "monster.core.boar"
+DisplayName = "Boar"
+LootTable = Array[ExtResource("2_dnrn6")]([SubResource("Resource_l6wml")])
+CurrencyDropChancePercent = 85.0
+MinimumCopperDrop = 1
+MaximumCopperDrop = 2
+ActorScene = ExtResource("1_td22i")
+MaximumHealth = 30.0
+AttackDamage = 5.0
+AttackInterval = 2.5
+AttackDuration = 0.5
+TargetingStyle = 0
+AbilityContentIds = Array[String](["ability.core.heavy_slam"])
+metadata/_custom_type_script = "uid://bwnluygsef150"
